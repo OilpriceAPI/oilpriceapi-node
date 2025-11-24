@@ -1,0 +1,23 @@
+# Source files
+src/
+tests/
+
+# Config files
+tsconfig.json
+.gitignore
+.npmignore
+
+# CI/CD
+.github/
+
+# Development
+*.test.ts
+*.spec.ts
+coverage/
+
+# Documentation (keep README)
+docs/
+
+# Misc
+.DS_Store
+*.log

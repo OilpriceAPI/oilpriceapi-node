@@ -1,0 +1,57 @@
+{
+  "name": "oilpriceapi",
+  "version": "0.2.0",
+  "description": "Official Node.js SDK for Oil Price API - Real-time and historical oil & commodity prices",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "oil",
+    "price",
+    "commodity",
+    "api",
+    "brent",
+    "wti",
+    "crude",
+    "gasoline",
+    "diesel",
+    "natural-gas",
+    "energy",
+    "trading"
+  ],
+  "author": "Oil Price API <karl@oilpriceapi.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OilpriceAPI/oilpriceapi-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OilpriceAPI/oilpriceapi-node/issues"
+  },
+  "homepage": "https://www.oilpriceapi.com",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}
