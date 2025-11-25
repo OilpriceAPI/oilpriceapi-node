@@ -171,81 +171,47 @@ const prices = await client.getLatestPrices();
 // [OilPriceAPI 2024-11-24T20:28:23.394Z] Response data received { status: 'success', hasData: true }
 ```
 
-## Integration Examples
+## Examples
 
-### Express.js
+See the [`examples/`](./examples) directory for complete, runnable code examples:
 
+- **[basic.ts](./examples/basic.ts)** - Simple usage patterns
+- **[express.ts](./examples/express.ts)** - Express.js API server integration
+- **[nextjs-api-route.ts](./examples/nextjs-api-route.ts)** - Next.js API route handler
+- **[error-handling.ts](./examples/error-handling.ts)** - Comprehensive error handling
+- **[commodities.ts](./examples/commodities.ts)** - Working with commodity metadata
+
+### Quick Examples
+
+**Get Latest Price:**
 ```typescript
-import express from 'express';
-import { OilPriceAPI } from 'oilpriceapi';
+const prices = await client.getLatestPrices({ commodity: 'WTI_USD' });
+console.log(prices[0].formatted); // "$74.25"
+```
 
-const app = express();
-const oilPrices = new OilPriceAPI({
-  apiKey: process.env.OIL_PRICE_API_KEY
-});
-
-app.get('/api/prices', async (req, res) => {
-  try {
-    const prices = await oilPrices.getLatestPrices();
-    res.json({ success: true, data: prices });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
+**Historical Data:**
+```typescript
+const history = await client.getHistoricalPrices({
+  commodity: 'BRENT_CRUDE_USD',
+  period: 'past_week'
 });
 ```
 
-### Next.js API Route
-
+**Commodity Metadata:**
 ```typescript
-// app/api/prices/route.ts
-import { OilPriceAPI } from 'oilpriceapi';
-
-const client = new OilPriceAPI({
-  apiKey: process.env.OIL_PRICE_API_KEY
-});
-
-export async function GET() {
-  try {
-    const prices = await client.getLatestPrices();
-    return Response.json(prices);
-  } catch (error) {
-    return Response.json(
-      { error: error.message },
-      { status: 500 }
-    );
-  }
-}
+const { commodities } = await client.getCommodities();
+console.log(`Found ${commodities.length} commodities`);
 ```
 
-### Price Monitoring Script
-
+**Error Handling:**
 ```typescript
-import { OilPriceAPI } from 'oilpriceapi';
-
-const client = new OilPriceAPI({ apiKey: process.env.OIL_PRICE_API_KEY });
-
-async function checkPrice() {
-  const wti = await client.getLatestPrices({ commodity: 'WTI_USD' });
-  const price = wti[0].value;
-
-  console.log(`Current WTI price: $${price}`);
-
-  if (price < 70) {
-    console.log('🚨 ALERT: WTI below $70!');
-    // Send notification, email, etc.
+try {
+  const prices = await client.getLatestPrices();
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    console.log('Rate limited, retry after:', error.retryAfter);
   }
 }
-
-// Check every 5 minutes
-setInterval(checkPrice, 5 * 60 * 1000);
-checkPrice(); // Run immediately
 ```
 
 ## API Reference
@@ -286,6 +252,27 @@ Get historical prices for a time period.
 - `options.endDate` (string, optional) - End date in ISO 8601 format (YYYY-MM-DD)
 
 **Returns:** `Promise<Price[]>`
+
+##### `getCommodities()`
+
+Get metadata for all supported commodities.
+
+**Returns:** `Promise<CommoditiesResponse>` - Object with `commodities` array
+
+##### `getCommodityCategories()`
+
+Get all commodity categories with their commodities.
+
+**Returns:** `Promise<CategoriesResponse>` - Object with category keys mapped to category objects
+
+##### `getCommodity(code)`
+
+Get metadata for a specific commodity by code.
+
+**Parameters:**
+- `code` (string, required) - Commodity code (e.g., "WTI_USD")
+
+**Returns:** `Promise<Commodity>` - Commodity metadata object
 
 ### Types
 
