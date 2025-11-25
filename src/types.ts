@@ -165,3 +165,84 @@ export interface HistoricalPricesOptions {
    */
   endDate?: string;
 }
+
+/**
+ * Represents commodity metadata
+ */
+export interface Commodity {
+  /**
+   * Unique commodity identifier
+   */
+  code: string;
+
+  /**
+   * Human-readable commodity name
+   */
+  name: string;
+
+  /**
+   * Base currency for pricing
+   */
+  currency: string;
+
+  /**
+   * Commodity category (e.g., "oil", "gas", "renewable")
+   */
+  category: string;
+
+  /**
+   * Detailed description
+   */
+  description?: string;
+
+  /**
+   * Unit of measurement (e.g., "barrel", "gallon")
+   */
+  unit: string;
+
+  /**
+   * Detailed unit description
+   */
+  unit_description?: string;
+
+  /**
+   * Storage multiplier for price values
+   */
+  multiplier?: number;
+
+  /**
+   * Price validation ranges
+   */
+  validation?: {
+    min: number;
+    max: number;
+  };
+
+  /**
+   * Threshold for significant price change alerts
+   */
+  price_change_threshold?: number;
+}
+
+/**
+ * Response from /v1/commodities endpoint
+ */
+export interface CommoditiesResponse {
+  commodities: Commodity[];
+}
+
+/**
+ * Category with its commodities
+ */
+export interface CommodityCategory {
+  name: string;
+  commodities: Commodity[];
+}
+
+/**
+ * Response from /v1/commodities/categories endpoint
+ * Returns object with category keys mapped to CommodityCategory objects
+ */
+export interface CategoriesResponse {
+  [categoryKey: string]: CommodityCategory;
+}

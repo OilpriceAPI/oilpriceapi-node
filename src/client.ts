@@ -4,6 +4,9 @@ import type {
   Price,
   LatestPricesOptions,
   HistoricalPricesOptions,
+  Commodity,
+  CommoditiesResponse,
+  CategoriesResponse,
 } from './types.js';
 import {
   OilPriceAPIError,
@@ -162,7 +165,7 @@ export class OilPriceAPI {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'oilpriceapi-node/0.2.0',
+              'User-Agent': 'oilpriceapi-node/0.3.0',
             },
             signal: controller.signal,
           });
@@ -366,5 +369,52 @@ export class OilPriceAPI {
     }
 
     return this.request<Price[]>('/v1/prices', params);
+  }
+
+  /**
+   * Get metadata for all supported commodities
+   *
+   * @returns Object containing array of commodities
+   *
+   * @example
+   * ```typescript
+   * const response = await client.getCommodities();
+   * console.log(response.commodities); // Array of commodity objects
+   * ```
+   */
+  async getCommodities(): Promise<CommoditiesResponse> {
+    return this.request<CommoditiesResponse>('/v1/commodities', {});
+  }
+
+  /**
+   * Get all commodity categories with their commodities
+   *
+   * @returns Object with category keys mapped to category objects
+   *
+   * @example
+   * ```typescript
+   * const categories = await client.getCommodityCategories();
+   * console.log(categories.oil.name); // "Oil"
+   * console.log(categories.oil.commodities.length); // 11
+   * ```
+   */
+  async getCommodityCategories(): Promise<CategoriesResponse> {
+    return this.request<CategoriesResponse>('/v1/commodities/categories', {});
+  }
+
+  /**
+   * Get metadata for a specific commodity by code
+   *
+   * @param code - Commodity code (e.g., "WTI_USD", "BRENT_CRUDE_USD")
+   * @returns Commodity metadata object
+   *
+   * @example
+   * ```typescript
+   * const commodity = await client.getCommodity('WTI_USD');
+   * console.log(commodity.name); // "WTI Crude Oil"
+   * ```
+   */
+  async getCommodity(code: string): Promise<Commodity> {
+    return this.request<Commodity>(`/v1/commodities/${code}`, {});
   }
 }

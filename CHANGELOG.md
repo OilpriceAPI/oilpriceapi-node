@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2024-11-25
+
+### Added
+- **Commodities Endpoint**: `getCommodities()` - Get metadata for all supported commodities
+- **Commodity Categories**: `getCommodityCategories()` - Get all commodity categories with their commodities
+- **Commodity Details**: `getCommodity(code)` - Get metadata for a specific commodity by code
+- New TypeScript interfaces: `Commodity`, `CommoditiesResponse`, `CommodityCategory`, `CategoriesResponse`
+
+### Supported Endpoints
+Now supports **5 endpoints** (up from 2):
+- `GET /v1/prices/latest` - Get latest commodity prices
+- `GET /v1/prices` - Get historical commodity prices
+- `GET /v1/commodities` - Get all commodities metadata
+- `GET /v1/commodities/categories` - Get commodity categories
+- `GET /v1/commodities/{code}` - Get specific commodity details
+
 ## [0.2.0] - 2024-11-24
 
 ### Added
@@ -44,5 +60,6 @@ New configuration options available:
 - `GET /v1/prices/latest` - Get latest commodity prices
 - `GET /v1/prices` - Get historical commodity prices
 
+[0.3.0]: https://github.com/OilpriceAPI/oilpriceapi-node/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/OilpriceAPI/oilpriceapi-node/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/OilpriceAPI/oilpriceapi-node/releases/tag/v0.1.0

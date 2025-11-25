@@ -14,6 +14,10 @@ export type {
   LatestPricesOptions,
   HistoricalPricesOptions,
   HistoricalPeriod,
+  Commodity,
+  CommoditiesResponse,
+  CommodityCategory,
+  CategoriesResponse,
 } from './types.js';
 export {
   OilPriceAPIError,
