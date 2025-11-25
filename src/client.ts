@@ -62,7 +62,7 @@ export class OilPriceAPI {
     this.retries = config.retries !== undefined ? config.retries : 3;
     this.retryDelay = config.retryDelay || 1000;
     this.retryStrategy = config.retryStrategy || 'exponential';
-    this.timeout = config.timeout || 30000;
+    this.timeout = config.timeout || 90000; // 90 seconds for slow historical queries
     this.debug = config.debug || false;
   }
 
@@ -165,7 +165,7 @@ export class OilPriceAPI {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'oilpriceapi-node/0.3.0',
+              'User-Agent': 'oilpriceapi-node/0.3.1',
             },
             signal: controller.signal,
           });

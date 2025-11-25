@@ -38,7 +38,7 @@ export interface OilPriceAPIConfig {
 
   /**
    * Request timeout in milliseconds
-   * @default 30000 (30 seconds)
+   * @default 90000 (90 seconds)
    */
   timeout?: number;
 

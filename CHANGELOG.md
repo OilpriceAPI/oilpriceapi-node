@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2024-11-25
+
+### Fixed
+- **Increased default timeout** from 30s to 90s to handle slow historical price queries
+- **Added "type": "module"** to package.json to eliminate module type warnings
+- Updated documentation to reflect 90-second default timeout
+
+### Changed
+- Default timeout: `30000ms` → `90000ms` (90 seconds)
+- User-Agent: `oilpriceapi-node/0.3.0` → `oilpriceapi-node/0.3.1`
+
 ## [0.3.0] - 2024-11-25
 
 ### Added
