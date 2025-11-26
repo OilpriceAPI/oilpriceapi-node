@@ -24,7 +24,7 @@ async function runQATests() {
     const prices = await client.getLatestPrices();
     if (prices && Array.isArray(prices) && prices.length > 0) {
       console.log(`✅ PASS - Got ${prices.length} prices`);
-      console.log(`   Sample: ${prices[0].name} = $${prices[0].value}`);
+      console.log(`   Sample: ${prices[0].code} = ${prices[0].formatted}`);
       passed++;
     } else {
       console.log('❌ FAIL - Invalid response');
@@ -41,7 +41,7 @@ async function runQATests() {
     console.log('Test 2: getLatestPrices({ commodity: "WTI_USD" })');
     const prices = await client.getLatestPrices({ commodity: 'WTI_USD' });
     if (prices && prices.length === 1 && prices[0].code === 'WTI_USD') {
-      console.log(`✅ PASS - WTI = $${prices[0].value}`);
+      console.log(`✅ PASS - WTI = ${prices[0].formatted}`);
       passed++;
     } else {
       console.log('❌ FAIL - Invalid response');

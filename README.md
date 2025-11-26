@@ -51,13 +51,12 @@ const prices = await client.getLatestPrices();
 // [
 //   {
 //     code: 'WTI_USD',
-//     name: 'WTI Crude Oil',
-//     value: 74.25,
+//     price: 74.25,
+//     formatted: '$74.25',
 //     currency: 'USD',
-//     unit: 'barrel',
-//     timestamp: '2024-11-24T12:00:00Z',
+//     type: 'spot_price',
 //     created_at: '2024-11-24T12:01:00Z',
-//     updated_at: '2024-11-24T12:01:00Z'
+//     source: 'oilprice.investing_com'
 //   },
 //   // ... more prices
 // ]
@@ -68,11 +67,11 @@ const prices = await client.getLatestPrices();
 ```typescript
 // Get only WTI crude oil price
 const wti = await client.getLatestPrices({ commodity: 'WTI_USD' });
-console.log(`WTI: $${wti[0].value} per barrel`);
+console.log(`WTI: ${wti[0].formatted} per barrel`);
 
 // Get only Brent crude price
 const brent = await client.getLatestPrices({ commodity: 'BRENT_CRUDE_USD' });
-console.log(`Brent: $${brent[0].value} per barrel`);
+console.log(`Brent: ${brent[0].formatted} per barrel`);
 ```
 
 ### Get Historical Prices (Past Week)

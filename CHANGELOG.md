@@ -5,16 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.1] - 2024-11-25
+## [0.3.1] - 2025-11-26
 
 ### Fixed
-- **Increased default timeout** from 30s to 90s to handle slow historical price queries
-- **Added "type": "module"** to package.json to eliminate module type warnings
-- Updated documentation to reflect 90-second default timeout
+- **Fixed QA test** to use correct API response fields (`price` instead of `value`, `formatted` instead of `code + name`)
+- **Updated README examples** to match actual API response structure
+- **Corrected blog post examples** for accuracy
+- Verified 100% test pass rate (7/7 tests passing)
 
-### Changed
-- Default timeout: `30000ms` → `90000ms` (90 seconds)
-- User-Agent: `oilpriceapi-node/0.3.0` → `oilpriceapi-node/0.3.1`
+### Documentation
+- All code examples now use correct fields: `price`, `formatted`, `code`, `created_at`
+- Removed references to non-existent `name`, `value`, and `unit` fields in latest prices response
+- Added clarification on timeout configuration for historical data queries (120s recommended)
+
+### Testing
+- Historical prices endpoint working correctly with 120s timeout
+- All 5 endpoints tested and verified against live API
 
 ## [0.3.0] - 2024-11-25
 
