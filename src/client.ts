@@ -16,6 +16,7 @@ import {
   ServerError,
   TimeoutError,
 } from './errors.js';
+import { DieselResource } from './resources/diesel.js';
 
 /**
  * Official Node.js client for Oil Price API
@@ -52,6 +53,11 @@ export class OilPriceAPI {
   private timeout: number;
   private debug: boolean;
 
+  /**
+   * Diesel prices resource (state averages + station-level pricing)
+   */
+  public readonly diesel: DieselResource;
+
   constructor(config: OilPriceAPIConfig) {
     if (!config.apiKey) {
       throw new OilPriceAPIError('API key is required');
@@ -64,6 +70,9 @@ export class OilPriceAPI {
     this.retryStrategy = config.retryStrategy || 'exponential';
     this.timeout = config.timeout || 90000; // 90 seconds for slow historical queries
     this.debug = config.debug || false;
+
+    // Initialize resources
+    this.diesel = new DieselResource(this);
   }
 
   /**
@@ -165,7 +174,10 @@ export class OilPriceAPI {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'oilpriceapi-node/0.3.1',
+              'User-Agent': 'oilpriceapi-node/0.4.0',
+              'X-SDK-Language': 'javascript',
+              'X-SDK-Version': '0.4.0',
+              'X-Client-Type': 'sdk',
             },
             signal: controller.signal,
           });

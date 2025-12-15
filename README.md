@@ -10,12 +10,13 @@ Official Node.js SDK for [Oil Price API](https://www.oilpriceapi.com) - Get real
 - ✅ **Simple** - Get started in 5 lines of code
 - 🔒 **Type-Safe** - Full TypeScript support with detailed type definitions
 - ⚡ **Fast** - Zero dependencies, uses native fetch (Node 18+)
-- 🎯 **Comprehensive** - Covers all API endpoints
+- 🎯 **Comprehensive** - Covers all API endpoints including diesel prices
 - 🚀 **Modern** - ES Modules, async/await, Promise-based
 - 🛡️ **Robust** - Custom error classes for better error handling
 - 🔄 **Resilient** - Automatic retries with exponential backoff
 - ⏱️ **Reliable** - Request timeouts and smart error handling
 - 🐛 **Debuggable** - Built-in debug logging mode
+- ⛽ **NEW** - Diesel prices (state averages + station-level pricing)
 
 ## Installation
 
@@ -96,6 +97,79 @@ const prices = await client.getHistoricalPrices({
 
 console.log(`Got ${prices.length} data points for 2024`);
 ```
+
+### Get Diesel Prices (New in v0.4.0)
+
+#### Get State Average Diesel Price
+
+```typescript
+// Get California diesel price
+const caPrice = await client.diesel.getPrice('CA');
+console.log(`California diesel: $${caPrice.price}/gallon`);
+console.log(`Source: ${caPrice.source}`);
+console.log(`Last updated: ${caPrice.updated_at}`);
+
+// Example output:
+// California diesel: $3.89/gallon
+// Source: EIA
+// Last updated: 2025-12-15T10:00:00Z
+```
+
+#### Get Nearby Diesel Stations
+
+```typescript
+// Find diesel stations near San Francisco
+const result = await client.diesel.getStations({
+  lat: 37.7749,   // San Francisco latitude
+  lng: -122.4194, // San Francisco longitude
+  radius: 8047    // 5 miles in meters (default if not specified)
+});
+
+console.log(`Regional average: $${result.regional_average.price}/gallon`);
+console.log(`Found ${result.stations.length} stations within ${result.search_area.radius_miles} miles`);
+
+// Print each station
+result.stations.forEach(station => {
+  console.log(`\n${station.name}`);
+  console.log(`  Address: ${station.address}`);
+  console.log(`  Price: ${station.formatted_price}`);
+  console.log(`  ${station.price_vs_average}`);
+});
+
+// Example output:
+// Regional average: $3.89/gallon
+// Found 12 stations within 5 miles
+//
+// Chevron Station
+//   Address: 123 Main St, San Francisco, CA
+//   Price: $3.75
+//   $0.14 cheaper than regional average
+//
+// Shell Gas
+//   Address: 456 Oak Ave, San Francisco, CA
+//   Price: $3.89
+//   Same as regional average
+```
+
+#### Find Cheapest Diesel Station
+
+```typescript
+const result = await client.diesel.getStations({
+  lat: 34.0522,   // Los Angeles
+  lng: -118.2437,
+  radius: 5000    // ~3 miles
+});
+
+// Find the cheapest station
+const cheapest = result.stations.reduce((min, station) =>
+  station.diesel_price < min.diesel_price ? station : min
+);
+
+console.log(`Cheapest diesel: ${cheapest.name} at ${cheapest.formatted_price}`);
+console.log(`Savings: ${Math.abs(cheapest.price_delta!).toFixed(2)} per gallon vs regional average`);
+```
+
+**Note:** Station-level diesel prices are available on paid tiers (Exploration and above). State averages are free.
 
 ### Advanced Configuration
 
@@ -202,6 +276,21 @@ const { commodities } = await client.getCommodities();
 console.log(`Found ${commodities.length} commodities`);
 ```
 
+**Diesel Prices:**
+```typescript
+// State average (free)
+const caPrice = await client.diesel.getPrice('CA');
+console.log(`CA diesel: $${caPrice.price}/gal`);
+
+// Nearby stations (paid tiers)
+const stations = await client.diesel.getStations({
+  lat: 37.7749,
+  lng: -122.4194,
+  radius: 8047  // 5 miles
+});
+console.log(`Found ${stations.stations.length} stations`);
+```
+
 **Error Handling:**
 ```typescript
 try {
@@ -273,6 +362,55 @@ Get metadata for a specific commodity by code.
 
 **Returns:** `Promise<Commodity>` - Commodity metadata object
 
+### `client.diesel`
+
+Resource for diesel price data (state averages and station-level pricing).
+
+##### `diesel.getPrice(state)`
+
+Get average diesel price for a US state from EIA data.
+
+**Parameters:**
+- `state` (string, required) - Two-letter US state code (e.g., "CA", "TX", "NY")
+
+**Returns:** `Promise<DieselPrice>`
+
+**Example:**
+```typescript
+const caPrice = await client.diesel.getPrice('CA');
+console.log(`California: $${caPrice.price}/gallon`);
+```
+
+##### `diesel.getStations(options)`
+
+Get nearby diesel stations with current pricing from Google Maps data.
+
+**Parameters:**
+- `options.lat` (number, required) - Latitude (-90 to 90)
+- `options.lng` (number, required) - Longitude (-180 to 180)
+- `options.radius` (number, optional) - Search radius in meters (default: 8047 = 5 miles, max: 50000)
+
+**Returns:** `Promise<DieselStationsResponse>`
+
+**Tier Requirements:** Available on paid tiers (Exploration and above)
+
+**Example:**
+```typescript
+const result = await client.diesel.getStations({
+  lat: 37.7749,
+  lng: -122.4194,
+  radius: 8047  // 5 miles
+});
+
+console.log(`Found ${result.stations.length} stations`);
+console.log(`Regional average: $${result.regional_average.price}/gallon`);
+
+const cheapest = result.stations.reduce((min, s) =>
+  s.diesel_price < min.diesel_price ? s : min
+);
+console.log(`Cheapest: ${cheapest.name} at ${cheapest.formatted_price}`);
+```
+
 ### Types
 
 #### `Price`
@@ -290,6 +428,74 @@ interface Price {
 }
 ```
 
+#### `DieselPrice`
+
+```typescript
+interface DieselPrice {
+  state: string;          // State code (e.g., "CA", "TX")
+  price: number;          // Average diesel price in USD per gallon
+  currency: string;       // Currency code (always "USD")
+  unit: string;           // Unit of measurement (always "gallon")
+  granularity: string;    // Level (e.g., "state", "national")
+  source: string;         // Data source (e.g., "EIA")
+  updated_at: string;     // ISO 8601 timestamp of last update
+  cached?: boolean;       // Whether served from cache
+}
+```
+
+#### `DieselStation`
+
+```typescript
+interface DieselStation {
+  name: string;           // Station name
+  address: string;        // Full street address
+  location: {
+    lat: number;          // Latitude
+    lng: number;          // Longitude
+  };
+  diesel_price: number;   // Price at this station (USD per gallon)
+  formatted_price: string;// Formatted price (e.g., "$3.89")
+  currency: string;       // Currency code (always "USD")
+  unit: string;           // Unit (always "gallon")
+  price_delta?: number;   // Difference from regional average
+  price_vs_average?: string; // Human-readable comparison
+  fuel_types?: string[];  // Available fuel types
+  last_updated?: string;  // ISO 8601 timestamp
+}
+```
+
+#### `DieselStationsResponse`
+
+```typescript
+interface DieselStationsResponse {
+  regional_average: {
+    price: number;        // Regional average price
+    currency: string;     // Currency code
+    unit: string;         // Unit
+    region: string;       // Region name
+    granularity: string;  // Granularity level
+    source: string;       // Data source
+  };
+  stations: DieselStation[]; // List of nearby stations
+  search_area: {
+    center: {
+      lat: number;        // Search center latitude
+      lng: number;        // Search center longitude
+    };
+    radius_meters: number;// Search radius in meters
+    radius_miles: number; // Search radius in miles
+  };
+  metadata: {
+    total_stations: number; // Number of stations found
+    source: string;        // Data source
+    cached: boolean;       // Whether served from cache
+    api_cost: number;      // Cost in dollars
+    timestamp: string;     // ISO 8601 timestamp
+    cache_age_hours?: number; // Cache age in hours
+  };
+}
+```
+
 ### Error Classes
 
 All errors extend `OilPriceAPIError`:
@@ -304,7 +510,7 @@ All errors extend `OilPriceAPIError`:
 The API provides prices for the following commodities:
 
 - **Crude Oil**: WTI, Brent Crude
-- **Refined Products**: Gasoline, Diesel, Heating Oil, Jet Fuel
+- **Refined Products**: Gasoline, Diesel (state averages + station-level), Heating Oil, Jet Fuel
 - **Natural Gas**: US Natural Gas, EU Natural Gas, UK Natural Gas
 - **And more...**
 
@@ -312,7 +518,7 @@ See the [full list of commodities](https://www.oilpriceapi.com/commodities) in t
 
 ## Pricing & Rate Limits
 
-- **Free Tier**: 1,000 requests/month
+- **Free Tier**: 100 requests (lifetime)
 - **Starter**: 50,000 requests/month - $49/mo
 - **Professional**: 100,000 requests/month - $99/mo
 - **Business**: 200,000 requests/month - $199/mo

@@ -19,6 +19,12 @@ export type {
   CommodityCategory,
   CategoriesResponse,
 } from './types.js';
+export type {
+  DieselPrice,
+  DieselStation,
+  DieselStationsResponse,
+  GetDieselStationsOptions,
+} from './resources/diesel.js';
 export {
   OilPriceAPIError,
   AuthenticationError,

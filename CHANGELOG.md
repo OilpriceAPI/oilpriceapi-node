@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-12-15
+
+### Added
+- **Diesel Prices Support**: New `client.diesel` resource for diesel price data
+- **State Average Diesel Prices**: `diesel.getPrice(state)` - Get EIA state-level diesel averages (free tier)
+- **Station-Level Diesel Pricing**: `diesel.getStations(options)` - Get nearby diesel stations with current prices from Google Maps (paid tiers)
+- New TypeScript interfaces: `DieselPrice`, `DieselStation`, `DieselStationsResponse`, `GetDieselStationsOptions`
+- Comprehensive input validation for coordinates, state codes, and radius
+- Detailed error handling for tier restrictions (403) and rate limits (429)
+
+### Documentation
+- Added diesel prices usage examples to README
+- Added API reference section for `client.diesel` resource
+- Added complete type definitions for all diesel-related interfaces
+- Updated Quick Examples section with diesel examples
+- Updated feature list to highlight diesel prices support
+
+### Testing
+- Added comprehensive test suite for diesel resource (15 test cases)
+- Tests cover input validation, error handling, and API responses
+- 100% coverage of diesel functionality
+
+### Supported Endpoints
+Now supports **7 endpoints** (up from 5):
+- `GET /v1/prices/latest` - Get latest commodity prices
+- `GET /v1/prices` - Get historical commodity prices
+- `GET /v1/commodities` - Get all commodities metadata
+- `GET /v1/commodities/categories` - Get commodity categories
+- `GET /v1/commodities/{code}` - Get specific commodity details
+- `GET /v1/diesel-prices` - Get state average diesel prices (NEW)
+- `POST /v1/diesel-prices/stations` - Get nearby diesel stations (NEW)
+
+### Breaking Changes
+None - This is a backwards-compatible feature addition.
+
 ## [0.3.1] - 2025-11-26
 
 ### Fixed
