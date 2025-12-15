@@ -25,6 +25,13 @@ export type {
   DieselStationsResponse,
   GetDieselStationsOptions,
 } from './resources/diesel.js';
+export type {
+  PriceAlert,
+  CreateAlertParams,
+  UpdateAlertParams,
+  AlertOperator,
+  WebhookTestResponse,
+} from './resources/alerts.js';
 export {
   OilPriceAPIError,
   AuthenticationError,

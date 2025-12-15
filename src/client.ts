@@ -17,6 +17,7 @@ import {
   TimeoutError,
 } from './errors.js';
 import { DieselResource } from './resources/diesel.js';
+import { AlertsResource } from './resources/alerts.js';
 
 /**
  * Official Node.js client for Oil Price API
@@ -58,6 +59,11 @@ export class OilPriceAPI {
    */
   public readonly diesel: DieselResource;
 
+  /**
+   * Price alerts resource (create, manage, and monitor alerts)
+   */
+  public readonly alerts: AlertsResource;
+
   constructor(config: OilPriceAPIConfig) {
     if (!config.apiKey) {
       throw new OilPriceAPIError('API key is required');
@@ -73,6 +79,7 @@ export class OilPriceAPI {
 
     // Initialize resources
     this.diesel = new DieselResource(this);
+    this.alerts = new AlertsResource(this);
   }
 
   /**
@@ -174,9 +181,9 @@ export class OilPriceAPI {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'oilpriceapi-node/0.4.0',
+              'User-Agent': 'oilpriceapi-node/0.5.0',
               'X-SDK-Language': 'javascript',
-              'X-SDK-Version': '0.4.0',
+              'X-SDK-Version': '0.5.0',
               'X-Client-Type': 'sdk',
             },
             signal: controller.signal,

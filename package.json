@@ -1,6 +1,6 @@
 {
   "name": "oilpriceapi",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Official Node.js SDK for Oil Price API - Real-time and historical oil & commodity prices",
   "type": "module",
   "main": "./dist/index.js",
@@ -35,7 +35,10 @@
     "diesel",
     "natural-gas",
     "energy",
-    "trading"
+    "trading",
+    "alerts",
+    "webhook",
+    "notifications"
   ],
   "author": "Oil Price API <karl@oilpriceapi.com>",
   "license": "MIT",

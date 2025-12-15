@@ -10,13 +10,14 @@ Official Node.js SDK for [Oil Price API](https://www.oilpriceapi.com) - Get real
 - ✅ **Simple** - Get started in 5 lines of code
 - 🔒 **Type-Safe** - Full TypeScript support with detailed type definitions
 - ⚡ **Fast** - Zero dependencies, uses native fetch (Node 18+)
-- 🎯 **Comprehensive** - Covers all API endpoints including diesel prices
+- 🎯 **Comprehensive** - Covers all API endpoints including diesel prices & alerts
 - 🚀 **Modern** - ES Modules, async/await, Promise-based
 - 🛡️ **Robust** - Custom error classes for better error handling
 - 🔄 **Resilient** - Automatic retries with exponential backoff
 - ⏱️ **Reliable** - Request timeouts and smart error handling
 - 🐛 **Debuggable** - Built-in debug logging mode
-- ⛽ **NEW** - Diesel prices (state averages + station-level pricing)
+- ⛽ **NEW v0.4.0** - Diesel prices (state averages + station-level pricing)
+- 🔔 **NEW v0.5.0** - Price alerts with webhook notifications
 
 ## Installation
 
@@ -171,6 +172,103 @@ console.log(`Savings: ${Math.abs(cheapest.price_delta!).toFixed(2)} per gallon v
 
 **Note:** Station-level diesel prices are available on paid tiers (Exploration and above). State averages are free.
 
+### Price Alerts (New in v0.5.0)
+
+#### Create a Price Alert
+
+```typescript
+// Create an alert when Brent crude exceeds $85
+const alert = await client.alerts.create({
+  name: 'Brent High Alert',
+  commodity_code: 'BRENT_CRUDE_USD',
+  condition_operator: 'greater_than',
+  condition_value: 85.00,
+  webhook_url: 'https://your-app.com/webhooks/price-alert',
+  enabled: true,
+  cooldown_minutes: 60  // Wait 60 minutes between triggers
+});
+
+console.log(`Alert created: ${alert.name} (ID: ${alert.id})`);
+```
+
+#### List All Alerts
+
+```typescript
+const alerts = await client.alerts.list();
+
+alerts.forEach(alert => {
+  console.log(`${alert.name}: ${alert.commodity_code} ${alert.condition_operator} ${alert.condition_value}`);
+  console.log(`  Status: ${alert.enabled ? 'Active' : 'Disabled'}`);
+  console.log(`  Triggers: ${alert.trigger_count}`);
+  console.log(`  Last triggered: ${alert.last_triggered_at || 'Never'}`);
+});
+```
+
+#### Update an Alert
+
+```typescript
+// Disable an alert
+await client.alerts.update(alertId, { enabled: false });
+
+// Change threshold and cooldown
+await client.alerts.update(alertId, {
+  condition_value: 90.00,
+  cooldown_minutes: 120
+});
+
+// Update webhook URL
+await client.alerts.update(alertId, {
+  webhook_url: 'https://new-app.com/webhook'
+});
+```
+
+#### Delete an Alert
+
+```typescript
+await client.alerts.delete(alertId);
+console.log('Alert deleted successfully');
+```
+
+#### Test Webhook Endpoint
+
+```typescript
+const result = await client.alerts.testWebhook('https://your-app.com/webhook');
+
+if (result.success) {
+  console.log(`Webhook OK (${result.status_code}) - ${result.response_time_ms}ms`);
+} else {
+  console.error(`Webhook failed: ${result.error}`);
+}
+```
+
+**Alert Operators:**
+- `greater_than` - Trigger when price exceeds threshold
+- `less_than` - Trigger when price falls below threshold
+- `equals` - Trigger when price matches threshold exactly
+- `greater_than_or_equal` - Trigger when price meets or exceeds threshold
+- `less_than_or_equal` - Trigger when price is at or below threshold
+
+**Webhook Payload Example:**
+When an alert triggers, a POST request is sent to your webhook URL with:
+```json
+{
+  "event": "price_alert.triggered",
+  "alert_id": "550e8400-e29b-41d4-a716-446655440000",
+  "alert_name": "Brent High Alert",
+  "commodity_code": "BRENT_CRUDE_USD",
+  "condition_operator": "greater_than",
+  "condition_value": 85.00,
+  "current_price": 86.50,
+  "triggered_at": "2025-12-15T14:30:00Z"
+}
+```
+
+**Limits:**
+- Maximum 100 alerts per user
+- Cooldown period: 0-1440 minutes (24 hours)
+- Condition value: Must be between $0.01 and $1,000,000
+- Webhook URL: Must use HTTPS protocol
+
 ### Advanced Configuration
 
 ```typescript
@@ -289,6 +387,24 @@ const stations = await client.diesel.getStations({
   radius: 8047  // 5 miles
 });
 console.log(`Found ${stations.stations.length} stations`);
+```
+
+**Price Alerts:**
+```typescript
+// Create an alert
+const alert = await client.alerts.create({
+  name: 'Brent High Alert',
+  commodity_code: 'BRENT_CRUDE_USD',
+  condition_operator: 'greater_than',
+  condition_value: 85.00,
+  webhook_url: 'https://your-app.com/webhook'
+});
+
+// List all alerts
+const alerts = await client.alerts.list();
+
+// Update an alert
+await client.alerts.update(alert.id, { enabled: false });
 ```
 
 **Error Handling:**

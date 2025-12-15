@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-15
+
+### Added
+- **Price Alerts**: New `client.alerts` resource for automated price monitoring with webhook notifications
+- **Alert Management**: Full CRUD operations for price alerts
+  - `alerts.list()` - Get all configured alerts
+  - `alerts.get(id)` - Get specific alert by ID
+  - `alerts.create(params)` - Create new price alert
+  - `alerts.update(id, params)` - Update existing alert
+  - `alerts.delete(id)` - Delete an alert
+  - `alerts.testWebhook(url)` - Test webhook endpoint
+- **Alert Operators**: 5 comparison operators for flexible conditions
+  - `greater_than` - Trigger when price exceeds threshold
+  - `less_than` - Trigger when price falls below threshold
+  - `equals` - Trigger when price matches threshold exactly
+  - `greater_than_or_equal` - Trigger at or above threshold
+  - `less_than_or_equal` - Trigger at or below threshold
+- **Webhook Integration**: HTTPS webhook notifications when alerts trigger
+- **Cooldown Periods**: Configurable cooldown (0-1440 minutes) to prevent alert spam
+- New TypeScript interfaces: `PriceAlert`, `CreateAlertParams`, `UpdateAlertParams`, `AlertOperator`, `WebhookTestResponse`
+- Comprehensive input validation for all alert parameters
+- Detailed error handling with clear validation messages
+
+### Documentation
+- Added complete Price Alerts section to README with examples
+- Added CRUD operation examples for alerts
+- Added webhook payload documentation
+- Updated Quick Examples section with alerts example
+- Updated feature list to highlight price alerts
+- Added API reference for alert limits and constraints
+
+### Testing
+- Added comprehensive test suite for alerts resource (24 test cases)
+- Tests cover all CRUD operations and validation scenarios
+- 100% coverage of alerts functionality
+- Tests for all 5 alert operators
+- Validation tests for name, commodity code, operator, value, webhook URL, and cooldown
+
+### Supported Endpoints
+Now supports **12 endpoints** (up from 7):
+- `GET /v1/prices/latest` - Get latest commodity prices
+- `GET /v1/prices` - Get historical commodity prices
+- `GET /v1/commodities` - Get all commodities metadata
+- `GET /v1/commodities/categories` - Get commodity categories
+- `GET /v1/commodities/{code}` - Get specific commodity details
+- `GET /v1/diesel-prices` - Get state average diesel prices
+- `POST /v1/diesel-prices/stations` - Get nearby diesel stations
+- `GET /v1/alerts` - List all price alerts (NEW)
+- `GET /v1/alerts/{id}` - Get specific alert (NEW)
+- `POST /v1/alerts` - Create price alert (NEW)
+- `PATCH /v1/alerts/{id}` - Update alert (NEW)
+- `DELETE /v1/alerts/{id}` - Delete alert (NEW)
+
+### Breaking Changes
+None - This is a backwards-compatible feature addition.
+
 ## [0.4.0] - 2025-12-15
 
 ### Added
