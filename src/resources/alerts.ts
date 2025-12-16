@@ -180,11 +180,12 @@ export class AlertsResource {
    * ```
    */
   async list(): Promise<PriceAlert[]> {
-    const response = await this.client['request']<{ alerts: PriceAlert[] }>(
+    const response = await this.client['request']<PriceAlert[] | { alerts: PriceAlert[] }>(
       '/v1/alerts',
       {}
     );
-    return response.alerts;
+    // API returns array directly, but handle both formats for compatibility
+    return Array.isArray(response) ? response : (response.alerts || []);
   }
 
   /**
@@ -210,11 +211,12 @@ export class AlertsResource {
       throw new Error('Alert ID must be a non-empty string');
     }
 
-    const response = await this.client['request']<{ alert: PriceAlert }>(
+    const response = await this.client['request']<PriceAlert | { alert: PriceAlert }>(
       `/v1/alerts/${id}`,
       {}
     );
-    return response.alert;
+    // API returns object directly, but handle both formats for compatibility
+    return 'alert' in response ? response.alert : response;
   }
 
   /**
@@ -332,8 +334,9 @@ export class AlertsResource {
       throw new Error(`Failed to create alert: ${response.status} ${errorText}`);
     }
 
-    const data = await response.json() as { alert: PriceAlert };
-    return data.alert;
+    const data = await response.json() as PriceAlert | { alert: PriceAlert };
+    // API returns object directly, but handle both formats for compatibility
+    return 'alert' in data ? data.alert : data;
   }
 
   /**
@@ -432,8 +435,9 @@ export class AlertsResource {
       throw new Error(`Failed to update alert: ${response.status} ${errorText}`);
     }
 
-    const data = await response.json() as { alert: PriceAlert };
-    return data.alert;
+    const data = await response.json() as PriceAlert | { alert: PriceAlert };
+    // API returns object directly, but handle both formats for compatibility
+    return 'alert' in data ? data.alert : data;
   }
 
   /**
@@ -475,61 +479,28 @@ export class AlertsResource {
   /**
    * Test a webhook endpoint
    *
-   * Sends a test POST request to the webhook URL to verify it's
-   * working correctly. Returns response time and status code.
+   * **NOTE:** This feature is not yet available in the API. The `/v1/alerts/test_webhook`
+   * endpoint has not been implemented yet. This method will throw an error until the
+   * backend endpoint is added.
    *
-   * **Test Payload Format:**
-   * ```json
-   * {
-   *   "event": "price_alert.test",
-   *   "alert_id": "test",
-   *   "timestamp": "2025-12-15T12:00:00Z"
-   * }
+   * To test if an alert would trigger, use the backend's `/v1/alerts/test` endpoint instead:
+   * ```bash
+   * curl -X POST "https://api.oilpriceapi.com/v1/alerts/:id/test" \
+   *   -H "Authorization: Bearer YOUR_API_KEY"
    * ```
    *
    * @param webhookUrl - The HTTPS webhook URL to test
    * @returns Test results including response time and status
    *
-   * @throws {ValidationError} If webhook URL is invalid
-   * @throws {OilPriceAPIError} If API request fails
+   * @throws {Error} Feature not yet available
    *
-   * @example
-   * ```typescript
-   * const result = await client.alerts.testWebhook('https://myapp.com/webhook');
-   *
-   * if (result.success) {
-   *   console.log(`Webhook OK (${result.status_code}) - ${result.response_time_ms}ms`);
-   * } else {
-   *   console.error(`Webhook failed: ${result.error}`);
-   * }
-   * ```
+   * @deprecated This feature is not yet available in the API
    */
   async testWebhook(webhookUrl: string): Promise<WebhookTestResponse> {
-    if (!webhookUrl || typeof webhookUrl !== 'string') {
-      throw new Error('Webhook URL is required and must be a string');
-    }
-    if (!webhookUrl.startsWith('https://')) {
-      throw new Error('Webhook URL must use HTTPS protocol');
-    }
-
-    const url = `${this.client['baseUrl']}/v1/alerts/test_webhook`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.client['apiKey']}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        webhook_url: webhookUrl
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to test webhook: ${response.status} ${errorText}`);
-    }
-
-    const data = await response.json() as WebhookTestResponse;
-    return data;
+    throw new Error(
+      'Webhook testing is not yet available. The /v1/alerts/test_webhook endpoint ' +
+      'has not been implemented in the API. To test if an alert would trigger, ' +
+      'use the /v1/alerts/:id/test endpoint instead.'
+    );
   }
 }

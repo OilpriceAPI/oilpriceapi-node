@@ -450,52 +450,17 @@ describe('AlertsResource', () => {
   });
 
   describe('testWebhook()', () => {
-    it('should test webhook successfully', async () => {
+    it('should throw error - feature not yet available', async () => {
       const webhookUrl = 'https://example.com/webhook';
-      const mockResponse = {
-        success: true,
-        status_code: 200,
-        response_time_ms: 145,
-        response_body: '{"received":true}'
-      };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse
-      });
-
-      const result = await client.alerts.testWebhook(webhookUrl);
-
-      expect(result.success).toBe(true);
-      expect(result.status_code).toBe(200);
-      expect(result.response_time_ms).toBe(145);
+      await expect(client.alerts.testWebhook(webhookUrl)).rejects.toThrow('Webhook testing is not yet available');
+      await expect(client.alerts.testWebhook(webhookUrl)).rejects.toThrow('/v1/alerts/test_webhook endpoint has not been implemented');
     });
 
-    it('should return failed test result', async () => {
-      const webhookUrl = 'https://example.com/webhook';
-      const mockResponse = {
-        success: false,
-        status_code: 500,
-        response_time_ms: 5000,
-        error: 'Internal Server Error'
-      };
-
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse
-      });
-
-      const result = await client.alerts.testWebhook(webhookUrl);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Internal Server Error');
-    });
-
-    it('should validate webhook URL', async () => {
-      await expect(client.alerts.testWebhook('')).rejects.toThrow('Webhook URL is required and must be a string');
-      await expect(client.alerts.testWebhook(null as any)).rejects.toThrow('Webhook URL is required and must be a string');
-      await expect(client.alerts.testWebhook('http://insecure.com')).rejects.toThrow('Webhook URL must use HTTPS protocol');
-      await expect(client.alerts.testWebhook('not-a-url')).rejects.toThrow('Webhook URL must use HTTPS protocol');
+    it('should throw error for any webhook URL', async () => {
+      // Even with valid URL, should throw not implemented error
+      await expect(client.alerts.testWebhook('https://example.com')).rejects.toThrow('not yet available');
+      await expect(client.alerts.testWebhook('https://test.com/hook')).rejects.toThrow('not yet available');
     });
   });
 });
