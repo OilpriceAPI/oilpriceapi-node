@@ -181,10 +181,9 @@ export class OilPriceAPI {
             headers: {
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'oilpriceapi-node/0.5.0',
-              'X-SDK-Language': 'javascript',
-              'X-SDK-Version': '0.5.0',
-              'X-Client-Type': 'sdk',
+              'User-Agent': 'oilpriceapi-node/0.5.1 node/' + process.version,
+              'X-Api-Client': 'oilpriceapi-node',
+              'X-Client-Version': '0.5.1',
             },
             signal: controller.signal,
           });
