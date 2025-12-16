@@ -625,12 +625,15 @@ All errors extend `OilPriceAPIError`:
 
 The API provides prices for the following commodities:
 
-- **Crude Oil**: WTI, Brent Crude
-- **Refined Products**: Gasoline, Diesel (state averages + station-level), Heating Oil, Jet Fuel
-- **Natural Gas**: US Natural Gas, EU Natural Gas, UK Natural Gas
-- **And more...**
+- **Crude Oil**: `WTI_USD`, `BRENT_CRUDE_USD`
+- **Refined Products**: `GASOLINE_USD`, `DIESEL_USD` (state averages + station-level), `HEATING_OIL_USD`, `JET_FUEL_USD`
+- **Natural Gas**: `NATURAL_GAS_USD`, `DUTCH_TTF_EUR`, `NATURAL_GAS_GBP`
+- **Coal** (8 Endpoints):
+  - **US Spot**: `CAPP_COAL_USD`, `PRB_COAL_USD`, `ILLINOIS_COAL_USD`
+  - **International**: `NEWCASTLE_COAL_USD`, `COKING_COAL_USD`, `CME_COAL_USD`
+  - **Historical**: `NYMEX_APPALACHIAN_USD`, `NYMEX_WESTERN_RAIL_USD`
 
-See the [full list of commodities](https://www.oilpriceapi.com/commodities) in the documentation.
+See the [full list of 79 commodities](https://www.oilpriceapi.com/commodities) in the documentation.
 
 ## Pricing & Rate Limits
 
