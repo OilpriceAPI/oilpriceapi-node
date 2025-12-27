@@ -47,6 +47,20 @@ export interface OilPriceAPIConfig {
    * @default false
    */
   debug?: boolean;
+
+  /**
+   * Your application's URL (optional, for telemetry)
+   * Helps us understand how the API is being used and may unlock
+   * a 10% bonus to your request limit.
+   * @example "https://myapp.com"
+   */
+  appUrl?: string;
+
+  /**
+   * Your application's name (optional, for telemetry)
+   * @example "MyFuelPriceTracker"
+   */
+  appName?: string;
 }
 
 /**
@@ -140,6 +154,15 @@ export interface LatestPricesOptions {
 export type HistoricalPeriod = 'past_week' | 'past_month' | 'past_year';
 
 /**
+ * Aggregation interval for historical data
+ *
+ * PERFORMANCE TIP: Use 'daily' or 'weekly' for year-long queries to reduce
+ * response times from 74s to <1s. The 'raw' option returns individual price
+ * points which can be 600k+ records for a year of BRENT data.
+ */
+export type AggregationInterval = 'raw' | 'hourly' | 'daily' | 'weekly' | 'monthly';
+
+/**
  * Options for fetching historical prices
  */
 export interface HistoricalPricesOptions {
@@ -164,6 +187,31 @@ export interface HistoricalPricesOptions {
    * Example: "2024-12-31"
    */
   endDate?: string;
+
+  /**
+   * Aggregation interval for the data
+   *
+   * PERFORMANCE: For year-long queries, use 'daily' (365 points) or 'weekly' (52 points)
+   * instead of 'raw' (600k+ points for BRENT) to dramatically improve response times.
+   *
+   * @default API default (raw for short periods, may be aggregated for long periods)
+   */
+  interval?: AggregationInterval;
+
+  /**
+   * Number of results per page
+   *
+   * @default 100 (API default)
+   * @max 1000
+   */
+  perPage?: number;
+
+  /**
+   * Page number for pagination (1-indexed)
+   *
+   * @default 1
+   */
+  page?: number;
 }
 
 /**

@@ -7,6 +7,7 @@
  */
 
 export { OilPriceAPI } from './client.js';
+export { SDK_VERSION, SDK_NAME } from './version.js';
 export type {
   OilPriceAPIConfig,
   RetryStrategy,
@@ -14,6 +15,7 @@ export type {
   LatestPricesOptions,
   HistoricalPricesOptions,
   HistoricalPeriod,
+  AggregationInterval,
   Commodity,
   CommoditiesResponse,
   CommodityCategory,

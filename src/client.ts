@@ -18,6 +18,7 @@ import {
 } from './errors.js';
 import { DieselResource } from './resources/diesel.js';
 import { AlertsResource } from './resources/alerts.js';
+import { SDK_VERSION, SDK_NAME, buildUserAgent } from './version.js';
 
 /**
  * Official Node.js client for Oil Price API
@@ -53,6 +54,8 @@ export class OilPriceAPI {
   private retryStrategy: RetryStrategy;
   private timeout: number;
   private debug: boolean;
+  private appUrl?: string;
+  private appName?: string;
 
   /**
    * Diesel prices resource (state averages + station-level pricing)
@@ -76,6 +79,8 @@ export class OilPriceAPI {
     this.retryStrategy = config.retryStrategy || 'exponential';
     this.timeout = config.timeout || 90000; // 90 seconds for slow historical queries
     this.debug = config.debug || false;
+    this.appUrl = config.appUrl;
+    this.appName = config.appName;
 
     // Initialize resources
     this.diesel = new DieselResource(this);
@@ -176,15 +181,26 @@ export class OilPriceAPI {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         try {
+          // Build headers with optional telemetry
+          const headers: Record<string, string> = {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'User-Agent': buildUserAgent(),
+            'X-SDK-Name': SDK_NAME,
+            'X-SDK-Version': SDK_VERSION,
+          };
+
+          // Add optional telemetry headers (10% bonus for appUrl!)
+          if (this.appUrl) {
+            headers['X-App-URL'] = this.appUrl;
+          }
+          if (this.appName) {
+            headers['X-App-Name'] = this.appName;
+          }
+
           const response = await fetch(url.toString(), {
             method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${this.apiKey}`,
-              'Content-Type': 'application/json',
-              'User-Agent': 'oilpriceapi-node/0.5.1 node/' + process.version,
-              'X-Api-Client': 'oilpriceapi-node',
-              'X-Client-Version': '0.5.1',
-            },
+            headers,
             signal: controller.signal,
           });
 
@@ -386,7 +402,31 @@ export class OilPriceAPI {
       params.end_date = options.endDate;
     }
 
-    return this.request<Price[]>('/v1/prices', params);
+    // PERFORMANCE FIX (December 24, 2025):
+    // Pass interval parameter to enable aggregated queries
+    // This reduces response times from 74s to <1s for year-long queries
+    // by returning 365 daily points instead of 600k+ raw points
+    if (options?.interval) {
+      params.interval = options.interval;
+    }
+
+    // Pagination parameters
+    if (options?.perPage !== undefined) {
+      params.per_page = options.perPage.toString();
+    }
+
+    if (options?.page !== undefined) {
+      params.page = options.page.toString();
+    }
+
+    // CRITICAL FIX (December 17, 2025):
+    // Use /v1/prices/past_year endpoint instead of /v1/prices
+    // The /v1/prices endpoint does NOT correctly handle start_date/end_date parameters
+    // This was the same bug that affected the Python SDK (fixed in v1.4.4)
+    // Issue: SDK was returning wrong dates for historical queries
+    // Root Cause: Backend has_scope :by_period not working on /v1/prices
+    // Solution: Use /v1/prices/past_year which uses direct WHERE clauses
+    return this.request<Price[]>('/v1/prices/past_year', params);
   }
 
   /**
