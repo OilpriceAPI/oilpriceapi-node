@@ -7,7 +7,9 @@ import type {
   Commodity,
   CommoditiesResponse,
   CategoriesResponse,
-} from './types.js';
+  DataConnectorPrice,
+  DataConnectorOptions,
+} from "./types.js";
 import {
   OilPriceAPIError,
   AuthenticationError,
@@ -15,10 +17,10 @@ import {
   NotFoundError,
   ServerError,
   TimeoutError,
-} from './errors.js';
-import { DieselResource } from './resources/diesel.js';
-import { AlertsResource } from './resources/alerts.js';
-import { SDK_VERSION, SDK_NAME, buildUserAgent } from './version.js';
+} from "./errors.js";
+import { DieselResource } from "./resources/diesel.js";
+import { AlertsResource } from "./resources/alerts.js";
+import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
 
 /**
  * Official Node.js client for Oil Price API
@@ -69,14 +71,14 @@ export class OilPriceAPI {
 
   constructor(config: OilPriceAPIConfig) {
     if (!config.apiKey) {
-      throw new OilPriceAPIError('API key is required');
+      throw new OilPriceAPIError("API key is required");
     }
 
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl || 'https://api.oilpriceapi.com';
+    this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
     this.retries = config.retries !== undefined ? config.retries : 3;
     this.retryDelay = config.retryDelay || 1000;
-    this.retryStrategy = config.retryStrategy || 'exponential';
+    this.retryStrategy = config.retryStrategy || "exponential";
     this.timeout = config.timeout || 90000; // 90 seconds for slow historical queries
     this.debug = config.debug || false;
     this.appUrl = config.appUrl;
@@ -93,7 +95,7 @@ export class OilPriceAPI {
   private log(message: string, data?: any): void {
     if (this.debug) {
       const timestamp = new Date().toISOString();
-      console.log(`[OilPriceAPI ${timestamp}] ${message}`, data || '');
+      console.log(`[OilPriceAPI ${timestamp}] ${message}`, data || "");
     }
   }
 
@@ -102,11 +104,11 @@ export class OilPriceAPI {
    */
   private calculateRetryDelay(attempt: number): number {
     switch (this.retryStrategy) {
-      case 'exponential':
+      case "exponential":
         return this.retryDelay * Math.pow(2, attempt);
-      case 'linear':
+      case "linear":
         return this.retryDelay * (attempt + 1);
-      case 'fixed':
+      case "fixed":
       default:
         return this.retryDelay;
     }
@@ -116,7 +118,7 @@ export class OilPriceAPI {
    * Sleep for specified milliseconds
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -124,7 +126,7 @@ export class OilPriceAPI {
    */
   private isRetryable(error: any): boolean {
     // Retry on network errors
-    if (error instanceof TypeError && error.message.includes('fetch')) {
+    if (error instanceof TypeError && error.message.includes("fetch")) {
       return true;
     }
 
@@ -152,7 +154,7 @@ export class OilPriceAPI {
    */
   private async request<T>(
     endpoint: string,
-    params?: Record<string, string>
+    params?: Record<string, string>,
   ): Promise<T> {
     // Build URL with query parameters
     const url = new URL(`${this.baseUrl}${endpoint}`);
@@ -183,23 +185,23 @@ export class OilPriceAPI {
         try {
           // Build headers with optional telemetry
           const headers: Record<string, string> = {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-            'User-Agent': buildUserAgent(),
-            'X-SDK-Name': SDK_NAME,
-            'X-SDK-Version': SDK_VERSION,
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+            "User-Agent": buildUserAgent(),
+            "X-SDK-Name": SDK_NAME,
+            "X-SDK-Version": SDK_VERSION,
           };
 
           // Add optional telemetry headers (10% bonus for appUrl!)
           if (this.appUrl) {
-            headers['X-App-URL'] = this.appUrl;
+            headers["X-App-URL"] = this.appUrl;
           }
           if (this.appName) {
-            headers['X-App-Name'] = this.appName;
+            headers["X-App-Name"] = this.appName;
           }
 
           const response = await fetch(url.toString(), {
-            method: 'GET',
+            method: "GET",
             headers,
             signal: controller.signal,
           });
@@ -216,7 +218,8 @@ export class OilPriceAPI {
             // Try to parse JSON error response
             try {
               const errorJson = JSON.parse(errorBody);
-              errorMessage = errorJson.message || errorJson.error || errorMessage;
+              errorMessage =
+                errorJson.message || errorJson.error || errorMessage;
             } catch {
               // Use default error message if response isn't JSON
             }
@@ -230,15 +233,17 @@ export class OilPriceAPI {
               case 404:
                 throw new NotFoundError(errorMessage);
               case 429:
-                const retryAfter = response.headers.get('Retry-After');
+                const retryAfter = response.headers.get("Retry-After");
                 const rateLimitError = new RateLimitError(
                   errorMessage,
-                  retryAfter ? parseInt(retryAfter, 10) : undefined
+                  retryAfter ? parseInt(retryAfter, 10) : undefined,
                 );
 
                 // If rate limited and we have retries left, wait and retry
                 if (attempt < this.retries && rateLimitError.retryAfter) {
-                  this.log(`Rate limited. Waiting ${rateLimitError.retryAfter}s`);
+                  this.log(
+                    `Rate limited. Waiting ${rateLimitError.retryAfter}s`,
+                  );
                   await this.sleep(rateLimitError.retryAfter * 1000);
                   continue;
                 }
@@ -253,7 +258,7 @@ export class OilPriceAPI {
                 throw new OilPriceAPIError(
                   errorMessage,
                   response.status,
-                  'HTTP_ERROR'
+                  "HTTP_ERROR",
                 );
             }
           }
@@ -261,43 +266,41 @@ export class OilPriceAPI {
           // Parse successful response
           const responseData: any = await response.json();
 
-          this.log('Response data received', {
+          this.log("Response data received", {
             status: responseData.status,
-            hasData: !!responseData.data
+            hasData: !!responseData.data,
           });
 
           // Handle different response structures
           // Latest endpoint: { status, data: { price, ... } }
           // Historical endpoint: { status, data: { prices: [...] } }
-          if (responseData.status === 'success' && responseData.data) {
+          if (responseData.status === "success" && responseData.data) {
             if (responseData.data.prices) {
               // Historical endpoint - return prices array
               this.log(`Returning ${responseData.data.prices.length} prices`);
               return responseData.data.prices as T;
             } else if (responseData.data.price !== undefined) {
               // Latest endpoint - wrap single price in array
-              this.log('Returning single price (wrapped in array)');
+              this.log("Returning single price (wrapped in array)");
               return [responseData.data] as T;
             }
           }
 
           // Fallback - return data as-is
-          this.log('Returning data as-is');
+          this.log("Returning data as-is");
           return responseData.data as T;
-
         } catch (error) {
           // Handle abort (timeout)
-          if (error instanceof Error && error.name === 'AbortError') {
-            throw new TimeoutError('Request timeout', this.timeout);
+          if (error instanceof Error && error.name === "AbortError") {
+            throw new TimeoutError("Request timeout", this.timeout);
           }
           throw error;
         }
-
       } catch (error) {
         lastError = error as Error;
         this.log(`Request failed: ${lastError.message}`, {
           attempt,
-          retryable: this.isRetryable(lastError)
+          retryable: this.isRetryable(lastError),
         });
 
         // Re-throw our custom errors if not retryable
@@ -316,7 +319,7 @@ export class OilPriceAPI {
             throw new OilPriceAPIError(
               `Request failed after ${this.retries + 1} attempts: ${error.message}`,
               undefined,
-              'NETWORK_ERROR'
+              "NETWORK_ERROR",
             );
           }
 
@@ -331,7 +334,7 @@ export class OilPriceAPI {
     }
 
     // This should never be reached, but TypeScript wants it
-    throw lastError || new OilPriceAPIError('Unknown error occurred');
+    throw lastError || new OilPriceAPIError("Unknown error occurred");
   }
 
   /**
@@ -356,7 +359,7 @@ export class OilPriceAPI {
       params.by_code = options.commodity;
     }
 
-    return this.request<Price[]>('/v1/prices/latest', params);
+    return this.request<Price[]>("/v1/prices/latest", params);
   }
 
   /**
@@ -382,7 +385,7 @@ export class OilPriceAPI {
    * ```
    */
   async getHistoricalPrices(
-    options?: HistoricalPricesOptions
+    options?: HistoricalPricesOptions,
   ): Promise<Price[]> {
     const params: Record<string, string> = {};
 
@@ -426,7 +429,41 @@ export class OilPriceAPI {
     // Issue: SDK was returning wrong dates for historical queries
     // Root Cause: Backend has_scope :by_period not working on /v1/prices
     // Solution: Use /v1/prices/past_year which uses direct WHERE clauses
-    return this.request<Price[]>('/v1/prices/past_year', params);
+    return this.request<Price[]>("/v1/prices/past_year", params);
+  }
+
+  /**
+   * Get prices from your connected data sources (BYOS)
+   *
+   * Requires Data Connector feature enabled on your organization.
+   *
+   * @example
+   * ```typescript
+   * // Get all connected prices
+   * const prices = await client.getDataConnectorPrices();
+   *
+   * // Filter by fuel type
+   * const vlsfo = await client.getDataConnectorPrices({ fuelType: 'VLSFO' });
+   *
+   * // Filter by port
+   * const singapore = await client.getDataConnectorPrices({ port: 'SINGAPORE' });
+   * ```
+   */
+  async getDataConnectorPrices(
+    options: DataConnectorOptions = {},
+  ): Promise<DataConnectorPrice[]> {
+    const params: Record<string, string> = {};
+
+    if (options.fuelType) params.fuel_type = options.fuelType;
+    if (options.port) params.port = options.port;
+    if (options.region) params.region = options.region;
+    if (options.since) params.since = options.since;
+
+    const response = await this.request<{
+      prices: DataConnectorPrice[];
+    }>("/v1/prices/data-connector", params);
+
+    return response.prices;
   }
 
   /**
@@ -441,7 +478,7 @@ export class OilPriceAPI {
    * ```
    */
   async getCommodities(): Promise<CommoditiesResponse> {
-    return this.request<CommoditiesResponse>('/v1/commodities', {});
+    return this.request<CommoditiesResponse>("/v1/commodities", {});
   }
 
   /**
@@ -457,7 +494,7 @@ export class OilPriceAPI {
    * ```
    */
   async getCommodityCategories(): Promise<CategoriesResponse> {
-    return this.request<CategoriesResponse>('/v1/commodities/categories', {});
+    return this.request<CategoriesResponse>("/v1/commodities/categories", {});
   }
 
   /**

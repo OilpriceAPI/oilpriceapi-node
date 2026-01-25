@@ -6,8 +6,8 @@
  * @packageDocumentation
  */
 
-export { OilPriceAPI } from './client.js';
-export { SDK_VERSION, SDK_NAME } from './version.js';
+export { OilPriceAPI } from "./client.js";
+export { SDK_VERSION, SDK_NAME } from "./version.js";
 export type {
   OilPriceAPIConfig,
   RetryStrategy,
@@ -20,20 +20,22 @@ export type {
   CommoditiesResponse,
   CommodityCategory,
   CategoriesResponse,
-} from './types.js';
+  DataConnectorPrice,
+  DataConnectorOptions,
+} from "./types.js";
 export type {
   DieselPrice,
   DieselStation,
   DieselStationsResponse,
   GetDieselStationsOptions,
-} from './resources/diesel.js';
+} from "./resources/diesel.js";
 export type {
   PriceAlert,
   CreateAlertParams,
   UpdateAlertParams,
   AlertOperator,
   WebhookTestResponse,
-} from './resources/alerts.js';
+} from "./resources/alerts.js";
 export {
   OilPriceAPIError,
   AuthenticationError,
@@ -41,4 +43,4 @@ export {
   NotFoundError,
   ServerError,
   TimeoutError,
-} from './errors.js';
+} from "./errors.js";

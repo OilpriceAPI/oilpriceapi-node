@@ -1,7 +1,7 @@
 /**
  * Retry backoff strategy
  */
-export type RetryStrategy = 'exponential' | 'linear' | 'fixed';
+export type RetryStrategy = "exponential" | "linear" | "fixed";
 
 /**
  * Configuration options for OilPriceAPI client
@@ -106,22 +106,22 @@ export interface Price {
    * Price changes over different time periods (24h, 7d, 30d, 90d)
    */
   changes?: {
-    '24h'?: {
+    "24h"?: {
       amount: number;
       percent: number;
       previous_price: number;
     };
-    '7d'?: {
+    "7d"?: {
       amount: number;
       percent: number;
       previous_price: number;
     };
-    '30d'?: {
+    "30d"?: {
       amount: number;
       percent: number;
       previous_price: number;
     };
-    '90d'?: {
+    "90d"?: {
       amount: number;
       percent: number;
       previous_price: number;
@@ -151,7 +151,7 @@ export interface LatestPricesOptions {
 /**
  * Time period options for historical data
  */
-export type HistoricalPeriod = 'past_week' | 'past_month' | 'past_year';
+export type HistoricalPeriod = "past_week" | "past_month" | "past_year";
 
 /**
  * Aggregation interval for historical data
@@ -160,7 +160,12 @@ export type HistoricalPeriod = 'past_week' | 'past_month' | 'past_year';
  * response times from 74s to <1s. The 'raw' option returns individual price
  * points which can be 600k+ records for a year of BRENT data.
  */
-export type AggregationInterval = 'raw' | 'hourly' | 'daily' | 'weekly' | 'monthly';
+export type AggregationInterval =
+  | "raw"
+  | "hourly"
+  | "daily"
+  | "weekly"
+  | "monthly";
 
 /**
  * Options for fetching historical prices
@@ -293,4 +298,74 @@ export interface CommodityCategory {
  */
 export interface CategoriesResponse {
   [categoryKey: string]: CommodityCategory;
+}
+
+/**
+ * BYOS (Bring Your Own Subscription) price from Data Connector
+ */
+export interface DataConnectorPrice {
+  /**
+   * Price value in specified currency
+   */
+  price: number;
+
+  /**
+   * Currency code (e.g., "USD")
+   */
+  currency: string;
+
+  /**
+   * Fuel type (e.g., "VLSFO", "MGO", "IFO380")
+   */
+  fuel_type: string;
+
+  /**
+   * Port name (e.g., "SINGAPORE", "ROTTERDAM")
+   */
+  port: string;
+
+  /**
+   * Geographic region (AMERICAS, EMEA, APAC)
+   */
+  region: string | null;
+
+  /**
+   * Unit of measurement (typically "MT" for metric ton)
+   */
+  unit: string;
+
+  /**
+   * Data source provider (e.g., "shipandbunker")
+   */
+  source: string;
+
+  /**
+   * ISO 8601 timestamp when price was recorded
+   */
+  timestamp: string;
+}
+
+/**
+ * Options for fetching Data Connector prices
+ */
+export interface DataConnectorOptions {
+  /**
+   * Filter by fuel type (VLSFO, MGO, IFO380)
+   */
+  fuelType?: string;
+
+  /**
+   * Filter by port name
+   */
+  port?: string;
+
+  /**
+   * Filter by region (AMERICAS, EMEA, APAC)
+   */
+  region?: string;
+
+  /**
+   * ISO 8601 timestamp to fetch prices after
+   */
+  since?: string;
 }
