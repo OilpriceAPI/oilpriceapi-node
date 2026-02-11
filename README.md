@@ -18,6 +18,7 @@ Official Node.js SDK for [Oil Price API](https://www.oilpriceapi.com) - Get real
 - 🐛 **Debuggable** - Built-in debug logging mode
 - ⛽ **NEW v0.4.0** - Diesel prices (state averages + station-level pricing)
 - 🔔 **NEW v0.5.0** - Price alerts with webhook notifications
+- 📊 **NEW v0.7.0** - Futures, storage, rig counts, analytics, drilling intelligence, webhooks, and energy intelligence
 
 ## Installation
 
@@ -28,13 +29,13 @@ npm install oilpriceapi
 ## Quick Start
 
 ```typescript
-import { OilPriceAPI } from 'oilpriceapi';
+import { OilPriceAPI } from "oilpriceapi";
 
 // Initialize the client
 const client = new OilPriceAPI({
-  apiKey: 'your_api_key_here',  // Get your free key at https://www.oilpriceapi.com
-  retries: 3,                    // Automatic retries (default: 3)
-  timeout: 30000                 // Request timeout in ms (default: 30000)
+  apiKey: "your_api_key_here", // Get your free key at https://www.oilpriceapi.com
+  retries: 3, // Automatic retries (default: 3)
+  timeout: 30000, // Request timeout in ms (default: 30000)
 });
 
 // Get latest prices
@@ -68,11 +69,11 @@ const prices = await client.getLatestPrices();
 
 ```typescript
 // Get only WTI crude oil price
-const wti = await client.getLatestPrices({ commodity: 'WTI_USD' });
+const wti = await client.getLatestPrices({ commodity: "WTI_USD" });
 console.log(`WTI: ${wti[0].formatted} per barrel`);
 
 // Get only Brent crude price
-const brent = await client.getLatestPrices({ commodity: 'BRENT_CRUDE_USD' });
+const brent = await client.getLatestPrices({ commodity: "BRENT_CRUDE_USD" });
 console.log(`Brent: ${brent[0].formatted} per barrel`);
 ```
 
@@ -80,8 +81,8 @@ console.log(`Brent: ${brent[0].formatted} per barrel`);
 
 ```typescript
 const weekPrices = await client.getHistoricalPrices({
-  period: 'past_week',
-  commodity: 'WTI_USD'
+  period: "past_week",
+  commodity: "WTI_USD",
 });
 
 console.log(`Got ${weekPrices.length} data points from the past week`);
@@ -91,9 +92,9 @@ console.log(`Got ${weekPrices.length} data points from the past week`);
 
 ```typescript
 const prices = await client.getHistoricalPrices({
-  startDate: '2024-01-01',
-  endDate: '2024-12-31',
-  commodity: 'BRENT_CRUDE_USD'
+  startDate: "2024-01-01",
+  endDate: "2024-12-31",
+  commodity: "BRENT_CRUDE_USD",
 });
 
 console.log(`Got ${prices.length} data points for 2024`);
@@ -106,9 +107,9 @@ For year-long queries, use the `interval` parameter to dramatically improve resp
 ```typescript
 // FAST: Daily aggregation returns 365 data points (~1 second)
 const yearlyPrices = await client.getHistoricalPrices({
-  period: 'past_year',
-  commodity: 'BRENT_CRUDE_USD',
-  interval: 'daily'  // Options: 'raw', 'hourly', 'daily', 'weekly', 'monthly'
+  period: "past_year",
+  commodity: "BRENT_CRUDE_USD",
+  interval: "daily", // Options: 'raw', 'hourly', 'daily', 'weekly', 'monthly'
 });
 
 console.log(`Got ${yearlyPrices.length} daily averages`);
@@ -124,7 +125,7 @@ console.log(`Got ${yearlyPrices.length} daily averages`);
 
 ```typescript
 // Get California diesel price
-const caPrice = await client.diesel.getPrice('CA');
+const caPrice = await client.diesel.getPrice("CA");
 console.log(`California diesel: $${caPrice.price}/gallon`);
 console.log(`Source: ${caPrice.source}`);
 console.log(`Last updated: ${caPrice.updated_at}`);
@@ -140,16 +141,18 @@ console.log(`Last updated: ${caPrice.updated_at}`);
 ```typescript
 // Find diesel stations near San Francisco
 const result = await client.diesel.getStations({
-  lat: 37.7749,   // San Francisco latitude
+  lat: 37.7749, // San Francisco latitude
   lng: -122.4194, // San Francisco longitude
-  radius: 8047    // 5 miles in meters (default if not specified)
+  radius: 8047, // 5 miles in meters (default if not specified)
 });
 
 console.log(`Regional average: $${result.regional_average.price}/gallon`);
-console.log(`Found ${result.stations.length} stations within ${result.search_area.radius_miles} miles`);
+console.log(
+  `Found ${result.stations.length} stations within ${result.search_area.radius_miles} miles`,
+);
 
 // Print each station
-result.stations.forEach(station => {
+result.stations.forEach((station) => {
   console.log(`\n${station.name}`);
   console.log(`  Address: ${station.address}`);
   console.log(`  Price: ${station.formatted_price}`);
@@ -175,18 +178,20 @@ result.stations.forEach(station => {
 
 ```typescript
 const result = await client.diesel.getStations({
-  lat: 34.0522,   // Los Angeles
+  lat: 34.0522, // Los Angeles
   lng: -118.2437,
-  radius: 5000    // ~3 miles
+  radius: 5000, // ~3 miles
 });
 
 // Find the cheapest station
 const cheapest = result.stations.reduce((min, station) =>
-  station.diesel_price < min.diesel_price ? station : min
+  station.diesel_price < min.diesel_price ? station : min,
 );
 
 console.log(`Cheapest diesel: ${cheapest.name} at ${cheapest.formatted_price}`);
-console.log(`Savings: ${Math.abs(cheapest.price_delta!).toFixed(2)} per gallon vs regional average`);
+console.log(
+  `Savings: ${Math.abs(cheapest.price_delta!).toFixed(2)} per gallon vs regional average`,
+);
 ```
 
 **Note:** Station-level diesel prices are available on paid tiers (Exploration and above). State averages are free.
@@ -198,13 +203,13 @@ console.log(`Savings: ${Math.abs(cheapest.price_delta!).toFixed(2)} per gallon v
 ```typescript
 // Create an alert when Brent crude exceeds $85
 const alert = await client.alerts.create({
-  name: 'Brent High Alert',
-  commodity_code: 'BRENT_CRUDE_USD',
-  condition_operator: 'greater_than',
-  condition_value: 85.00,
-  webhook_url: 'https://your-app.com/webhooks/price-alert',
+  name: "Brent High Alert",
+  commodity_code: "BRENT_CRUDE_USD",
+  condition_operator: "greater_than",
+  condition_value: 85.0,
+  webhook_url: "https://your-app.com/webhooks/price-alert",
   enabled: true,
-  cooldown_minutes: 60  // Wait 60 minutes between triggers
+  cooldown_minutes: 60, // Wait 60 minutes between triggers
 });
 
 console.log(`Alert created: ${alert.name} (ID: ${alert.id})`);
@@ -215,11 +220,13 @@ console.log(`Alert created: ${alert.name} (ID: ${alert.id})`);
 ```typescript
 const alerts = await client.alerts.list();
 
-alerts.forEach(alert => {
-  console.log(`${alert.name}: ${alert.commodity_code} ${alert.condition_operator} ${alert.condition_value}`);
-  console.log(`  Status: ${alert.enabled ? 'Active' : 'Disabled'}`);
+alerts.forEach((alert) => {
+  console.log(
+    `${alert.name}: ${alert.commodity_code} ${alert.condition_operator} ${alert.condition_value}`,
+  );
+  console.log(`  Status: ${alert.enabled ? "Active" : "Disabled"}`);
   console.log(`  Triggers: ${alert.trigger_count}`);
-  console.log(`  Last triggered: ${alert.last_triggered_at || 'Never'}`);
+  console.log(`  Last triggered: ${alert.last_triggered_at || "Never"}`);
 });
 ```
 
@@ -231,13 +238,13 @@ await client.alerts.update(alertId, { enabled: false });
 
 // Change threshold and cooldown
 await client.alerts.update(alertId, {
-  condition_value: 90.00,
-  cooldown_minutes: 120
+  condition_value: 90.0,
+  cooldown_minutes: 120,
 });
 
 // Update webhook URL
 await client.alerts.update(alertId, {
-  webhook_url: 'https://new-app.com/webhook'
+  webhook_url: "https://new-app.com/webhook",
 });
 ```
 
@@ -245,22 +252,25 @@ await client.alerts.update(alertId, {
 
 ```typescript
 await client.alerts.delete(alertId);
-console.log('Alert deleted successfully');
+console.log("Alert deleted successfully");
 ```
 
 #### Test Webhook Endpoint
 
 ```typescript
-const result = await client.alerts.testWebhook('https://your-app.com/webhook');
+const result = await client.alerts.testWebhook("https://your-app.com/webhook");
 
 if (result.success) {
-  console.log(`Webhook OK (${result.status_code}) - ${result.response_time_ms}ms`);
+  console.log(
+    `Webhook OK (${result.status_code}) - ${result.response_time_ms}ms`,
+  );
 } else {
   console.error(`Webhook failed: ${result.error}`);
 }
 ```
 
 **Alert Operators:**
+
 - `greater_than` - Trigger when price exceeds threshold
 - `less_than` - Trigger when price falls below threshold
 - `equals` - Trigger when price matches threshold exactly
@@ -269,6 +279,7 @@ if (result.success) {
 
 **Webhook Payload Example:**
 When an alert triggers, a POST request is sent to your webhook URL with:
+
 ```json
 {
   "event": "price_alert.triggered",
@@ -276,36 +287,247 @@ When an alert triggers, a POST request is sent to your webhook URL with:
   "alert_name": "Brent High Alert",
   "commodity_code": "BRENT_CRUDE_USD",
   "condition_operator": "greater_than",
-  "condition_value": 85.00,
-  "current_price": 86.50,
+  "condition_value": 85.0,
+  "current_price": 86.5,
   "triggered_at": "2025-12-15T14:30:00Z"
 }
 ```
 
 **Limits:**
+
 - Maximum 100 alerts per user
 - Cooldown period: 0-1440 minutes (24 hours)
 - Condition value: Must be between $0.01 and $1,000,000
 - Webhook URL: Must use HTTPS protocol
 
+### Commodities Metadata (New in v0.7.0)
+
+```typescript
+// List all available commodities
+const { commodities } = await client.commodities.list();
+console.log(`${commodities.length} commodities available`);
+
+// Get specific commodity details
+const wti = await client.commodities.get("WTI_USD");
+console.log(`${wti.name}: ${wti.description}`);
+console.log(`Unit: ${wti.unit}, Currency: ${wti.currency}`);
+
+// Get commodities by category
+const categories = await client.commodities.categories();
+console.log(`Oil category: ${categories.oil.commodities.length} commodities`);
+```
+
+### Futures Contracts (New in v0.7.0)
+
+```typescript
+// Get latest futures price
+const wti = await client.futures.latest("CL.1");
+console.log(`WTI Front Month: $${wti.price}`);
+
+// Get OHLC data
+const ohlc = await client.futures.ohlc("CL.1", "2024-01-15");
+console.log(`High: $${ohlc.high}, Low: $${ohlc.low}`);
+
+// Get futures curve
+const curve = await client.futures.curve("CL");
+curve.curve.forEach((point) => {
+  console.log(`${point.months_out} months: $${point.price}`);
+});
+```
+
+### Storage Levels (New in v0.7.0)
+
+```typescript
+// Get total US crude storage
+const storage = await client.storage.all();
+console.log(`US inventory: ${storage.level} ${storage.unit}`);
+
+// Get Cushing hub levels
+const cushing = await client.storage.cushing();
+console.log(`Cushing: ${cushing.level} ${cushing.unit}`);
+
+// Get Strategic Petroleum Reserve
+const spr = await client.storage.spr();
+console.log(`SPR: ${spr.level} ${spr.unit}`);
+```
+
+### Rig Counts (New in v0.7.0)
+
+```typescript
+// Get latest Baker Hughes rig count
+const rigCounts = await client.rigCounts.latest();
+console.log(`Total rigs: ${rigCounts.total}`);
+console.log(`Oil: ${rigCounts.oil}, Gas: ${rigCounts.gas}`);
+
+// Get summary with changes
+const summary = await client.rigCounts.summary();
+console.log(`Week-over-week: ${summary.week_change}`);
+console.log(`Year-over-year: ${summary.year_change}`);
+```
+
+### Analytics (New in v0.7.0)
+
+```typescript
+// Get performance metrics
+const perf = await client.analytics.performance({
+  commodity: "WTI_USD",
+  days: 30,
+});
+console.log(`30-day return: ${perf.return_percent}%`);
+console.log(`Volatility: ${perf.volatility}`);
+
+// Analyze correlation between commodities
+const corr = await client.analytics.correlation(
+  "WTI_USD",
+  "BRENT_CRUDE_USD",
+  90,
+);
+console.log(`Correlation: ${corr.correlation} (${corr.strength})`);
+```
+
+### Drilling Intelligence (New in v0.7.0)
+
+```typescript
+// Get latest drilling activity
+const drilling = await client.drilling.latest();
+console.log(`Active rigs: ${drilling.total_rigs}`);
+console.log(`Frac spreads: ${drilling.total_frac_spreads}`);
+
+// Get basin-specific data
+const permian = await client.drilling.basin("Permian");
+console.log(`Permian rigs: ${permian.active_rigs}`);
+console.log(`DUC wells: ${permian.duc_wells}`);
+```
+
+### Energy Intelligence (New in v0.7.0)
+
+Access comprehensive energy market intelligence from EIA, Baker Hughes, and FracFocus.
+
+```typescript
+// Rig counts
+const rigCounts = await client.ei.rigCounts.latest();
+console.log(`Total rigs: ${rigCounts.total_rigs}`);
+
+// Oil inventories
+const inventories = await client.ei.oilInventories.latest();
+console.log(`Crude stocks: ${inventories.level} ${inventories.unit}`);
+
+// OPEC production
+const opec = await client.ei.opecProduction.total();
+console.log(`OPEC production: ${opec.total_production_bpd} bpd`);
+
+// Well timeline
+const timeline = await client.ei.wellTimeline("42-123-12345");
+timeline.events.forEach((e) => {
+  console.log(`${e.date}: ${e.event_type}`);
+});
+```
+
+### Webhooks (New in v0.7.0)
+
+```typescript
+// Create a webhook
+const webhook = await client.webhooks.create({
+  name: "Price Updates",
+  url: "https://myapp.com/webhooks/prices",
+  events: ["price.updated", "alert.triggered"],
+  enabled: true,
+});
+
+// Test the webhook
+const test = await client.webhooks.test(webhook.id);
+console.log(`Test ${test.success ? "passed" : "failed"}`);
+
+// List all webhooks
+const webhooks = await client.webhooks.list();
+webhooks.forEach((wh) => {
+  console.log(`${wh.name}: ${wh.successful_deliveries} successful`);
+});
+```
+
+### Bunker Fuels (New in v0.7.0)
+
+```typescript
+// Get bunker fuel prices at all ports
+const bunkerPrices = await client.bunkerFuels.all();
+console.log(`${bunkerPrices.length} port prices available`);
+
+// Get prices at specific port
+const singapore = await client.bunkerFuels.port("SGSIN");
+console.log(`Singapore VLSFO: $${singapore.prices.VLSFO}/MT`);
+
+// Compare prices across ports
+const comparison = await client.bunkerFuels.compare("VLSFO");
+comparison.ports.forEach((p) => {
+  console.log(`${p.port_name}: $${p.price}/MT (rank ${p.rank})`);
+});
+```
+
+### Forecasts (New in v0.7.0)
+
+```typescript
+// Get monthly forecasts
+const forecasts = await client.forecasts.monthly();
+forecasts.forEach((f) => {
+  console.log(`${f.period}: $${f.forecast_price} (${f.source})`);
+});
+
+// Check forecast accuracy
+const accuracy = await client.forecasts.accuracy();
+console.log(`EIA MAPE: ${accuracy.mape}%`);
+
+// Get specific forecast
+const wtiQ2 = await client.forecasts.get({
+  commodity: "WTI_USD",
+  period: "2024-Q2",
+});
+console.log(`WTI Q2 forecast: $${wtiQ2.forecast_price}`);
+```
+
+### Data Sources (New in v0.7.0)
+
+Manage custom data source integrations for Bring Your Own Source (BYOS).
+
+```typescript
+// Create a data source
+const source = await client.dataSources.create({
+  name: "Internal Pricing Database",
+  type: "database",
+  config: { host: "db.example.com", port: 5432 },
+  sync_frequency_minutes: 60,
+});
+
+// Test the connection
+const test = await client.dataSources.test(source.id);
+console.log(`Connection ${test.success ? "OK" : "failed"}`);
+
+// View sync logs
+const logs = await client.dataSources.logs(source.id);
+logs.forEach((log) => {
+  console.log(
+    `${log.timestamp}: ${log.status} - ${log.records_synced} records`,
+  );
+});
+```
+
 ### Advanced Configuration
 
 ```typescript
-import { OilPriceAPI } from 'oilpriceapi';
+import { OilPriceAPI } from "oilpriceapi";
 
 const client = new OilPriceAPI({
-  apiKey: 'your_key',
+  apiKey: "your_key",
 
   // Retry configuration
-  retries: 3,                    // Max retry attempts (default: 3)
-  retryDelay: 1000,              // Initial delay in ms (default: 1000)
-  retryStrategy: 'exponential',  // 'exponential', 'linear', or 'fixed'
+  retries: 3, // Max retry attempts (default: 3)
+  retryDelay: 1000, // Initial delay in ms (default: 1000)
+  retryStrategy: "exponential", // 'exponential', 'linear', or 'fixed'
 
   // Timeout configuration
-  timeout: 30000,                // Request timeout in ms (default: 30000)
+  timeout: 30000, // Request timeout in ms (default: 30000)
 
   // Debug mode
-  debug: true                    // Enable debug logging (default: false)
+  debug: true, // Enable debug logging (default: false)
 });
 ```
 
@@ -318,26 +540,30 @@ import {
   RateLimitError,
   NotFoundError,
   TimeoutError,
-  ServerError
-} from 'oilpriceapi';
+  ServerError,
+} from "oilpriceapi";
 
-const client = new OilPriceAPI({ apiKey: 'your_key' });
+const client = new OilPriceAPI({ apiKey: "your_key" });
 
 try {
   const prices = await client.getLatestPrices();
 } catch (error) {
   if (error instanceof AuthenticationError) {
-    console.error('Invalid API key:', error.message);
+    console.error("Invalid API key:", error.message);
   } else if (error instanceof RateLimitError) {
-    console.error('Rate limit exceeded. Retry after:', error.retryAfter, 'seconds');
+    console.error(
+      "Rate limit exceeded. Retry after:",
+      error.retryAfter,
+      "seconds",
+    );
   } else if (error instanceof TimeoutError) {
-    console.error('Request timed out:', error.message);
+    console.error("Request timed out:", error.message);
   } else if (error instanceof ServerError) {
-    console.error('Server error:', error.statusCode, error.message);
+    console.error("Server error:", error.statusCode, error.message);
   } else if (error instanceof NotFoundError) {
-    console.error('Commodity not found:', error.message);
+    console.error("Commodity not found:", error.message);
   } else {
-    console.error('Unknown error:', error);
+    console.error("Unknown error:", error);
   }
 }
 ```
@@ -348,8 +574,8 @@ Enable debug logging to see detailed request/response information:
 
 ```typescript
 const client = new OilPriceAPI({
-  apiKey: 'your_key',
-  debug: true
+  apiKey: "your_key",
+  debug: true,
 });
 
 // This will log all requests, responses, retries, and errors
@@ -374,49 +600,54 @@ See the [`examples/`](./examples) directory for complete, runnable code examples
 ### Quick Examples
 
 **Get Latest Price:**
+
 ```typescript
-const prices = await client.getLatestPrices({ commodity: 'WTI_USD' });
+const prices = await client.getLatestPrices({ commodity: "WTI_USD" });
 console.log(prices[0].formatted); // "$74.25"
 ```
 
 **Historical Data:**
+
 ```typescript
 const history = await client.getHistoricalPrices({
-  commodity: 'BRENT_CRUDE_USD',
-  period: 'past_week'
+  commodity: "BRENT_CRUDE_USD",
+  period: "past_week",
 });
 ```
 
 **Commodity Metadata:**
+
 ```typescript
 const { commodities } = await client.getCommodities();
 console.log(`Found ${commodities.length} commodities`);
 ```
 
 **Diesel Prices:**
+
 ```typescript
 // State average (free)
-const caPrice = await client.diesel.getPrice('CA');
+const caPrice = await client.diesel.getPrice("CA");
 console.log(`CA diesel: $${caPrice.price}/gal`);
 
 // Nearby stations (paid tiers)
 const stations = await client.diesel.getStations({
   lat: 37.7749,
   lng: -122.4194,
-  radius: 8047  // 5 miles
+  radius: 8047, // 5 miles
 });
 console.log(`Found ${stations.stations.length} stations`);
 ```
 
 **Price Alerts:**
+
 ```typescript
 // Create an alert
 const alert = await client.alerts.create({
-  name: 'Brent High Alert',
-  commodity_code: 'BRENT_CRUDE_USD',
-  condition_operator: 'greater_than',
-  condition_value: 85.00,
-  webhook_url: 'https://your-app.com/webhook'
+  name: "Brent High Alert",
+  commodity_code: "BRENT_CRUDE_USD",
+  condition_operator: "greater_than",
+  condition_value: 85.0,
+  webhook_url: "https://your-app.com/webhook",
 });
 
 // List all alerts
@@ -426,13 +657,37 @@ const alerts = await client.alerts.list();
 await client.alerts.update(alert.id, { enabled: false });
 ```
 
+**Futures & Storage:**
+
+```typescript
+// Get WTI futures price
+const wti = await client.futures.latest("CL.1");
+console.log(`WTI: $${wti.price}`);
+
+// Get Cushing storage
+const cushing = await client.storage.cushing();
+console.log(`Cushing: ${cushing.level} ${cushing.unit}`);
+```
+
+**Analytics:**
+
+```typescript
+// Get performance metrics
+const perf = await client.analytics.performance({
+  commodity: "WTI_USD",
+  days: 30,
+});
+console.log(`30-day return: ${perf.return_percent}%`);
+```
+
 **Error Handling:**
+
 ```typescript
 try {
   const prices = await client.getLatestPrices();
 } catch (error) {
   if (error instanceof RateLimitError) {
-    console.log('Rate limited, retry after:', error.retryAfter);
+    console.log("Rate limited, retry after:", error.retryAfter);
   }
 }
 ```
@@ -450,6 +705,7 @@ new OilPriceAPI(config: OilPriceAPIConfig)
 ```
 
 **Parameters:**
+
 - `config.apiKey` (string, required) - Your API key from https://www.oilpriceapi.com
 - `config.baseUrl` (string, optional) - Custom API base URL (for testing)
 
@@ -460,6 +716,7 @@ new OilPriceAPI(config: OilPriceAPIConfig)
 Get the latest prices for all commodities or a specific commodity.
 
 **Parameters:**
+
 - `options.commodity` (string, optional) - Filter by commodity code (e.g., "WTI_USD")
 
 **Returns:** `Promise<Price[]>`
@@ -469,6 +726,7 @@ Get the latest prices for all commodities or a specific commodity.
 Get historical prices for a time period.
 
 **Parameters:**
+
 - `options.period` (string, optional) - One of: "past_week", "past_month", "past_year"
 - `options.commodity` (string, optional) - Filter by commodity code
 - `options.startDate` (string, optional) - Start date in ISO 8601 format (YYYY-MM-DD)
@@ -496,6 +754,7 @@ Get all commodity categories with their commodities.
 Get metadata for a specific commodity by code.
 
 **Parameters:**
+
 - `code` (string, required) - Commodity code (e.g., "WTI_USD")
 
 **Returns:** `Promise<Commodity>` - Commodity metadata object
@@ -509,13 +768,15 @@ Resource for diesel price data (state averages and station-level pricing).
 Get average diesel price for a US state from EIA data.
 
 **Parameters:**
+
 - `state` (string, required) - Two-letter US state code (e.g., "CA", "TX", "NY")
 
 **Returns:** `Promise<DieselPrice>`
 
 **Example:**
+
 ```typescript
-const caPrice = await client.diesel.getPrice('CA');
+const caPrice = await client.diesel.getPrice("CA");
 console.log(`California: $${caPrice.price}/gallon`);
 ```
 
@@ -524,6 +785,7 @@ console.log(`California: $${caPrice.price}/gallon`);
 Get nearby diesel stations with current pricing from Google Maps data.
 
 **Parameters:**
+
 - `options.lat` (number, required) - Latitude (-90 to 90)
 - `options.lng` (number, required) - Longitude (-180 to 180)
 - `options.radius` (number, optional) - Search radius in meters (default: 8047 = 5 miles, max: 50000)
@@ -533,18 +795,19 @@ Get nearby diesel stations with current pricing from Google Maps data.
 **Tier Requirements:** Available on paid tiers (Exploration and above)
 
 **Example:**
+
 ```typescript
 const result = await client.diesel.getStations({
   lat: 37.7749,
   lng: -122.4194,
-  radius: 8047  // 5 miles
+  radius: 8047, // 5 miles
 });
 
 console.log(`Found ${result.stations.length} stations`);
 console.log(`Regional average: $${result.regional_average.price}/gallon`);
 
 const cheapest = result.stations.reduce((min, s) =>
-  s.diesel_price < min.diesel_price ? s : min
+  s.diesel_price < min.diesel_price ? s : min,
 );
 console.log(`Cheapest: ${cheapest.name} at ${cheapest.formatted_price}`);
 ```
@@ -555,14 +818,14 @@ console.log(`Cheapest: ${cheapest.name} at ${cheapest.formatted_price}`);
 
 ```typescript
 interface Price {
-  code: string;          // Commodity code (e.g., "WTI_USD")
-  name: string;          // Human-readable name
-  value: number;         // Price value
-  currency: string;      // Currency code (e.g., "USD")
-  unit: string;          // Unit of measurement (e.g., "barrel")
-  timestamp: string;     // ISO 8601 timestamp
-  created_at: string;    // ISO 8601 timestamp
-  updated_at: string;    // ISO 8601 timestamp
+  code: string; // Commodity code (e.g., "WTI_USD")
+  name: string; // Human-readable name
+  value: number; // Price value
+  currency: string; // Currency code (e.g., "USD")
+  unit: string; // Unit of measurement (e.g., "barrel")
+  timestamp: string; // ISO 8601 timestamp
+  created_at: string; // ISO 8601 timestamp
+  updated_at: string; // ISO 8601 timestamp
 }
 ```
 
@@ -570,14 +833,14 @@ interface Price {
 
 ```typescript
 interface DieselPrice {
-  state: string;          // State code (e.g., "CA", "TX")
-  price: number;          // Average diesel price in USD per gallon
-  currency: string;       // Currency code (always "USD")
-  unit: string;           // Unit of measurement (always "gallon")
-  granularity: string;    // Level (e.g., "state", "national")
-  source: string;         // Data source (e.g., "EIA")
-  updated_at: string;     // ISO 8601 timestamp of last update
-  cached?: boolean;       // Whether served from cache
+  state: string; // State code (e.g., "CA", "TX")
+  price: number; // Average diesel price in USD per gallon
+  currency: string; // Currency code (always "USD")
+  unit: string; // Unit of measurement (always "gallon")
+  granularity: string; // Level (e.g., "state", "national")
+  source: string; // Data source (e.g., "EIA")
+  updated_at: string; // ISO 8601 timestamp of last update
+  cached?: boolean; // Whether served from cache
 }
 ```
 
@@ -585,20 +848,20 @@ interface DieselPrice {
 
 ```typescript
 interface DieselStation {
-  name: string;           // Station name
-  address: string;        // Full street address
+  name: string; // Station name
+  address: string; // Full street address
   location: {
-    lat: number;          // Latitude
-    lng: number;          // Longitude
+    lat: number; // Latitude
+    lng: number; // Longitude
   };
-  diesel_price: number;   // Price at this station (USD per gallon)
-  formatted_price: string;// Formatted price (e.g., "$3.89")
-  currency: string;       // Currency code (always "USD")
-  unit: string;           // Unit (always "gallon")
-  price_delta?: number;   // Difference from regional average
+  diesel_price: number; // Price at this station (USD per gallon)
+  formatted_price: string; // Formatted price (e.g., "$3.89")
+  currency: string; // Currency code (always "USD")
+  unit: string; // Unit (always "gallon")
+  price_delta?: number; // Difference from regional average
   price_vs_average?: string; // Human-readable comparison
-  fuel_types?: string[];  // Available fuel types
-  last_updated?: string;  // ISO 8601 timestamp
+  fuel_types?: string[]; // Available fuel types
+  last_updated?: string; // ISO 8601 timestamp
 }
 ```
 
@@ -607,28 +870,28 @@ interface DieselStation {
 ```typescript
 interface DieselStationsResponse {
   regional_average: {
-    price: number;        // Regional average price
-    currency: string;     // Currency code
-    unit: string;         // Unit
-    region: string;       // Region name
-    granularity: string;  // Granularity level
-    source: string;       // Data source
+    price: number; // Regional average price
+    currency: string; // Currency code
+    unit: string; // Unit
+    region: string; // Region name
+    granularity: string; // Granularity level
+    source: string; // Data source
   };
   stations: DieselStation[]; // List of nearby stations
   search_area: {
     center: {
-      lat: number;        // Search center latitude
-      lng: number;        // Search center longitude
+      lat: number; // Search center latitude
+      lng: number; // Search center longitude
     };
-    radius_meters: number;// Search radius in meters
+    radius_meters: number; // Search radius in meters
     radius_miles: number; // Search radius in miles
   };
   metadata: {
     total_stations: number; // Number of stations found
-    source: string;        // Data source
-    cached: boolean;       // Whether served from cache
-    api_cost: number;      // Cost in dollars
-    timestamp: string;     // ISO 8601 timestamp
+    source: string; // Data source
+    cached: boolean; // Whether served from cache
+    api_cost: number; // Cost in dollars
+    timestamp: string; // ISO 8601 timestamp
     cache_age_hours?: number; // Cache age in hours
   };
 }
