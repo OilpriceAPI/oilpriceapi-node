@@ -34,14 +34,7 @@ export type {
   CreateAlertParams,
   UpdateAlertParams,
   AlertOperator,
-  WebhookTestResponse,
 } from "./resources/alerts.js";
-export type {
-  Commodity,
-  CommoditiesResponse,
-  CommodityCategory,
-  CategoriesResponse,
-} from "./resources/commodities.js";
 export type {
   FuturesPrice,
   HistoricalFuturesPrice,
@@ -83,7 +76,7 @@ export type {
   TrendAnalysis,
   SpreadAnalysis,
   ForecastPoint,
-  PriceForecast,
+  PriceForecast as AnalyticsPriceForecast,
 } from "./resources/analytics.js";
 export type {
   MonthlyForecast,
@@ -95,6 +88,79 @@ export type {
   DataQualityReportMeta,
   DataQualityReport,
 } from "./resources/data-quality.js";
+export type {
+  DrillingIntelligenceData,
+  LatestDrillingData,
+  DrillingSummary,
+  DrillingTrend,
+  FracSpreadData,
+  WellPermitData,
+  DUCWellData,
+  CompletionData,
+  WellsDrilledData,
+  BasinDrillingData,
+} from "./resources/drilling.js";
+export type {
+  WellTimelineEvent,
+  WellTimeline,
+  RigCountRecord,
+  RigCountByBasin,
+  RigCountByState,
+  HistoricalRigCount,
+  OilInventoryRecord,
+  OilInventorySummary,
+  InventoryByProduct,
+  HistoricalInventory,
+  CushingInventory,
+  OPECProductionRecord,
+  TotalOPECProduction,
+  ProductionByCountry,
+  HistoricalProduction,
+  TopProducer,
+  DrillingProductivityRecord,
+  DrillingProductivitySummary,
+  DUCWellInventory,
+  ProductivityByBasin,
+  HistoricalProductivity,
+  ProductivityTrend,
+  ForecastRecord,
+  ForecastSummary,
+  PriceForecast,
+  ProductionForecast,
+  HistoricalForecast,
+  ForecastComparison,
+  WellPermitRecord,
+  WellPermitSummary,
+  PermitsByState,
+  PermitsByOperator,
+  PermitsByFormation,
+  WellPermitSearchQuery,
+  FracFocusRecord,
+  FracFocusSummary,
+  DisclosuresByState,
+  DisclosuresByOperator,
+  ChemicalUsage,
+  WellChemical,
+  FracFocusSearchQuery,
+} from "./resources/ei/index.js";
+export type {
+  WebhookEndpoint,
+  CreateWebhookParams,
+  UpdateWebhookParams,
+  WebhookTestResponse as WebhookTestResult,
+  WebhookEvent,
+} from "./resources/webhooks.js";
+export type {
+  DataSourceType,
+  DataSourceStatus,
+  DataSource,
+  CreateDataSourceParams,
+  UpdateDataSourceParams,
+  DataSourceTestResponse,
+  DataSourceLog,
+  DataSourceHealth,
+  CredentialRotationResponse,
+} from "./resources/data-sources.js";
 export {
   OilPriceAPIError,
   AuthenticationError,
@@ -113,3 +179,16 @@ export { BunkerFuelsResource } from "./resources/bunker-fuels.js";
 export { AnalyticsResource } from "./resources/analytics.js";
 export { ForecastsResource } from "./resources/forecasts.js";
 export { DataQualityResource } from "./resources/data-quality.js";
+export { DrillingIntelligenceResource } from "./resources/drilling.js";
+export {
+  EnergyIntelligenceResource,
+  EIRigCountsResource,
+  EIOilInventoriesResource,
+  EIOPECProductionResource,
+  EIDrillingProductivityResource,
+  EIForecastsResource,
+  EIWellPermitsResource,
+  EIFracFocusResource,
+} from "./resources/ei/index.js";
+export { WebhooksResource } from "./resources/webhooks.js";
+export { DataSourcesResource } from "./resources/data-sources.js";

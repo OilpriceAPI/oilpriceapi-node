@@ -28,6 +28,10 @@ import { BunkerFuelsResource } from "./resources/bunker-fuels.js";
 import { AnalyticsResource } from "./resources/analytics.js";
 import { ForecastsResource } from "./resources/forecasts.js";
 import { DataQualityResource } from "./resources/data-quality.js";
+import { DrillingIntelligenceResource } from "./resources/drilling.js";
+import { EnergyIntelligenceResource } from "./resources/ei/index.js";
+import { WebhooksResource } from "./resources/webhooks.js";
+import { DataSourcesResource } from "./resources/data-sources.js";
 import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
 
 /**
@@ -117,6 +121,26 @@ export class OilPriceAPI {
    */
   public readonly dataQuality: DataQualityResource;
 
+  /**
+   * Drilling intelligence resource (US onshore drilling activity)
+   */
+  public readonly drilling: DrillingIntelligenceResource;
+
+  /**
+   * Energy intelligence resource (comprehensive market intelligence)
+   */
+  public readonly ei: EnergyIntelligenceResource;
+
+  /**
+   * Webhooks resource (webhook endpoint management)
+   */
+  public readonly webhooks: WebhooksResource;
+
+  /**
+   * Data sources resource (BYOS - Bring Your Own Source)
+   */
+  public readonly dataSources: DataSourcesResource;
+
   constructor(config: OilPriceAPIConfig) {
     if (!config.apiKey) {
       throw new OilPriceAPIError("API key is required");
@@ -143,6 +167,10 @@ export class OilPriceAPI {
     this.analytics = new AnalyticsResource(this);
     this.forecasts = new ForecastsResource(this);
     this.dataQuality = new DataQualityResource(this);
+    this.drilling = new DrillingIntelligenceResource(this);
+    this.ei = new EnergyIntelligenceResource(this);
+    this.webhooks = new WebhooksResource(this);
+    this.dataSources = new DataSourcesResource(this);
   }
 
   /**
