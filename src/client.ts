@@ -20,6 +20,14 @@ import {
 } from "./errors.js";
 import { DieselResource } from "./resources/diesel.js";
 import { AlertsResource } from "./resources/alerts.js";
+import { CommoditiesResource } from "./resources/commodities.js";
+import { FuturesResource } from "./resources/futures.js";
+import { StorageResource } from "./resources/storage.js";
+import { RigCountsResource } from "./resources/rig-counts.js";
+import { BunkerFuelsResource } from "./resources/bunker-fuels.js";
+import { AnalyticsResource } from "./resources/analytics.js";
+import { ForecastsResource } from "./resources/forecasts.js";
+import { DataQualityResource } from "./resources/data-quality.js";
 import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
 
 /**
@@ -69,6 +77,46 @@ export class OilPriceAPI {
    */
   public readonly alerts: AlertsResource;
 
+  /**
+   * Commodities resource (metadata and categories)
+   */
+  public readonly commodities: CommoditiesResource;
+
+  /**
+   * Futures resource (contracts, OHLC, curves, spreads)
+   */
+  public readonly futures: FuturesResource;
+
+  /**
+   * Storage resource (inventory levels, Cushing, SPR)
+   */
+  public readonly storage: StorageResource;
+
+  /**
+   * Rig counts resource (Baker Hughes rig count data)
+   */
+  public readonly rigCounts: RigCountsResource;
+
+  /**
+   * Bunker fuels resource (marine fuel prices at ports)
+   */
+  public readonly bunkerFuels: BunkerFuelsResource;
+
+  /**
+   * Analytics resource (performance, statistics, correlations)
+   */
+  public readonly analytics: AnalyticsResource;
+
+  /**
+   * Forecasts resource (EIA/IEA forecasts and accuracy)
+   */
+  public readonly forecasts: ForecastsResource;
+
+  /**
+   * Data quality resource (quality metrics and reports)
+   */
+  public readonly dataQuality: DataQualityResource;
+
   constructor(config: OilPriceAPIConfig) {
     if (!config.apiKey) {
       throw new OilPriceAPIError("API key is required");
@@ -87,6 +135,14 @@ export class OilPriceAPI {
     // Initialize resources
     this.diesel = new DieselResource(this);
     this.alerts = new AlertsResource(this);
+    this.commodities = new CommoditiesResource(this);
+    this.futures = new FuturesResource(this);
+    this.storage = new StorageResource(this);
+    this.rigCounts = new RigCountsResource(this);
+    this.bunkerFuels = new BunkerFuelsResource(this);
+    this.analytics = new AnalyticsResource(this);
+    this.forecasts = new ForecastsResource(this);
+    this.dataQuality = new DataQualityResource(this);
   }
 
   /**

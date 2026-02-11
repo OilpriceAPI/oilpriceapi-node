@@ -99,6 +99,25 @@ const prices = await client.getHistoricalPrices({
 console.log(`Got ${prices.length} data points for 2024`);
 ```
 
+### Performance Optimization (New in v0.6.0)
+
+For year-long queries, use the `interval` parameter to dramatically improve response times:
+
+```typescript
+// FAST: Daily aggregation returns 365 data points (~1 second)
+const yearlyPrices = await client.getHistoricalPrices({
+  period: 'past_year',
+  commodity: 'BRENT_CRUDE_USD',
+  interval: 'daily'  // Options: 'raw', 'hourly', 'daily', 'weekly', 'monthly'
+});
+
+console.log(`Got ${yearlyPrices.length} daily averages`);
+// Output: Got 365 daily averages
+
+// SLOW: Raw data returns 600k+ points (can take 74+ seconds)
+// Only use 'raw' when you need every individual price point
+```
+
 ### Get Diesel Prices (New in v0.4.0)
 
 #### Get State Average Diesel Price
@@ -454,6 +473,9 @@ Get historical prices for a time period.
 - `options.commodity` (string, optional) - Filter by commodity code
 - `options.startDate` (string, optional) - Start date in ISO 8601 format (YYYY-MM-DD)
 - `options.endDate` (string, optional) - End date in ISO 8601 format (YYYY-MM-DD)
+- `options.interval` (string, optional) - Aggregation interval: "raw", "hourly", "daily", "weekly", "monthly". **Performance tip:** Use "daily" for year-long queries (365 points vs 600k+ raw points)
+- `options.perPage` (number, optional) - Results per page (default: 100, max: 1000)
+- `options.page` (number, optional) - Page number for pagination (default: 1)
 
 **Returns:** `Promise<Price[]>`
 

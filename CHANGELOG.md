@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-12-24
+
+### Added
+- **PERFORMANCE**: Added `interval` parameter to `getHistoricalPrices()` for aggregated queries
+  - `'raw'` - Individual price points (default, can be slow for year-long queries)
+  - `'hourly'` - Hourly averages
+  - `'daily'` - Daily averages (recommended for year-long queries - 365 points vs 600k+)
+  - `'weekly'` - Weekly averages (52 points per year)
+  - `'monthly'` - Monthly averages (12 points per year)
+- **PERFORMANCE**: Added `perPage` parameter for pagination control (default: 100, max: 1000)
+- **PERFORMANCE**: Added `page` parameter for pagination navigation
+- New TypeScript type: `AggregationInterval`
+
+### Performance Improvements
+- Year-long queries improved from 74+ seconds to <1 second when using `interval: 'daily'`
+- Example: `getHistoricalPrices({ period: 'past_year', commodity: 'BRENT_CRUDE_USD', interval: 'daily' })`
+
+### Testing
+- Added 7 new tests for interval and pagination parameters
+- All 118 tests passing
+
+### Breaking Changes
+None - This is a backwards-compatible feature addition. Existing code continues to work.
+
+## [0.5.3] - 2025-12-17
+
+### Fixed
+- **CRITICAL**: Fixed historical date range queries returning incorrect dates
+  - Changed `getHistoricalPrices()` to use `/v1/prices/past_year` endpoint instead of `/v1/prices`
+  - The `/v1/prices` endpoint was not correctly handling `start_date`/`end_date` parameters
+  - This was the same bug that affected the Python SDK (fixed in v1.4.4)
+  - Users requesting data for specific date ranges now receive correct results
+
+### Testing
+- Added comprehensive test suite for historical price queries (22 new tests)
+- Added error handling test suite (31 new tests)
+- Test coverage now at 95%+ for all source files
+
+### Breaking Changes
+None - This is a bug fix that corrects behavior to match documentation.
+
+## [0.5.2] - 2025-12-17
+
+### Added
+- Centralized version management in `src/version.ts`
+- Export `SDK_VERSION` and `SDK_NAME` constants for tracking
+- User-Agent header: `oilpriceapi-node/{version} node/{node_version}`
+- `X-Api-Client` and `X-Client-Version` headers for SDK tracking
+
+### Testing
+- Added integration tests for User-Agent header verification (11 tests)
+
+## [0.5.1] - 2025-12-16
+
+### Added
+- Minor improvements to diesel and alerts resources
+
 ## [0.5.0] - 2025-12-15
 
 ### Added
