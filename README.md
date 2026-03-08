@@ -1,9 +1,15 @@
 # Oil Price API - Node.js SDK
 
+> **Real-time oil and commodity price data for Node.js** - Professional-grade API at 98% less cost than Bloomberg Terminal
+
 [![npm version](https://badge.fury.io/js/oilpriceapi.svg)](https://www.npmjs.com/package/oilpriceapi)
+[![npm downloads](https://img.shields.io/npm/dm/oilpriceapi)](https://www.npmjs.com/package/oilpriceapi)
+[![Tests](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml/badge.svg)](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Official Node.js SDK for [Oil Price API](https://www.oilpriceapi.com) - Get real-time and historical oil & commodity prices.
+**[Get Free API Key](https://www.oilpriceapi.com/signup)** | **[Documentation](https://docs.oilpriceapi.com)** | **[Pricing](https://www.oilpriceapi.com/pricing)**
+
+The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.com) - Real-time and historical oil prices for Brent Crude, WTI, Natural Gas, and 100+ commodities.
 
 ## Features
 
@@ -950,10 +956,9 @@ We welcome contributions! Please see our [Contributing Guide](https://github.com
 
 ## Support
 
-- 📧 Email: support@oilpriceapi.com
-- 🐛 Issues: [GitHub Issues](https://github.com/OilpriceAPI/oilpriceapi-node/issues)
-- 📚 Documentation: [oilpriceapi.com/docs](https://www.oilpriceapi.com/docs)
-- 💬 Discord: [Join our community](https://discord.gg/oilpriceapi)
+- Email: support@oilpriceapi.com
+- Issues: [GitHub Issues](https://github.com/OilpriceAPI/oilpriceapi-node/issues)
+- Docs: [Documentation](https://docs.oilpriceapi.com)
 
 ## License
 
@@ -961,11 +966,29 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Links
 
-- [Website](https://www.oilpriceapi.com)
-- [API Documentation](https://www.oilpriceapi.com/docs)
+- [OilPriceAPI Website](https://www.oilpriceapi.com)
+- [API Documentation](https://docs.oilpriceapi.com)
+- [Pricing](https://www.oilpriceapi.com/pricing)
+- [Status Page](https://status.oilpriceapi.com)
 - [GitHub Repository](https://github.com/OilpriceAPI/oilpriceapi-node)
 - [npm Package](https://www.npmjs.com/package/oilpriceapi)
 
 ---
 
-Made with ❤️ by the Oil Price API team
+## Why OilPriceAPI?
+
+[OilPriceAPI](https://www.oilpriceapi.com) provides professional-grade commodity price data at **98% less cost than Bloomberg Terminal** ($24,000/year vs $45/month). Trusted by energy traders, financial analysts, and developers worldwide.
+
+### Key Benefits
+
+- **Real-time data** updated every 5 minutes
+- **Historical data** for trend analysis and backtesting
+- **99.9% uptime** with enterprise-grade reliability
+- **5-minute integration** with this Node.js SDK
+- **Free tier** with 100 requests to get started
+
+**[Start Free](https://www.oilpriceapi.com/signup)** | **[View Pricing](https://www.oilpriceapi.com/pricing)** | **[Read Docs](https://docs.oilpriceapi.com)**
+
+---
+
+Made with care by the OilPriceAPI Team
