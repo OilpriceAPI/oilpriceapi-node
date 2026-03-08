@@ -7,7 +7,7 @@
 [![Tests](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml/badge.svg)](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**[Get Free API Key](https://www.oilpriceapi.com/signup)** | **[Documentation](https://docs.oilpriceapi.com)** | **[Pricing](https://www.oilpriceapi.com/pricing)**
+**[Get Free API Key](https://www.oilpriceapi.com/signup?utm_source=npm&utm_medium=sdk&utm_campaign=readme)** | **[Documentation](https://docs.oilpriceapi.com)** | **[Pricing](https://www.oilpriceapi.com/pricing?utm_source=npm&utm_medium=sdk&utm_campaign=pricing)**
 
 The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.com) - Real-time and historical oil prices for Brent Crude, WTI, Natural Gas, and 100+ commodities.
 
@@ -39,7 +39,7 @@ import { OilPriceAPI } from "oilpriceapi";
 
 // Initialize the client
 const client = new OilPriceAPI({
-  apiKey: "your_api_key_here", // Get your free key at https://www.oilpriceapi.com
+  apiKey: "your_api_key_here", // Get your free key at https://www.oilpriceapi.com/signup
   retries: 3, // Automatic retries (default: 3)
   timeout: 30000, // Request timeout in ms (default: 30000)
 });
@@ -712,7 +712,7 @@ new OilPriceAPI(config: OilPriceAPIConfig)
 
 **Parameters:**
 
-- `config.apiKey` (string, required) - Your API key from https://www.oilpriceapi.com
+- `config.apiKey` (string, required) - Your API key from https://www.oilpriceapi.com/signup
 - `config.baseUrl` (string, optional) - Custom API base URL (for testing)
 
 #### Methods
@@ -934,7 +934,7 @@ See the [full list of 79 commodities](https://www.oilpriceapi.com/commodities) i
 - **Business**: 200,000 requests/month - $199/mo
 - **Enterprise**: Custom limits - Contact us
 
-Get started with a free API key at [oilpriceapi.com](https://www.oilpriceapi.com).
+Get started with a free API key at [oilpriceapi.com/signup](https://www.oilpriceapi.com/signup?utm_source=npm&utm_medium=sdk&utm_campaign=readme).
 
 ## Requirements
 
@@ -968,7 +968,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 - [OilPriceAPI Website](https://www.oilpriceapi.com)
 - [API Documentation](https://docs.oilpriceapi.com)
-- [Pricing](https://www.oilpriceapi.com/pricing)
+- [Pricing](https://www.oilpriceapi.com/pricing?utm_source=npm&utm_medium=sdk&utm_campaign=pricing)
 - [Status Page](https://status.oilpriceapi.com)
 - [GitHub Repository](https://github.com/OilpriceAPI/oilpriceapi-node)
 - [npm Package](https://www.npmjs.com/package/oilpriceapi)
@@ -987,7 +987,16 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **5-minute integration** with this Node.js SDK
 - **Free tier** with 100 requests to get started
 
-**[Start Free](https://www.oilpriceapi.com/signup)** | **[View Pricing](https://www.oilpriceapi.com/pricing)** | **[Read Docs](https://docs.oilpriceapi.com)**
+**[Start Free](https://www.oilpriceapi.com/signup?utm_source=npm&utm_medium=sdk&utm_campaign=readme)** | **[View Pricing](https://www.oilpriceapi.com/pricing?utm_source=npm&utm_medium=sdk&utm_campaign=pricing)** | **[Read Docs](https://docs.oilpriceapi.com)**
+
+---
+
+## Also Available As
+
+- **[Python SDK](https://pypi.org/project/oilpriceapi/)** - Python client with Pandas integration
+- **[Go SDK](https://github.com/OilpriceAPI/oilpriceapi-go)** - Idiomatic Go client
+- **[MCP Server](https://www.npmjs.com/package/oilpriceapi-mcp)** - Model Context Protocol server for Claude, Cursor, and VS Code
+- **[Google Sheets Add-on](https://github.com/OilpriceAPI/google-sheets-addin)** - Custom functions for spreadsheets
 
 ---
 
