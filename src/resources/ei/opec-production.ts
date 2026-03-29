@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../../client.js";
+import { ValidationError } from "../../errors.js";
 
 /**
  * OPEC production record
@@ -128,7 +129,7 @@ export class EIOPECProductionResource {
    */
   async get(id: string): Promise<OPECProductionRecord> {
     if (!id || typeof id !== "string") {
-      throw new Error("Record ID must be a non-empty string");
+      throw new ValidationError("Record ID must be a non-empty string");
     }
 
     return this.client["request"]<OPECProductionRecord>(

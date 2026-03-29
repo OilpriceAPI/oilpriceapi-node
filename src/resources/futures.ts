@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Futures contract price data
@@ -212,7 +213,7 @@ export class FuturesResource {
    */
   async latest(contract: string): Promise<FuturesPrice> {
     if (!contract || typeof contract !== "string") {
-      throw new Error("Contract symbol must be a non-empty string");
+      throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
     return this.client["request"]<FuturesPrice>(`/v1/futures/${contract}`, {});
@@ -242,7 +243,7 @@ export class FuturesResource {
     options?: HistoricalFuturesOptions,
   ): Promise<HistoricalFuturesPrice[]> {
     if (!contract || typeof contract !== "string") {
-      throw new Error("Contract symbol must be a non-empty string");
+      throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
     const params: Record<string, string> = {};
@@ -277,7 +278,7 @@ export class FuturesResource {
    */
   async ohlc(contract: string, date?: string): Promise<FuturesOHLC> {
     if (!contract || typeof contract !== "string") {
-      throw new Error("Contract symbol must be a non-empty string");
+      throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
     const params: Record<string, string> = {};
@@ -310,7 +311,7 @@ export class FuturesResource {
    */
   async intraday(contract: string): Promise<IntradayFuturesData> {
     if (!contract || typeof contract !== "string") {
-      throw new Error("Contract symbol must be a non-empty string");
+      throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
     return this.client["request"]<IntradayFuturesData>(
@@ -340,10 +341,10 @@ export class FuturesResource {
    */
   async spreads(contract1: string, contract2: string): Promise<FuturesSpread> {
     if (!contract1 || typeof contract1 !== "string") {
-      throw new Error("First contract symbol must be a non-empty string");
+      throw new ValidationError("First contract symbol must be a non-empty string");
     }
     if (!contract2 || typeof contract2 !== "string") {
-      throw new Error("Second contract symbol must be a non-empty string");
+      throw new ValidationError("Second contract symbol must be a non-empty string");
     }
 
     return this.client["request"]<FuturesSpread>("/v1/futures/spreads", {
@@ -374,7 +375,7 @@ export class FuturesResource {
    */
   async curve(contract: string): Promise<FuturesCurveData> {
     if (!contract || typeof contract !== "string") {
-      throw new Error("Contract symbol must be a non-empty string");
+      throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
     return this.client["request"]<FuturesCurveData>(
@@ -407,7 +408,7 @@ export class FuturesResource {
     months?: number,
   ): Promise<ContinuousFuturesData> {
     if (!contract || typeof contract !== "string") {
-      throw new Error("Contract symbol must be a non-empty string");
+      throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
     const params: Record<string, string> = {};

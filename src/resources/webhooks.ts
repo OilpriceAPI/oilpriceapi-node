@@ -5,6 +5,8 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
+import { verifyWebhookSignature } from "../index.js";
 
 /**
  * Webhook endpoint configuration
@@ -201,12 +203,13 @@ export class WebhooksResource {
    */
   async get(id: string): Promise<WebhookEndpoint> {
     if (!id || typeof id !== "string") {
-      throw new Error("Webhook ID must be a non-empty string");
+      throw new ValidationError("Webhook ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      WebhookEndpoint | { webhook: WebhookEndpoint }
-    >(`/v1/webhooks/${id}`, {});
+    const response = await this.client["request"]<WebhookEndpoint | { webhook: WebhookEndpoint }>(
+      `/v1/webhooks/${id}`,
+      {},
+    );
 
     return "webhook" in response ? response.webhook : response;
   }
@@ -234,49 +237,34 @@ export class WebhooksResource {
    */
   async create(params: CreateWebhookParams): Promise<WebhookEndpoint> {
     if (!params.name || typeof params.name !== "string") {
-      throw new Error("Webhook name is required");
+      throw new ValidationError("Webhook name is required");
     }
     if (!params.url || !params.url.startsWith("https://")) {
-      throw new Error("Webhook URL must use HTTPS protocol");
+      throw new ValidationError("Webhook URL must use HTTPS protocol");
     }
-    if (
-      !params.events ||
-      !Array.isArray(params.events) ||
-      params.events.length === 0
-    ) {
-      throw new Error("At least one event type is required");
+    if (!params.events || !Array.isArray(params.events) || params.events.length === 0) {
+      throw new ValidationError("At least one event type is required");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/webhooks`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        webhook: {
-          name: params.name,
-          url: params.url,
-          events: params.events,
-          enabled: params.enabled ?? true,
-          secret: params.secret,
-          metadata: params.metadata,
+    const response = await this.client["request"]<WebhookEndpoint | { webhook: WebhookEndpoint }>(
+      "/v1/webhooks",
+      {},
+      {
+        method: "POST",
+        body: {
+          webhook: {
+            name: params.name,
+            url: params.url,
+            events: params.events,
+            enabled: params.enabled ?? true,
+            secret: params.secret,
+            metadata: params.metadata,
+          },
         },
-      }),
-    });
+      },
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to create webhook: ${response.status} ${errorText}`,
-      );
-    }
-
-    const data = (await response.json()) as
-      | WebhookEndpoint
-      | { webhook: WebhookEndpoint };
-    return "webhook" in data ? data.webhook : data;
+    return "webhook" in response ? response.webhook : response;
   }
 
   /**
@@ -300,48 +288,32 @@ export class WebhooksResource {
    * });
    * ```
    */
-  async update(
-    id: string,
-    params: UpdateWebhookParams,
-  ): Promise<WebhookEndpoint> {
+  async update(id: string, params: UpdateWebhookParams): Promise<WebhookEndpoint> {
     if (!id || typeof id !== "string") {
-      throw new Error("Webhook ID must be a non-empty string");
+      throw new ValidationError("Webhook ID must be a non-empty string");
     }
 
     if (params.url !== undefined && !params.url.startsWith("https://")) {
-      throw new Error("Webhook URL must use HTTPS protocol");
+      throw new ValidationError("Webhook URL must use HTTPS protocol");
     }
 
     if (
       params.events !== undefined &&
       (!Array.isArray(params.events) || params.events.length === 0)
     ) {
-      throw new Error("Events must be a non-empty array");
+      throw new ValidationError("Events must be a non-empty array");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/webhooks/${id}`;
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
+    const response = await this.client["request"]<WebhookEndpoint | { webhook: WebhookEndpoint }>(
+      `/v1/webhooks/${id}`,
+      {},
+      {
+        method: "PATCH",
+        body: { webhook: params },
       },
-      body: JSON.stringify({
-        webhook: params,
-      }),
-    });
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to update webhook: ${response.status} ${errorText}`,
-      );
-    }
-
-    const data = (await response.json()) as
-      | WebhookEndpoint
-      | { webhook: WebhookEndpoint };
-    return "webhook" in data ? data.webhook : data;
+    return "webhook" in response ? response.webhook : response;
   }
 
   /**
@@ -360,24 +332,10 @@ export class WebhooksResource {
    */
   async delete(id: string): Promise<void> {
     if (!id || typeof id !== "string") {
-      throw new Error("Webhook ID must be a non-empty string");
+      throw new ValidationError("Webhook ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/webhooks/${id}`;
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to delete webhook: ${response.status} ${errorText}`,
-      );
-    }
+    await this.client["request"](`/v1/webhooks/${id}`, {}, { method: "DELETE" });
   }
 
   /**
@@ -403,26 +361,14 @@ export class WebhooksResource {
    */
   async test(id: string): Promise<WebhookTestResponse> {
     if (!id || typeof id !== "string") {
-      throw new Error("Webhook ID must be a non-empty string");
+      throw new ValidationError("Webhook ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/webhooks/${id}/test`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to test webhook: ${response.status} ${errorText}`,
-      );
-    }
-
-    return response.json() as Promise<WebhookTestResponse>;
+    return this.client["request"]<WebhookTestResponse>(
+      `/v1/webhooks/${id}/test`,
+      {},
+      { method: "POST" },
+    );
   }
 
   /**
@@ -446,13 +392,53 @@ export class WebhooksResource {
    */
   async events(id: string): Promise<WebhookEvent[]> {
     if (!id || typeof id !== "string") {
-      throw new Error("Webhook ID must be a non-empty string");
+      throw new ValidationError("Webhook ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      WebhookEvent[] | { events: WebhookEvent[] }
-    >(`/v1/webhooks/${id}/events`, {});
+    const response = await this.client["request"]<WebhookEvent[] | { events: WebhookEvent[] }>(
+      `/v1/webhooks/${id}/events`,
+      {},
+    );
 
     return Array.isArray(response) ? response : response.events;
+  }
+
+  /**
+   * Verify a webhook signature.
+   *
+   * Validates that a webhook payload was sent by OilPriceAPI by checking
+   * the HMAC-SHA256 signature. Uses constant-time comparison to prevent
+   * timing attacks.
+   *
+   * @param payload - Raw request body (string or Buffer)
+   * @param signature - Value of the X-OilPriceAPI-Signature header (e.g., "sha256=abc123...")
+   * @param secret - Your webhook signing secret
+   * @returns true if signature is valid
+   *
+   * @example
+   * ```typescript
+   * import express from 'express';
+   * import { OilPriceAPI } from 'oilpriceapi';
+   *
+   * const app = express();
+   * const client = new OilPriceAPI({ apiKey: 'your_key' });
+   *
+   * // Use raw body parser for webhook routes
+   * app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+   *   const signature = req.headers['x-oilpriceapi-signature'] as string;
+   *   const isValid = client.webhooks.verifySignature(req.body, signature, 'your_secret');
+   *
+   *   if (!isValid) {
+   *     return res.status(401).send('Invalid signature');
+   *   }
+   *
+   *   const event = JSON.parse(req.body.toString());
+   *   console.log('Verified webhook:', event.type);
+   *   res.sendStatus(200);
+   * });
+   * ```
+   */
+  verifySignature(payload: string | Buffer, signature: string, secret: string): boolean {
+    return verifyWebhookSignature(payload, signature, secret);
   }
 }

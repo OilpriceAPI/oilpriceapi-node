@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Commodity metadata
@@ -129,7 +130,7 @@ export class CommoditiesResource {
    */
   async get(code: string): Promise<Commodity> {
     if (!code || typeof code !== "string") {
-      throw new Error("Commodity code must be a non-empty string");
+      throw new ValidationError("Commodity code must be a non-empty string");
     }
 
     return this.client["request"]<Commodity>(`/v1/commodities/${code}`, {});

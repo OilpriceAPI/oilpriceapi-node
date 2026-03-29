@@ -13,6 +13,7 @@ import { EIDrillingProductivityResource } from "./drilling-productivity.js";
 import { EIForecastsResource } from "./forecasts.js";
 import { EIWellPermitsResource } from "./well-permits.js";
 import { EIFracFocusResource } from "./frac-focus.js";
+import { ValidationError } from "../../errors.js";
 
 /**
  * Well timeline event
@@ -149,7 +150,7 @@ export class EnergyIntelligenceResource {
    */
   async wellTimeline(apiNumber: string): Promise<WellTimeline> {
     if (!apiNumber || typeof apiNumber !== "string") {
-      throw new Error("API number must be a non-empty string");
+      throw new ValidationError("API number must be a non-empty string");
     }
 
     return this.client["request"]<WellTimeline>(

@@ -14,7 +14,7 @@ export class OilPriceAPIError extends Error {
 
   constructor(message: string, statusCode?: number, code?: string) {
     super(message);
-    this.name = 'OilPriceAPIError';
+    this.name = "OilPriceAPIError";
     this.statusCode = statusCode;
     this.code = code;
 
@@ -29,9 +29,9 @@ export class OilPriceAPIError extends Error {
  * Thrown when API authentication fails (401)
  */
 export class AuthenticationError extends OilPriceAPIError {
-  constructor(message: string = 'Invalid API key') {
-    super(message, 401, 'AUTHENTICATION_ERROR');
-    this.name = 'AuthenticationError';
+  constructor(message: string = "Invalid API key") {
+    super(message, 401, "AUTHENTICATION_ERROR");
+    this.name = "AuthenticationError";
   }
 }
 
@@ -44,9 +44,9 @@ export class RateLimitError extends OilPriceAPIError {
    */
   retryAfter?: number;
 
-  constructor(message: string = 'Rate limit exceeded', retryAfter?: number) {
-    super(message, 429, 'RATE_LIMIT_ERROR');
-    this.name = 'RateLimitError';
+  constructor(message: string = "Rate limit exceeded", retryAfter?: number) {
+    super(message, 429, "RATE_LIMIT_ERROR");
+    this.name = "RateLimitError";
     this.retryAfter = retryAfter;
   }
 }
@@ -55,9 +55,9 @@ export class RateLimitError extends OilPriceAPIError {
  * Thrown when requested resource is not found (404)
  */
 export class NotFoundError extends OilPriceAPIError {
-  constructor(message: string = 'Resource not found') {
-    super(message, 404, 'NOT_FOUND_ERROR');
-    this.name = 'NotFoundError';
+  constructor(message: string = "Resource not found") {
+    super(message, 404, "NOT_FOUND_ERROR");
+    this.name = "NotFoundError";
   }
 }
 
@@ -65,9 +65,22 @@ export class NotFoundError extends OilPriceAPIError {
  * Thrown when server returns 5xx error
  */
 export class ServerError extends OilPriceAPIError {
-  constructor(message: string = 'Internal server error', statusCode: number = 500) {
-    super(message, statusCode, 'SERVER_ERROR');
-    this.name = 'ServerError';
+  constructor(
+    message: string = "Internal server error",
+    statusCode: number = 500,
+  ) {
+    super(message, statusCode, "SERVER_ERROR");
+    this.name = "ServerError";
+  }
+}
+
+/**
+ * Thrown when SDK-side input validation fails
+ */
+export class ValidationError extends OilPriceAPIError {
+  constructor(message: string) {
+    super(message, undefined, "VALIDATION_ERROR");
+    this.name = "ValidationError";
   }
 }
 
@@ -75,8 +88,8 @@ export class ServerError extends OilPriceAPIError {
  * Thrown when request exceeds timeout
  */
 export class TimeoutError extends OilPriceAPIError {
-  constructor(message: string = 'Request timeout', timeout: number) {
-    super(`${message} (${timeout}ms)`, undefined, 'TIMEOUT_ERROR');
-    this.name = 'TimeoutError';
+  constructor(message: string = "Request timeout", timeout: number) {
+    super(`${message} (${timeout}ms)`, undefined, "TIMEOUT_ERROR");
+    this.name = "TimeoutError";
   }
 }

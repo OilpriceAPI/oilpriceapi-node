@@ -7,12 +7,12 @@
  * - X-Client-Version header
  * - Package.json (should match)
  */
-export const SDK_VERSION = '0.7.0';
+export const SDK_VERSION = "0.8.0";
 
 /**
  * SDK identifier used in User-Agent and X-Api-Client headers
  */
-export const SDK_NAME = 'oilpriceapi-node';
+export const SDK_NAME = "oilpriceapi-node";
 
 /**
  * Build the full User-Agent string

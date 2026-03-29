@@ -6,6 +6,8 @@
  * @packageDocumentation
  */
 
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 export { OilPriceAPI } from "./client.js";
 export { SDK_VERSION, SDK_NAME } from "./version.js";
 export type {
@@ -78,11 +80,7 @@ export type {
   ForecastPoint,
   PriceForecast as AnalyticsPriceForecast,
 } from "./resources/analytics.js";
-export type {
-  MonthlyForecast,
-  ForecastAccuracy,
-  ArchivedForecast,
-} from "./resources/forecasts.js";
+export type { MonthlyForecast, ForecastAccuracy, ArchivedForecast } from "./resources/forecasts.js";
 export type {
   DataQualitySummary,
   DataQualityReportMeta,
@@ -167,6 +165,7 @@ export {
   RateLimitError,
   NotFoundError,
   ServerError,
+  ValidationError,
   TimeoutError,
 } from "./errors.js";
 export { DieselResource } from "./resources/diesel.js";
@@ -192,3 +191,30 @@ export {
 } from "./resources/ei/index.js";
 export { WebhooksResource } from "./resources/webhooks.js";
 export { DataSourcesResource } from "./resources/data-sources.js";
+
+/**
+ * Standalone webhook signature verification.
+ *
+ * Convenience function for verifying webhook signatures without
+ * instantiating a full client.
+ *
+ * @example
+ * ```typescript
+ * import { verifyWebhookSignature } from 'oilpriceapi';
+ *
+ * const isValid = verifyWebhookSignature(rawBody, signatureHeader, secret);
+ * ```
+ */
+export function verifyWebhookSignature(
+  payload: string | Buffer,
+  signature: string,
+  secret: string,
+): boolean {
+  const expectedSignature = "sha256=" + createHmac("sha256", secret).update(payload).digest("hex");
+
+  try {
+    return timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}

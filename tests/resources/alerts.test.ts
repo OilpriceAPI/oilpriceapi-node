@@ -6,9 +6,6 @@ import type {
   UpdateAlertParams,
 } from "../../src/resources/alerts.js";
 
-// Mock fetch globally
-global.fetch = vi.fn();
-
 describe("AlertsResource", () => {
   let client: OilPriceAPI;
 
@@ -155,23 +152,31 @@ describe("AlertsResource", () => {
         updated_at: "2025-12-15T10:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ alert: mockCreatedAlert }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ alert: mockCreatedAlert });
 
       const alert = await client.alerts.create(params);
 
       expect(alert).toEqual(mockCreatedAlert);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.oilpriceapi.com/v1/alerts",
-        expect.objectContaining({
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/v1/alerts",
+        {},
+        {
           method: "POST",
-          headers: expect.objectContaining({
-            Authorization: "Bearer test_key_123",
-            "Content-Type": "application/json",
-          }),
-        }),
+          body: {
+            price_alert: {
+              name: params.name,
+              commodity_code: params.commodity_code,
+              condition_operator: params.condition_operator,
+              condition_value: params.condition_value,
+              webhook_url: undefined,
+              enabled: true,
+              cooldown_minutes: 60,
+              metadata: undefined,
+            },
+          },
+        },
       );
     });
 
@@ -196,10 +201,9 @@ describe("AlertsResource", () => {
         updated_at: "2025-12-15T10:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ alert: mockCreatedAlert }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ alert: mockCreatedAlert });
 
       const alert = await client.alerts.create(params);
 
@@ -207,6 +211,25 @@ describe("AlertsResource", () => {
       expect(alert.enabled).toBe(false);
       expect(alert.cooldown_minutes).toBe(180);
       expect(alert.metadata).toEqual({ tag: "important", priority: "high" });
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/v1/alerts",
+        {},
+        {
+          method: "POST",
+          body: {
+            price_alert: {
+              name: params.name,
+              commodity_code: params.commodity_code,
+              condition_operator: params.condition_operator,
+              condition_value: params.condition_value,
+              webhook_url: params.webhook_url,
+              enabled: params.enabled,
+              cooldown_minutes: params.cooldown_minutes,
+              metadata: params.metadata,
+            },
+          },
+        },
+      );
     });
 
     it("should validate alert name", async () => {
@@ -353,10 +376,9 @@ describe("AlertsResource", () => {
         updated_at: "2025-12-15T10:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ alert: mockAlert }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ alert: mockAlert });
 
       const operators = [
         "greater_than",
@@ -371,7 +393,7 @@ describe("AlertsResource", () => {
         ).resolves.toBeDefined();
       }
 
-      expect(global.fetch).toHaveBeenCalledTimes(5);
+      expect(requestSpy).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -399,15 +421,22 @@ describe("AlertsResource", () => {
         updated_at: "2025-12-15T11:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ alert: mockUpdatedAlert }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ alert: mockUpdatedAlert });
 
       const alert = await client.alerts.update(alertId, updateParams);
 
       expect(alert.condition_value).toBe(90.0);
       expect(alert.enabled).toBe(false);
+      expect(requestSpy).toHaveBeenCalledWith(
+        `/v1/alerts/${alertId}`,
+        {},
+        {
+          method: "PATCH",
+          body: { price_alert: updateParams },
+        },
+      );
     });
 
     it("should update all fields", async () => {
@@ -432,10 +461,9 @@ describe("AlertsResource", () => {
         updated_at: "2025-12-15T11:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ alert: mockUpdatedAlert }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ alert: mockUpdatedAlert });
 
       const alert = await client.alerts.update(alertId, updateParams);
 
@@ -443,6 +471,14 @@ describe("AlertsResource", () => {
       expect(alert.commodity_code).toBe("WTI_USD");
       expect(alert.condition_operator).toBe("less_than");
       expect(alert.condition_value).toBe(70.0);
+      expect(requestSpy).toHaveBeenCalledWith(
+        `/v1/alerts/${alertId}`,
+        {},
+        {
+          method: "PATCH",
+          body: { price_alert: updateParams },
+        },
+      );
     });
 
     it("should throw error for invalid alert ID", async () => {
@@ -510,15 +546,14 @@ describe("AlertsResource", () => {
         updated_at: "2025-12-15T11:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ alert: mockUpdatedAlert }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ alert: mockUpdatedAlert });
 
       await expect(
         client.alerts.update(alertId, { webhook_url: null }),
       ).resolves.toBeDefined();
-      expect(global.fetch).toHaveBeenCalled();
+      expect(requestSpy).toHaveBeenCalled();
     });
   });
 
@@ -526,17 +561,16 @@ describe("AlertsResource", () => {
     it("should delete an alert successfully", async () => {
       const alertId = "550e8400-e29b-41d4-a716-446655440000";
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({});
 
       await client.alerts.delete(alertId);
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `https://api.oilpriceapi.com/v1/alerts/${alertId}`,
-        expect.objectContaining({
-          method: "DELETE",
-        }),
+      expect(requestSpy).toHaveBeenCalledWith(
+        `/v1/alerts/${alertId}`,
+        {},
+        { method: "DELETE" },
       );
     });
 
@@ -559,20 +593,18 @@ describe("AlertsResource", () => {
         response_time_ms: 145,
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue(mockResponse);
 
       const result = await client.alerts.test(alertId);
 
       expect(result.success).toBe(true);
       expect(result.status_code).toBe(200);
-      expect(global.fetch).toHaveBeenCalledWith(
-        `https://api.oilpriceapi.com/v1/alerts/${alertId}/test`,
-        expect.objectContaining({
-          method: "POST",
-        }),
+      expect(requestSpy).toHaveBeenCalledWith(
+        `/v1/alerts/${alertId}/test`,
+        {},
+        { method: "POST" },
       );
     });
 

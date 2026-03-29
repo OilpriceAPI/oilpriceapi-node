@@ -9,8 +9,9 @@ export type RetryStrategy = "exponential" | "linear" | "fixed";
 export interface OilPriceAPIConfig {
   /**
    * Your API key from https://www.oilpriceapi.com
+   * If not provided, reads from OILPRICEAPI_KEY environment variable.
    */
-  apiKey: string;
+  apiKey?: string;
 
   /**
    * Base URL for the API (optional, for testing)

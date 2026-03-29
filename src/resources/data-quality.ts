@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Data quality summary
@@ -245,7 +246,7 @@ export class DataQualityResource {
    */
   async report(code: string): Promise<DataQualityReport> {
     if (!code || typeof code !== "string") {
-      throw new Error("Report code must be a non-empty string");
+      throw new ValidationError("Report code must be a non-empty string");
     }
 
     return this.client["request"]<DataQualityReport>(

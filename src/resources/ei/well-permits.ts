@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../../client.js";
+import { ValidationError } from "../../errors.js";
 
 /**
  * Well permit record
@@ -154,7 +155,7 @@ export class EIWellPermitsResource {
    */
   async get(id: string): Promise<WellPermitRecord> {
     if (!id || typeof id !== "string") {
-      throw new Error("Record ID must be a non-empty string");
+      throw new ValidationError("Record ID must be a non-empty string");
     }
 
     return this.client["request"]<WellPermitRecord>(

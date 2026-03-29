@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Monthly forecast data
@@ -229,7 +230,7 @@ export class ForecastsResource {
    */
   async get(period: string, commodity?: string): Promise<MonthlyForecast> {
     if (!period || typeof period !== "string") {
-      throw new Error("Period must be a non-empty string");
+      throw new ValidationError("Period must be a non-empty string");
     }
 
     const params: Record<string, string> = {};

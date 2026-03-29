@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Performance metrics for commodities
@@ -258,7 +259,7 @@ export class AnalyticsResource {
     days?: number,
   ): Promise<StatisticalAnalysis> {
     if (!commodity || typeof commodity !== "string") {
-      throw new Error("Commodity code must be a non-empty string");
+      throw new ValidationError("Commodity code must be a non-empty string");
     }
 
     const params: Record<string, string> = { commodity };
@@ -298,10 +299,10 @@ export class AnalyticsResource {
     days?: number,
   ): Promise<CorrelationAnalysis> {
     if (!commodity1 || typeof commodity1 !== "string") {
-      throw new Error("First commodity code must be a non-empty string");
+      throw new ValidationError("First commodity code must be a non-empty string");
     }
     if (!commodity2 || typeof commodity2 !== "string") {
-      throw new Error("Second commodity code must be a non-empty string");
+      throw new ValidationError("Second commodity code must be a non-empty string");
     }
 
     const params: Record<string, string> = {
@@ -338,7 +339,7 @@ export class AnalyticsResource {
    */
   async trend(commodity: string, days?: number): Promise<TrendAnalysis> {
     if (!commodity || typeof commodity !== "string") {
-      throw new Error("Commodity code must be a non-empty string");
+      throw new ValidationError("Commodity code must be a non-empty string");
     }
 
     const params: Record<string, string> = { commodity };
@@ -372,10 +373,10 @@ export class AnalyticsResource {
     commodity2: string,
   ): Promise<SpreadAnalysis> {
     if (!commodity1 || typeof commodity1 !== "string") {
-      throw new Error("First commodity code must be a non-empty string");
+      throw new ValidationError("First commodity code must be a non-empty string");
     }
     if (!commodity2 || typeof commodity2 !== "string") {
-      throw new Error("Second commodity code must be a non-empty string");
+      throw new ValidationError("Second commodity code must be a non-empty string");
     }
 
     return this.client["request"]<SpreadAnalysis>("/v1/analytics/spread", {
@@ -408,7 +409,7 @@ export class AnalyticsResource {
    */
   async forecast(commodity: string): Promise<PriceForecast> {
     if (!commodity || typeof commodity !== "string") {
-      throw new Error("Commodity code must be a non-empty string");
+      throw new ValidationError("Commodity code must be a non-empty string");
     }
 
     return this.client["request"]<PriceForecast>("/v1/analytics/forecast", {

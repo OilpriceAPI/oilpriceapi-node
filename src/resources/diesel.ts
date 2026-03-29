@@ -1,4 +1,5 @@
-import type { OilPriceAPI } from '../client.js';
+import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Diesel price data for a specific state or region
@@ -153,12 +154,12 @@ export class DieselResource {
    */
   async getPrice(state: string): Promise<DieselPrice> {
     if (!state || state.length !== 2) {
-      throw new Error('State must be a 2-letter US state code (e.g., "CA", "TX")');
+      throw new ValidationError('State must be a 2-letter US state code (e.g., "CA", "TX")');
     }
 
-    const response = await this.client['request']<{ regional_average: DieselPrice }>(
-      '/v1/diesel-prices',
-      { state: state.toUpperCase() }
+    const response = await this.client["request"]<{ regional_average: DieselPrice }>(
+      "/v1/diesel-prices",
+      { state: state.toUpperCase() },
     );
 
     return response.regional_average;
@@ -208,59 +209,22 @@ export class DieselResource {
 
     // Validate coordinates
     if (lat < -90 || lat > 90) {
-      throw new Error('Latitude must be between -90 and 90');
+      throw new ValidationError("Latitude must be between -90 and 90");
     }
     if (lng < -180 || lng > 180) {
-      throw new Error('Longitude must be between -180 and 180');
+      throw new ValidationError("Longitude must be between -180 and 180");
     }
     if (radius < 0 || radius > 50000) {
-      throw new Error('Radius must be between 0 and 50000 meters');
+      throw new ValidationError("Radius must be between 0 and 50000 meters");
     }
 
-    // Use POST request for stations endpoint
-    const response = await fetch(
-      `${this.client['baseUrl']}/v1/diesel-prices/stations`,
+    return this.client["request"]<DieselStationsResponse>(
+      "/v1/diesel-prices/stations",
+      {},
       {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.client['apiKey']}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'oilpriceapi-node/0.4.0',
-          'X-SDK-Language': 'javascript',
-          'X-SDK-Version': '0.4.0',
-          'X-Client-Type': 'sdk',
-        },
-        body: JSON.stringify({ lat, lng, radius }),
-      }
+        method: "POST",
+        body: { lat, lng, radius },
+      },
     );
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-
-      try {
-        const errorJson = JSON.parse(errorBody);
-        errorMessage = errorJson.message || errorJson.error || errorMessage;
-      } catch {
-        // Use default error message
-      }
-
-      // Handle specific status codes
-      if (response.status === 403) {
-        throw new Error(
-          `Diesel station queries not available on your plan. ${errorMessage}`
-        );
-      }
-      if (response.status === 429) {
-        throw new Error(
-          `Diesel station query limit exceeded. ${errorMessage}`
-        );
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json() as DieselStationsResponse;
-    return data;
   }
 }

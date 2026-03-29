@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../../client.js";
+import { ValidationError } from "../../errors.js";
 
 /**
  * Oil inventory record
@@ -137,7 +138,7 @@ export class EIOilInventoriesResource {
    */
   async get(id: string): Promise<OilInventoryRecord> {
     if (!id || typeof id !== "string") {
-      throw new Error("Record ID must be a non-empty string");
+      throw new ValidationError("Record ID must be a non-empty string");
     }
 
     return this.client["request"]<OilInventoryRecord>(

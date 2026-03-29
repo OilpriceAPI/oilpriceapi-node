@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Valid condition operators for price alerts
@@ -207,7 +208,7 @@ export class AlertsResource {
    */
   async get(id: string): Promise<PriceAlert> {
     if (!id || typeof id !== "string") {
-      throw new Error("Alert ID must be a non-empty string");
+      throw new ValidationError("Alert ID must be a non-empty string");
     }
 
     const response = await this.client["request"]<
@@ -257,16 +258,16 @@ export class AlertsResource {
   async create(params: CreateAlertParams): Promise<PriceAlert> {
     // Validate required fields
     if (!params.name || typeof params.name !== "string") {
-      throw new Error("Alert name is required and must be a string");
+      throw new ValidationError("Alert name is required and must be a string");
     }
     if (params.name.length < 1 || params.name.length > 100) {
-      throw new Error("Alert name must be 1-100 characters");
+      throw new ValidationError("Alert name must be 1-100 characters");
     }
     if (!params.commodity_code || typeof params.commodity_code !== "string") {
-      throw new Error("Commodity code is required and must be a string");
+      throw new ValidationError("Commodity code is required and must be a string");
     }
     if (!params.condition_operator) {
-      throw new Error("Condition operator is required");
+      throw new ValidationError("Condition operator is required");
     }
 
     const validOperators: AlertOperator[] = [
@@ -277,16 +278,16 @@ export class AlertsResource {
       "less_than_or_equal",
     ];
     if (!validOperators.includes(params.condition_operator)) {
-      throw new Error(
+      throw new ValidationError(
         `Invalid operator. Must be one of: ${validOperators.join(", ")}`,
       );
     }
 
     if (typeof params.condition_value !== "number") {
-      throw new Error("Condition value must be a number");
+      throw new ValidationError("Condition value must be a number");
     }
     if (params.condition_value <= 0 || params.condition_value > 1_000_000) {
-      throw new Error(
+      throw new ValidationError(
         "Condition value must be greater than 0 and less than or equal to 1,000,000",
       );
     }
@@ -294,55 +295,47 @@ export class AlertsResource {
     // Validate optional fields
     if (params.webhook_url !== undefined) {
       if (typeof params.webhook_url !== "string") {
-        throw new Error("Webhook URL must be a string");
+        throw new ValidationError("Webhook URL must be a string");
       }
       if (params.webhook_url && !params.webhook_url.startsWith("https://")) {
-        throw new Error("Webhook URL must use HTTPS protocol");
+        throw new ValidationError("Webhook URL must use HTTPS protocol");
       }
     }
 
     if (params.cooldown_minutes !== undefined) {
       if (typeof params.cooldown_minutes !== "number") {
-        throw new Error("Cooldown minutes must be a number");
+        throw new ValidationError("Cooldown minutes must be a number");
       }
       if (params.cooldown_minutes < 0 || params.cooldown_minutes > 1440) {
-        throw new Error(
+        throw new ValidationError(
           "Cooldown minutes must be between 0 and 1440 (24 hours)",
         );
       }
     }
 
-    const url = `${this.client["baseUrl"]}/v1/alerts`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        price_alert: {
-          name: params.name,
-          commodity_code: params.commodity_code,
-          condition_operator: params.condition_operator,
-          condition_value: params.condition_value,
-          webhook_url: params.webhook_url,
-          enabled: params.enabled ?? true,
-          cooldown_minutes: params.cooldown_minutes ?? 60,
-          metadata: params.metadata,
+    const response = await this.client["request"]<
+      PriceAlert | { alert: PriceAlert }
+    >(
+      "/v1/alerts",
+      {},
+      {
+        method: "POST",
+        body: {
+          price_alert: {
+            name: params.name,
+            commodity_code: params.commodity_code,
+            condition_operator: params.condition_operator,
+            condition_value: params.condition_value,
+            webhook_url: params.webhook_url,
+            enabled: params.enabled ?? true,
+            cooldown_minutes: params.cooldown_minutes ?? 60,
+            metadata: params.metadata,
+          },
         },
-      }),
-    });
+      },
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to create alert: ${response.status} ${errorText}`,
-      );
-    }
-
-    const data = (await response.json()) as PriceAlert | { alert: PriceAlert };
-    // API returns object directly, but handle both formats for compatibility
-    return "alert" in data ? data.alert : data;
+    return "alert" in response ? response.alert : response;
   }
 
   /**
@@ -378,7 +371,7 @@ export class AlertsResource {
    */
   async update(id: string, params: UpdateAlertParams): Promise<PriceAlert> {
     if (!id || typeof id !== "string") {
-      throw new Error("Alert ID must be a non-empty string");
+      throw new ValidationError("Alert ID must be a non-empty string");
     }
 
     // Validate fields if provided
@@ -388,7 +381,7 @@ export class AlertsResource {
         params.name.length < 1 ||
         params.name.length > 100
       ) {
-        throw new Error("Alert name must be 1-100 characters");
+        throw new ValidationError("Alert name must be 1-100 characters");
       }
     }
 
@@ -401,7 +394,7 @@ export class AlertsResource {
         "less_than_or_equal",
       ];
       if (!validOperators.includes(params.condition_operator)) {
-        throw new Error(
+        throw new ValidationError(
           `Invalid operator. Must be one of: ${validOperators.join(", ")}`,
         );
       }
@@ -409,10 +402,10 @@ export class AlertsResource {
 
     if (params.condition_value !== undefined) {
       if (typeof params.condition_value !== "number") {
-        throw new Error("Condition value must be a number");
+        throw new ValidationError("Condition value must be a number");
       }
       if (params.condition_value <= 0 || params.condition_value > 1_000_000) {
-        throw new Error(
+        throw new ValidationError(
           "Condition value must be greater than 0 and less than or equal to 1,000,000",
         );
       }
@@ -423,7 +416,7 @@ export class AlertsResource {
         typeof params.webhook_url !== "string" ||
         !params.webhook_url.startsWith("https://")
       ) {
-        throw new Error("Webhook URL must be a valid HTTPS URL");
+        throw new ValidationError("Webhook URL must be a valid HTTPS URL");
       }
     }
 
@@ -433,34 +426,24 @@ export class AlertsResource {
         params.cooldown_minutes < 0 ||
         params.cooldown_minutes > 1440
       ) {
-        throw new Error(
+        throw new ValidationError(
           "Cooldown minutes must be between 0 and 1440 (24 hours)",
         );
       }
     }
 
-    const url = `${this.client["baseUrl"]}/v1/alerts/${id}`;
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
+    const response = await this.client["request"]<
+      PriceAlert | { alert: PriceAlert }
+    >(
+      `/v1/alerts/${id}`,
+      {},
+      {
+        method: "PATCH",
+        body: { price_alert: params },
       },
-      body: JSON.stringify({
-        price_alert: params,
-      }),
-    });
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to update alert: ${response.status} ${errorText}`,
-      );
-    }
-
-    const data = (await response.json()) as PriceAlert | { alert: PriceAlert };
-    // API returns object directly, but handle both formats for compatibility
-    return "alert" in data ? data.alert : data;
+    return "alert" in response ? response.alert : response;
   }
 
   /**
@@ -481,24 +464,10 @@ export class AlertsResource {
    */
   async delete(id: string): Promise<void> {
     if (!id || typeof id !== "string") {
-      throw new Error("Alert ID must be a non-empty string");
+      throw new ValidationError("Alert ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/alerts/${id}`;
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to delete alert: ${response.status} ${errorText}`,
-      );
-    }
+    await this.client["request"](`/v1/alerts/${id}`, {}, { method: "DELETE" });
   }
 
   /**
@@ -524,24 +493,14 @@ export class AlertsResource {
    */
   async test(alertId: string): Promise<WebhookTestResponse> {
     if (!alertId || typeof alertId !== "string") {
-      throw new Error("Alert ID must be a non-empty string");
+      throw new ValidationError("Alert ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/alerts/${alertId}/test`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to test alert: ${response.status} ${errorText}`);
-    }
-
-    return response.json() as Promise<WebhookTestResponse>;
+    return this.client["request"]<WebhookTestResponse>(
+      `/v1/alerts/${alertId}/test`,
+      {},
+      { method: "POST" },
+    );
   }
 
   /**

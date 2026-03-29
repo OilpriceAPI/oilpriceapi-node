@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Bunker fuel price data
@@ -202,7 +203,7 @@ export class BunkerFuelsResource {
    */
   async port(code: string): Promise<PortBunkerPrices> {
     if (!code || typeof code !== "string") {
-      throw new Error("Port code must be a non-empty string");
+      throw new ValidationError("Port code must be a non-empty string");
     }
 
     return this.client["request"]<PortBunkerPrices>(
@@ -231,7 +232,7 @@ export class BunkerFuelsResource {
    */
   async compare(ports: string[]): Promise<PortPriceComparison> {
     if (!Array.isArray(ports) || ports.length === 0) {
-      throw new Error("Ports must be a non-empty array of port codes");
+      throw new ValidationError("Ports must be a non-empty array of port codes");
     }
 
     return this.client["request"]<PortPriceComparison>(
@@ -295,10 +296,10 @@ export class BunkerFuelsResource {
     options?: HistoricalBunkerOptions,
   ): Promise<HistoricalBunkerPrice[]> {
     if (!port || typeof port !== "string") {
-      throw new Error("Port code must be a non-empty string");
+      throw new ValidationError("Port code must be a non-empty string");
     }
     if (!fuelType || typeof fuelType !== "string") {
-      throw new Error("Fuel type must be a non-empty string");
+      throw new ValidationError("Fuel type must be a non-empty string");
     }
 
     const params: Record<string, string> = {

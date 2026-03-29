@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Storage level data
@@ -206,7 +207,7 @@ export class StorageResource {
     options?: HistoricalStorageOptions,
   ): Promise<HistoricalStorageData[]> {
     if (!code || typeof code !== "string") {
-      throw new Error("Storage location code must be a non-empty string");
+      throw new ValidationError("Storage location code must be a non-empty string");
     }
 
     const params: Record<string, string> = {};

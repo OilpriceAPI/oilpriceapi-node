@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Data source types
@@ -248,7 +249,7 @@ export class DataSourcesResource {
    */
   async get(id: string): Promise<DataSource> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
     const response = await this.client["request"]<
@@ -284,45 +285,36 @@ export class DataSourcesResource {
    */
   async create(params: CreateDataSourceParams): Promise<DataSource> {
     if (!params.name || typeof params.name !== "string") {
-      throw new Error("Data source name is required");
+      throw new ValidationError("Data source name is required");
     }
     if (!params.type) {
-      throw new Error("Data source type is required");
+      throw new ValidationError("Data source type is required");
     }
     if (!params.config || typeof params.config !== "object") {
-      throw new Error("Data source config is required");
+      throw new ValidationError("Data source config is required");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/data-sources`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data_source: {
-          name: params.name,
-          type: params.type,
-          config: params.config,
-          enabled: params.enabled ?? true,
-          sync_frequency_minutes: params.sync_frequency_minutes ?? 60,
-          metadata: params.metadata,
+    const response = await this.client["request"]<
+      DataSource | { data_source: DataSource }
+    >(
+      "/v1/data-sources",
+      {},
+      {
+        method: "POST",
+        body: {
+          data_source: {
+            name: params.name,
+            type: params.type,
+            config: params.config,
+            enabled: params.enabled ?? true,
+            sync_frequency_minutes: params.sync_frequency_minutes ?? 60,
+            metadata: params.metadata,
+          },
         },
-      }),
-    });
+      },
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to create data source: ${response.status} ${errorText}`,
-      );
-    }
-
-    const data = (await response.json()) as
-      | DataSource
-      | { data_source: DataSource };
-    return "data_source" in data ? data.data_source : data;
+    return "data_source" in response ? response.data_source : response;
   }
 
   /**
@@ -351,32 +343,21 @@ export class DataSourcesResource {
     params: UpdateDataSourceParams,
   ): Promise<DataSource> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/data-sources/${id}`;
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
+    const response = await this.client["request"]<
+      DataSource | { data_source: DataSource }
+    >(
+      `/v1/data-sources/${id}`,
+      {},
+      {
+        method: "PATCH",
+        body: { data_source: params },
       },
-      body: JSON.stringify({
-        data_source: params,
-      }),
-    });
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to update data source: ${response.status} ${errorText}`,
-      );
-    }
-
-    const data = (await response.json()) as
-      | DataSource
-      | { data_source: DataSource };
-    return "data_source" in data ? data.data_source : data;
+    return "data_source" in response ? response.data_source : response;
   }
 
   /**
@@ -395,24 +376,14 @@ export class DataSourcesResource {
    */
   async delete(id: string): Promise<void> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/data-sources/${id}`;
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to delete data source: ${response.status} ${errorText}`,
-      );
-    }
+    await this.client["request"](
+      `/v1/data-sources/${id}`,
+      {},
+      { method: "DELETE" },
+    );
   }
 
   /**
@@ -436,26 +407,14 @@ export class DataSourcesResource {
    */
   async test(id: string): Promise<DataSourceTestResponse> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/data-sources/${id}/test`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to test data source: ${response.status} ${errorText}`,
-      );
-    }
-
-    return response.json() as Promise<DataSourceTestResponse>;
+    return this.client["request"]<DataSourceTestResponse>(
+      `/v1/data-sources/${id}/test`,
+      {},
+      { method: "POST" },
+    );
   }
 
   /**
@@ -480,7 +439,7 @@ export class DataSourcesResource {
    */
   async logs(id: string): Promise<DataSourceLog[]> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
     const response = await this.client["request"]<
@@ -509,7 +468,7 @@ export class DataSourcesResource {
    */
   async health(id: string): Promise<DataSourceHealth> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
     return this.client["request"]<DataSourceHealth>(
@@ -537,25 +496,13 @@ export class DataSourcesResource {
    */
   async rotateCredentials(id: string): Promise<CredentialRotationResponse> {
     if (!id || typeof id !== "string") {
-      throw new Error("Data source ID must be a non-empty string");
+      throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const url = `${this.client["baseUrl"]}/v1/data-sources/${id}/rotate-credentials`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.client["apiKey"]}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to rotate credentials: ${response.status} ${errorText}`,
-      );
-    }
-
-    return response.json() as Promise<CredentialRotationResponse>;
+    return this.client["request"]<CredentialRotationResponse>(
+      `/v1/data-sources/${id}/rotate-credentials`,
+      {},
+      { method: "POST" },
+    );
   }
 }

@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
+import { ValidationError } from "../errors.js";
 
 /**
  * Drilling intelligence data point
@@ -475,7 +476,7 @@ export class DrillingIntelligenceResource {
    */
   async basin(name: string): Promise<BasinDrillingData> {
     if (!name || typeof name !== "string") {
-      throw new Error("Basin name must be a non-empty string");
+      throw new ValidationError("Basin name must be a non-empty string");
     }
 
     return this.client["request"]<BasinDrillingData>(

@@ -141,12 +141,13 @@ export class OilPriceAPI {
    */
   public readonly dataSources: DataSourcesResource;
 
-  constructor(config: OilPriceAPIConfig) {
-    if (!config.apiKey) {
-      throw new OilPriceAPIError("API key is required");
+  constructor(config: OilPriceAPIConfig = {}) {
+    this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
+    if (!this.apiKey) {
+      throw new OilPriceAPIError(
+        "API key required. Set OILPRICEAPI_KEY env var or pass apiKey in config.",
+      );
     }
-
-    this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
     this.retries = config.retries !== undefined ? config.retries : 3;
     this.retryDelay = config.retryDelay || 1000;
@@ -234,11 +235,14 @@ export class OilPriceAPI {
   }
 
   /**
-   * Internal method to make HTTP requests with retry and timeout
+   * Internal method to make HTTP requests with retry and timeout.
+   * Supports all HTTP methods (GET, POST, PATCH, DELETE) with consistent
+   * retry logic, timeout handling, and typed error responses.
    */
   private async request<T>(
     endpoint: string,
     params?: Record<string, string>,
+    options?: { method?: string; body?: unknown },
   ): Promise<T> {
     // Build URL with query parameters
     const url = new URL(`${this.baseUrl}${endpoint}`);
@@ -284,11 +288,17 @@ export class OilPriceAPI {
             headers["X-App-Name"] = this.appName;
           }
 
-          const response = await fetch(url.toString(), {
-            method: "GET",
+          const fetchOptions: RequestInit = {
+            method: options?.method || "GET",
             headers,
             signal: controller.signal,
-          });
+          };
+
+          if (options?.body !== undefined) {
+            fetchOptions.body = JSON.stringify(options.body);
+          }
+
+          const response = await fetch(url.toString(), fetchOptions);
 
           clearTimeout(timeoutId);
 
@@ -302,8 +312,7 @@ export class OilPriceAPI {
             // Try to parse JSON error response
             try {
               const errorJson = JSON.parse(errorBody);
-              errorMessage =
-                errorJson.message || errorJson.error || errorMessage;
+              errorMessage = errorJson.message || errorJson.error || errorMessage;
             } catch {
               // Use default error message if response isn't JSON
             }
@@ -325,9 +334,7 @@ export class OilPriceAPI {
 
                 // If rate limited and we have retries left, wait and retry
                 if (attempt < this.retries && rateLimitError.retryAfter) {
-                  this.log(
-                    `Rate limited. Waiting ${rateLimitError.retryAfter}s`,
-                  );
+                  this.log(`Rate limited. Waiting ${rateLimitError.retryAfter}s`);
                   await this.sleep(rateLimitError.retryAfter * 1000);
                   continue;
                 }
@@ -339,16 +346,19 @@ export class OilPriceAPI {
               case 504:
                 throw new ServerError(errorMessage, response.status);
               default:
-                throw new OilPriceAPIError(
-                  errorMessage,
-                  response.status,
-                  "HTTP_ERROR",
-                );
+                throw new OilPriceAPIError(errorMessage, response.status, "HTTP_ERROR");
             }
           }
 
+          // Handle empty responses (e.g., 204 No Content from DELETE)
+          const responseText = await response.text();
+          if (!responseText) {
+            this.log("Empty response body");
+            return {} as T;
+          }
+
           // Parse successful response
-          const responseData: any = await response.json();
+          const responseData: any = JSON.parse(responseText);
 
           this.log("Response data received", {
             status: responseData.status,
@@ -370,9 +380,9 @@ export class OilPriceAPI {
             }
           }
 
-          // Fallback - return data as-is
+          // Fallback - return data as-is (used by resource mutations, alerts, webhooks, etc.)
           this.log("Returning data as-is");
-          return responseData.data as T;
+          return (responseData.data !== undefined ? responseData.data : responseData) as T;
         } catch (error) {
           // Handle abort (timeout)
           if (error instanceof Error && error.name === "AbortError") {
@@ -468,9 +478,7 @@ export class OilPriceAPI {
    * });
    * ```
    */
-  async getHistoricalPrices(
-    options?: HistoricalPricesOptions,
-  ): Promise<Price[]> {
+  async getHistoricalPrices(options?: HistoricalPricesOptions): Promise<Price[]> {
     const params: Record<string, string> = {};
 
     if (options?.period) {
@@ -517,6 +525,54 @@ export class OilPriceAPI {
   }
 
   /**
+   * Paginate through historical prices automatically.
+   *
+   * Returns an async generator that yields pages of prices, fetching
+   * the next page only when needed. Avoids loading all data into memory.
+   *
+   * @param options - Same options as getHistoricalPrices, plus perPage (default: 100)
+   *
+   * @example
+   * ```typescript
+   * // Iterate through all pages
+   * for await (const page of client.paginateHistoricalPrices({
+   *   commodity: 'BRENT_CRUDE_USD',
+   *   startDate: '2024-01-01',
+   *   endDate: '2024-12-31',
+   *   perPage: 100,
+   * })) {
+   *   console.log(`Got ${page.length} prices`);
+   *   // Process each page...
+   * }
+   *
+   * // Or collect all prices
+   * const allPrices: Price[] = [];
+   * for await (const page of client.paginateHistoricalPrices({ commodity: 'WTI_USD' })) {
+   *   allPrices.push(...page);
+   * }
+   * ```
+   */
+  async *paginateHistoricalPrices(options?: HistoricalPricesOptions): AsyncGenerator<Price[]> {
+    const perPage = options?.perPage || 100;
+    let page = 1;
+
+    while (true) {
+      const results = await this.getHistoricalPrices({
+        ...options,
+        page,
+        perPage,
+      });
+
+      if (results.length === 0) break;
+
+      yield results;
+
+      if (results.length < perPage) break;
+      page++;
+    }
+  }
+
+  /**
    * Get prices from your connected data sources (BYOS)
    *
    * Requires Data Connector feature enabled on your organization.
@@ -533,9 +589,7 @@ export class OilPriceAPI {
    * const singapore = await client.getDataConnectorPrices({ port: 'SINGAPORE' });
    * ```
    */
-  async getDataConnectorPrices(
-    options: DataConnectorOptions = {},
-  ): Promise<DataConnectorPrice[]> {
+  async getDataConnectorPrices(options: DataConnectorOptions = {}): Promise<DataConnectorPrice[]> {
     const params: Record<string, string> = {};
 
     if (options.fuelType) params.fuel_type = options.fuelType;

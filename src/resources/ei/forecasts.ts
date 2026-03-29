@@ -5,6 +5,7 @@
  */
 
 import type { OilPriceAPI } from "../../client.js";
+import { ValidationError } from "../../errors.js";
 
 /**
  * Forecast record
@@ -154,7 +155,7 @@ export class EIForecastsResource {
    */
   async get(id: string): Promise<ForecastRecord> {
     if (!id || typeof id !== "string") {
-      throw new Error("Record ID must be a non-empty string");
+      throw new ValidationError("Record ID must be a non-empty string");
     }
 
     return this.client["request"]<ForecastRecord>(`/v1/ei/forecasts/${id}`, {});

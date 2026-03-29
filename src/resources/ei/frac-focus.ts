@@ -6,6 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../../client.js";
+import { ValidationError } from "../../errors.js";
 
 /**
  * FracFocus disclosure record
@@ -175,7 +176,7 @@ export class EIFracFocusResource {
    */
   async get(id: string): Promise<FracFocusRecord> {
     if (!id || typeof id !== "string") {
-      throw new Error("Record ID must be a non-empty string");
+      throw new ValidationError("Record ID must be a non-empty string");
     }
 
     return this.client["request"]<FracFocusRecord>(
@@ -277,7 +278,7 @@ export class EIFracFocusResource {
    */
   async chemicals(id: string): Promise<WellChemical[]> {
     if (!id || typeof id !== "string") {
-      throw new Error("Disclosure ID must be a non-empty string");
+      throw new ValidationError("Disclosure ID must be a non-empty string");
     }
 
     const response = await this.client["request"]<
@@ -295,7 +296,7 @@ export class EIFracFocusResource {
    */
   async forWell(apiNumber: string): Promise<FracFocusRecord[]> {
     if (!apiNumber || typeof apiNumber !== "string") {
-      throw new Error("API number must be a non-empty string");
+      throw new ValidationError("API number must be a non-empty string");
     }
 
     const response = await this.client["request"]<

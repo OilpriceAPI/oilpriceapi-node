@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createHmac } from "node:crypto";
 import { OilPriceAPI } from "../../src/client.js";
 import type {
   WebhookEndpoint,
@@ -7,9 +8,6 @@ import type {
   WebhookTestResponse,
   WebhookEvent,
 } from "../../src/resources/webhooks.js";
-
-// Mock fetch globally
-global.fetch = vi.fn();
 
 describe("WebhooksResource", () => {
   let client: OilPriceAPI;
@@ -114,23 +112,29 @@ describe("WebhooksResource", () => {
         updated_at: "2024-01-01T00:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ webhook: mockWebhook }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ webhook: mockWebhook });
 
       const result = await client.webhooks.create(params);
 
       expect(result).toEqual(mockWebhook);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.oilpriceapi.com/v1/webhooks",
-        expect.objectContaining({
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/v1/webhooks",
+        {},
+        {
           method: "POST",
-          headers: expect.objectContaining({
-            Authorization: "Bearer test_key_123",
-            "Content-Type": "application/json",
-          }),
-        }),
+          body: {
+            webhook: {
+              name: params.name,
+              url: params.url,
+              events: params.events,
+              enabled: true,
+              secret: undefined,
+              metadata: undefined,
+            },
+          },
+        },
       );
     });
 
@@ -183,26 +187,27 @@ describe("WebhooksResource", () => {
         updated_at: "2024-01-15T10:00:00Z",
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => ({ webhook: mockWebhook }),
-      });
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ webhook: mockWebhook });
 
       const result = await client.webhooks.update("webhook-1", params);
 
       expect(result.enabled).toBe(false);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.oilpriceapi.com/v1/webhooks/webhook-1",
-        expect.objectContaining({
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/v1/webhooks/webhook-1",
+        {},
+        {
           method: "PATCH",
-        }),
+          body: { webhook: params },
+        },
       );
     });
 
     it("should throw error for empty webhook ID", async () => {
-      await expect(
-        client.webhooks.update("", { enabled: false }),
-      ).rejects.toThrow("Webhook ID must be a non-empty string");
+      await expect(client.webhooks.update("", { enabled: false })).rejects.toThrow(
+        "Webhook ID must be a non-empty string",
+      );
     });
 
     it("should validate HTTPS URL when updating", async () => {
@@ -212,26 +217,19 @@ describe("WebhooksResource", () => {
     });
 
     it("should validate events array when updating", async () => {
-      await expect(
-        client.webhooks.update("webhook-1", { events: [] }),
-      ).rejects.toThrow("Events must be a non-empty array");
+      await expect(client.webhooks.update("webhook-1", { events: [] })).rejects.toThrow(
+        "Events must be a non-empty array",
+      );
     });
   });
 
   describe("delete()", () => {
     it("should delete a webhook", async () => {
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-      });
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue({});
 
       await client.webhooks.delete("webhook-1");
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.oilpriceapi.com/v1/webhooks/webhook-1",
-        expect.objectContaining({
-          method: "DELETE",
-        }),
-      );
+      expect(requestSpy).toHaveBeenCalledWith("/v1/webhooks/webhook-1", {}, { method: "DELETE" });
     });
 
     it("should throw error for empty webhook ID", async () => {
@@ -249,20 +247,16 @@ describe("WebhooksResource", () => {
         response_time_ms: 145,
       };
 
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockResponse);
 
       const result = await client.webhooks.test("webhook-1");
 
       expect(result.success).toBe(true);
       expect(result.status_code).toBe(200);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.oilpriceapi.com/v1/webhooks/webhook-1/test",
-        expect.objectContaining({
-          method: "POST",
-        }),
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/v1/webhooks/webhook-1/test",
+        {},
+        { method: "POST" },
       );
     });
 
@@ -295,10 +289,7 @@ describe("WebhooksResource", () => {
 
       const result = await client.webhooks.events("webhook-1");
 
-      expect(requestSpy).toHaveBeenCalledWith(
-        "/v1/webhooks/webhook-1/events",
-        {},
-      );
+      expect(requestSpy).toHaveBeenCalledWith("/v1/webhooks/webhook-1/events", {});
       expect(result).toEqual(mockEvents);
     });
 
@@ -306,6 +297,41 @@ describe("WebhooksResource", () => {
       await expect(client.webhooks.events("")).rejects.toThrow(
         "Webhook ID must be a non-empty string",
       );
+    });
+  });
+
+  describe("verifySignature()", () => {
+    const secret = "webhook_secret_xyz";
+    const payload = '{"event":"price.updated","price":80.25}';
+
+    function makeSignature(p: string | Buffer, s: string): string {
+      return "sha256=" + createHmac("sha256", s).update(p).digest("hex");
+    }
+
+    it("returns true for a valid signature", () => {
+      const sig = makeSignature(payload, secret);
+      expect(client.webhooks.verifySignature(payload, sig, secret)).toBe(true);
+    });
+
+    it("returns false for an invalid signature", () => {
+      const badSig = "sha256=" + "b".repeat(64);
+      expect(client.webhooks.verifySignature(payload, badSig, secret)).toBe(false);
+    });
+
+    it("returns false for an empty signature string", () => {
+      expect(client.webhooks.verifySignature(payload, "", secret)).toBe(false);
+    });
+
+    it("returns false when the payload differs from what was signed", () => {
+      const sig = makeSignature(payload, secret);
+      expect(
+        client.webhooks.verifySignature('{"event":"price.updated","price":0}', sig, secret),
+      ).toBe(false);
+    });
+
+    it("returns false when the wrong secret is used", () => {
+      const sig = makeSignature(payload, secret);
+      expect(client.webhooks.verifySignature(payload, sig, "wrong_secret")).toBe(false);
     });
   });
 });

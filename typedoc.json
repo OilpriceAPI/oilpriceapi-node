@@ -1,0 +1,16 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts"],
+  "out": "./docs",
+  "name": "OilPriceAPI Node.js SDK",
+  "readme": "./README.md",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "hideGenerator": true,
+  "navigationLinks": {
+    "API Docs": "https://docs.oilpriceapi.com",
+    "npm": "https://www.npmjs.com/package/oilpriceapi",
+    "GitHub": "https://github.com/OilpriceAPI/oilpriceapi-node"
+  }
+}
