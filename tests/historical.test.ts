@@ -57,7 +57,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -89,7 +89,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -115,7 +115,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -139,7 +139,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -160,7 +160,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -181,7 +181,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -206,7 +206,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -231,7 +231,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -252,7 +252,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -275,7 +275,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -319,7 +319,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         const result = await client.getHistoricalPrices({
@@ -343,7 +343,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         const result = await client.getHistoricalPrices({
@@ -374,7 +374,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         const result = await client.getHistoricalPrices({
@@ -398,7 +398,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -419,7 +419,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -442,7 +442,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         const result = await client.getHistoricalPrices();
@@ -475,7 +475,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -498,7 +498,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -520,7 +520,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -542,7 +542,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -564,7 +564,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -586,7 +586,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -608,7 +608,7 @@ describe('Historical Prices', () => {
           ok: true,
           status: 200,
           statusText: 'OK',
-          json: async () => mockResponse
+          text: async () => JSON.stringify(mockResponse)
         } as Response);
 
         await client.getHistoricalPrices({
@@ -656,7 +656,7 @@ describe('getLatestPrices()', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => mockResponse
+      text: async () => JSON.stringify(mockResponse)
     } as Response);
 
     await client.getLatestPrices({ commodity: 'WTI_USD' });
@@ -684,7 +684,7 @@ describe('getLatestPrices()', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => mockResponse
+      text: async () => JSON.stringify(mockResponse)
     } as Response);
 
     const result = await client.getLatestPrices({ commodity: 'BRENT_CRUDE_USD' });
@@ -704,7 +704,7 @@ describe('getLatestPrices()', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => mockResponse
+      text: async () => JSON.stringify(mockResponse)
     } as Response);
 
     await client.getLatestPrices();
@@ -742,7 +742,7 @@ describe('getCommodities()', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => mockResponse
+      text: async () => JSON.stringify(mockResponse)
     } as Response);
 
     await client.getCommodities();
@@ -778,7 +778,7 @@ describe('getCommodityCategories()', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => mockResponse
+      text: async () => JSON.stringify(mockResponse)
     } as Response);
 
     await client.getCommodityCategories();
@@ -817,7 +817,7 @@ describe('getCommodity()', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => mockResponse
+      text: async () => JSON.stringify(mockResponse)
     } as Response);
 
     await client.getCommodity('BRENT_CRUDE_USD');

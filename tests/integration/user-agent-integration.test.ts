@@ -28,7 +28,7 @@ describe("User-Agent Integration Tests", () => {
 
   it("should export SDK_VERSION constant", () => {
     expect(SDK_VERSION).toBeDefined();
-    expect(SDK_VERSION).toBe("0.7.0");
+    expect(SDK_VERSION).toBe("0.8.0");
   });
 
   it("should export SDK_NAME constant", () => {
@@ -58,15 +58,12 @@ describe("User-Agent Integration Tests", () => {
 
 describe("Version Consistency", () => {
   it("buildUserAgent should produce correct format", async () => {
-    const { buildUserAgent, SDK_VERSION, SDK_NAME } =
-      await import("../../src/version.js");
+    const { buildUserAgent, SDK_VERSION, SDK_NAME } = await import("../../src/version.js");
     const userAgent = buildUserAgent();
 
     // Should match format: oilpriceapi-node/0.5.2 node/v20.x.x
     expect(userAgent).toContain(SDK_NAME);
     expect(userAgent).toContain(SDK_VERSION);
-    expect(userAgent).toMatch(
-      /oilpriceapi-node\/\d+\.\d+\.\d+ node\/v\d+\.\d+/,
-    );
+    expect(userAgent).toMatch(/oilpriceapi-node\/\d+\.\d+\.\d+ node\/v\d+\.\d+/);
   });
 });
