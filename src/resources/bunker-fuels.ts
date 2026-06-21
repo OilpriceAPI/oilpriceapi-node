@@ -123,13 +123,30 @@ export interface HistoricalBunkerPrice {
 }
 
 /**
- * Options for historical bunker fuel query
+ * Options for historical bunker fuel query.
+ *
+ * The controller reads `from` / `to` (dates) and `interval` — not `start_date` /
+ * `end_date` / `fuel_type`. History is returned per port (all grades).
  */
 export interface HistoricalBunkerOptions {
   /** Start date in ISO 8601 format (YYYY-MM-DD) */
   startDate?: string;
   /** End date in ISO 8601 format (YYYY-MM-DD) */
   endDate?: string;
+  /** Aggregation interval (e.g. 'daily') */
+  interval?: string;
+}
+
+/**
+ * Options for port-to-port bunker spread query.
+ */
+export interface BunkerSpreadOptions {
+  /** Origin port code */
+  from: string;
+  /** Destination port code */
+  to: string;
+  /** Fuel grade (e.g. 'VLSFO') */
+  grade?: string;
 }
 
 /**
@@ -177,9 +194,10 @@ export class BunkerFuelsResource {
    * ```
    */
   async all(): Promise<BunkerFuelPrice[]> {
+    // Route is GET /v1/bunker-fuels/all (the bare /v1/bunker-fuels has no route).
     const response = await this.client["request"]<
       BunkerFuelPrice[] | { prices: BunkerFuelPrice[] }
-    >("/v1/bunker-fuels", {});
+    >("/v1/bunker-fuels/all", {});
 
     return Array.isArray(response) ? response : response.prices;
   }
@@ -206,10 +224,7 @@ export class BunkerFuelsResource {
       throw new ValidationError("Port code must be a non-empty string");
     }
 
-    return this.client["request"]<PortBunkerPrices>(
-      `/v1/bunker-fuels/ports/${code}`,
-      {},
-    );
+    return this.client["request"]<PortBunkerPrices>(`/v1/bunker-fuels/ports/${code}`, {});
   }
 
   /**
@@ -235,36 +250,40 @@ export class BunkerFuelsResource {
       throw new ValidationError("Ports must be a non-empty array of port codes");
     }
 
-    return this.client["request"]<PortPriceComparison>(
-      "/v1/bunker-fuels/compare",
-      {
-        ports: ports.join(","),
-      },
-    );
+    return this.client["request"]<PortPriceComparison>("/v1/bunker-fuels/compare", {
+      ports: ports.join(","),
+    });
   }
 
   /**
-   * Get bunker fuel price spreads
+   * Get the bunker fuel price spread between two ports.
    *
-   * Returns spreads between different fuel grades (e.g., VLSFO-IFO380).
+   * Maps to `GET /v1/bunker-fuels/spreads/ports`, which reads `from`, `to`
+   * and `grade`. (Earlier SDKs called `/v1/bunker-fuels/spreads` with no params,
+   * which 404'd.)
    *
-   * @returns Fuel price spreads
+   * @param options - `{ from, to, grade? }`
+   * @returns Port-to-port fuel price spread
    *
-   * @throws {OilPriceAPIError} If API request fails
+   * @throws {ValidationError} If from/to are missing
    *
    * @example
    * ```typescript
-   * const spreads = await client.bunkerFuels.spreads();
-   * spreads.spreads.forEach(spread => {
-   *   console.log(`${spread.fuel1}-${spread.fuel2} spread: $${spread.average_spread}`);
-   * });
+   * const spread = await client.bunkerFuels.spreads({ from: 'SIN', to: 'RTM', grade: 'VLSFO' });
    * ```
    */
-  async spreads(): Promise<BunkerFuelSpreads> {
-    return this.client["request"]<BunkerFuelSpreads>(
-      "/v1/bunker-fuels/spreads",
-      {},
-    );
+  async spreads(options: BunkerSpreadOptions): Promise<BunkerFuelSpreads> {
+    if (!options?.from || !options?.to) {
+      throw new ValidationError("Both 'from' and 'to' port codes are required");
+    }
+
+    const params: Record<string, string> = {
+      from: options.from,
+      to: options.to,
+    };
+    if (options.grade) params.grade = options.grade;
+
+    return this.client["request"]<BunkerFuelSpreads>("/v1/bunker-fuels/spreads/ports", params);
   }
 
   /**
@@ -278,9 +297,16 @@ export class BunkerFuelsResource {
    * @throws {NotFoundError} If port or fuel type not found
    * @throws {OilPriceAPIError} If API request fails
    *
+   * The history endpoint is keyed by port in the PATH (`/historical/:port_code`)
+   * and returns all grades for that port; it does not filter by a single fuel
+   * type. It reads `from` / `to` / `interval` query params.
+   *
+   * @param port - Port code (e.g., "SIN", "RTM") — used as a path segment
+   * @param options - `{ startDate, endDate, interval }`
+   *
    * @example
    * ```typescript
-   * const history = await client.bunkerFuels.historical('SIN', 'VLSFO', {
+   * const history = await client.bunkerFuels.historical('SIN', {
    *   startDate: '2024-01-01',
    *   endDate: '2024-12-31'
    * });
@@ -292,26 +318,21 @@ export class BunkerFuelsResource {
    */
   async historical(
     port: string,
-    fuelType: string,
     options?: HistoricalBunkerOptions,
   ): Promise<HistoricalBunkerPrice[]> {
     if (!port || typeof port !== "string") {
       throw new ValidationError("Port code must be a non-empty string");
     }
-    if (!fuelType || typeof fuelType !== "string") {
-      throw new ValidationError("Fuel type must be a non-empty string");
-    }
 
-    const params: Record<string, string> = {
-      port,
-      fuel_type: fuelType,
-    };
-    if (options?.startDate) params.start_date = options.startDate;
-    if (options?.endDate) params.end_date = options.endDate;
+    const params: Record<string, string> = {};
+    if (options?.startDate) params.from = options.startDate;
+    if (options?.endDate) params.to = options.endDate;
+    if (options?.interval) params.interval = options.interval;
 
+    // Port code is a PATH segment: GET /v1/bunker-fuels/historical/:port_code
     const response = await this.client["request"]<
       HistoricalBunkerPrice[] | { data: HistoricalBunkerPrice[] }
-    >("/v1/bunker-fuels/historical", params);
+    >(`/v1/bunker-fuels/historical/${port}`, params);
 
     return Array.isArray(response) ? response : response.data;
   }

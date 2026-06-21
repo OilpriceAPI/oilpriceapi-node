@@ -10,108 +10,186 @@ describe("AnalyticsResource", () => {
   });
 
   describe("performance()", () => {
-    it("should fetch performance metrics", async () => {
+    it("should fetch usage analytics with a range param", async () => {
       const mockData = {
-        commodity: "WTI_USD",
-        period_days: 30,
-        average_price: 75.5,
-        volatility: 2.5,
-        return_percent: 5.2,
-        high: 78.0,
-        low: 72.0,
-        timestamp: "2024-01-15T00:00:00Z",
+        overview: { totalRequests: 100 },
+        dailyUsage: [],
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
-      const result = await client.analytics.performance({
-        commodity: "WTI_USD",
-      });
+      const result = await client.analytics.performance({ range: "7d" });
 
       expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/performance", {
-        commodity: "WTI_USD",
+        range: "7d",
       });
-      expect(result.average_price).toBe(75.5);
+      expect((result.overview as any).totalRequests).toBe(100);
+    });
+
+    it("should send no params when called without options", async () => {
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue({});
+
+      await client.analytics.performance();
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/performance", {});
     });
   });
 
   describe("statistics()", () => {
-    it("should fetch statistical analysis", async () => {
+    it("should send code and period params", async () => {
       const mockData = {
-        commodity: "WTI_USD",
-        period_days: 30,
-        mean: 75.5,
-        median: 75.25,
-        std_dev: 2.5,
-        variance: 6.25,
-        min: 72.0,
-        max: 78.0,
-        timestamp: "2024-01-15T00:00:00Z",
+        code: "WTI_USD",
+        period: 30,
+        statistics: { mean: 75.5 },
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
-      const result = await client.analytics.statistics("WTI_USD");
+      const result = await client.analytics.statistics("WTI_USD", 30);
 
       expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/statistics", {
-        commodity: "WTI_USD",
+        code: "WTI_USD",
+        period: "30",
       });
-      expect(result.mean).toBe(75.5);
+      expect((result.statistics as any).mean).toBe(75.5);
+    });
+
+    it("should send only code when period omitted", async () => {
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue({});
+
+      await client.analytics.statistics("WTI_USD");
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/statistics", {
+        code: "WTI_USD",
+      });
     });
   });
 
   describe("correlation()", () => {
-    it("should calculate correlation between commodities", async () => {
+    it("should send code1/code2 (not commodity1/commodity2)", async () => {
       const mockData = {
-        commodity1: "WTI_USD",
-        commodity2: "BRENT_CRUDE_USD",
-        period_days: 30,
+        type: "analysis",
+        code1: "WTI_USD",
+        code2: "BRENT_CRUDE_USD",
+        period: 30,
         correlation: 0.95,
-        strength: "strong" as const,
-        timestamp: "2024-01-15T00:00:00Z",
+        strength: "very_strong",
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
-      const result = await client.analytics.correlation(
-        "WTI_USD",
-        "BRENT_CRUDE_USD",
-      );
+      const result = await client.analytics.correlation("WTI_USD", "BRENT_CRUDE_USD");
 
       expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/correlation", {
-        commodity1: "WTI_USD",
-        commodity2: "BRENT_CRUDE_USD",
+        code1: "WTI_USD",
+        code2: "BRENT_CRUDE_USD",
       });
       expect(result.correlation).toBe(0.95);
+    });
+
+    it("should accept a numeric period (backward compatible)", async () => {
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue({});
+
+      await client.analytics.correlation("WTI_USD", "BRENT_CRUDE_USD", 90);
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/correlation", {
+        code1: "WTI_USD",
+        code2: "BRENT_CRUDE_USD",
+        period: "90",
+      });
+    });
+
+    it("should support rolling correlation with type/window", async () => {
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue({});
+
+      await client.analytics.correlation("WTI_USD", "BRENT_CRUDE_USD", {
+        period: 60,
+        type: "rolling",
+        window: 7,
+      });
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/correlation", {
+        code1: "WTI_USD",
+        code2: "BRENT_CRUDE_USD",
+        period: "60",
+        type: "rolling",
+        window: "7",
+      });
     });
   });
 
   describe("trend()", () => {
-    it("should detect price trends", async () => {
+    it("should send code (not commodity)", async () => {
       const mockData = {
-        commodity: "WTI_USD",
-        period_days: 30,
-        trend: "upward" as const,
-        strength: 75,
-        timestamp: "2024-01-15T00:00:00Z",
+        type: "analysis",
+        code: "WTI_USD",
+        period: 30,
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
       const result = await client.analytics.trend("WTI_USD");
 
       expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/trend", {
-        commodity: "WTI_USD",
+        code: "WTI_USD",
       });
-      expect(result.trend).toBe("upward");
+      expect(result.code).toBe("WTI_USD");
+    });
+
+    it("should support indicator variants via type/window", async () => {
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue({});
+
+      await client.analytics.trend("WTI_USD", { type: "rsi", window: 14 });
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/trend", {
+        code: "WTI_USD",
+        type: "rsi",
+        window: "14",
+      });
+    });
+  });
+
+  describe("spread()", () => {
+    it("should send the named spread and period", async () => {
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ type: "current", spread: "wti_brent" });
+
+      await client.analytics.spread("wti_brent", { period: 30 });
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/spread", {
+        spread: "wti_brent",
+        period: "30",
+      });
+    });
+
+    it("should send no spread param to list available spreads", async () => {
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ available_spreads: [] });
+
+      await client.analytics.spread();
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/spread", {});
+    });
+  });
+
+  describe("forecast()", () => {
+    it("should send code/method/period", async () => {
+      const requestSpy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ code: "WTI_USD", method: "ema" });
+
+      await client.analytics.forecast("WTI_USD", {
+        method: "ema",
+        period: 90,
+      });
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/analytics/forecast", {
+        code: "WTI_USD",
+        method: "ema",
+        period: "90",
+      });
     });
   });
 });

@@ -161,12 +161,7 @@ export type HistoricalPeriod = "past_week" | "past_month" | "past_year";
  * response times from 74s to <1s. The 'raw' option returns individual price
  * points which can be 600k+ records for a year of BRENT data.
  */
-export type AggregationInterval =
-  | "raw"
-  | "hourly"
-  | "daily"
-  | "weekly"
-  | "monthly";
+export type AggregationInterval = "raw" | "hourly" | "daily" | "weekly" | "monthly";
 
 /**
  * Options for fetching historical prices
@@ -283,6 +278,50 @@ export interface Commodity {
  */
 export interface CommoditiesResponse {
   commodities: Commodity[];
+}
+
+/**
+ * A single price entry from the no-auth demo prices endpoint.
+ */
+export interface DemoPrice {
+  code: string;
+  name: string;
+  price: number;
+  currency: string;
+  updated_at: string;
+  change_24h?: number;
+  source?: string;
+}
+
+/**
+ * Parsed response from the no-auth `GET /v1/demo/prices` endpoint.
+ */
+export interface DemoPricesResponse {
+  prices: DemoPrice[];
+  meta: {
+    demo_mode?: boolean;
+    rate_limit?: string;
+    available_commodities?: number;
+    [key: string]: unknown;
+  };
+  examples?: unknown;
+}
+
+/**
+ * Parsed response from the no-auth `GET /v1/demo/commodities` endpoint.
+ */
+export interface DemoCommoditiesResponse {
+  /** Commodities grouped by category key. */
+  commodities: Record<string, Commodity[]>;
+  meta: {
+    /** Total number of demo-listed commodities. */
+    total: number;
+    /** Category keys present in the listing. */
+    categories: string[];
+    /** Commodity codes available on the free demo tier. */
+    free_commodities: string[];
+    [key: string]: unknown;
+  };
 }
 
 /**

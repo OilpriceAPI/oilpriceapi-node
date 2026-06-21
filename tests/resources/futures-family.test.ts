@@ -84,9 +84,10 @@ describe("Futures contract families (issue #1)", () => {
         endDate: "2024-01-31",
       });
 
+      // Controller reads from/to, not start_date/end_date.
       expect(spy).toHaveBeenCalledWith("/v1/futures/ice-brent/historical", {
-        start_date: "2024-01-01",
-        end_date: "2024-01-31",
+        from: "2024-01-01",
+        to: "2024-01-31",
       });
     });
 
@@ -99,13 +100,14 @@ describe("Futures contract families (issue #1)", () => {
       expect(result).toEqual(prices);
     });
 
-    it("ohlc() passes date param", async () => {
+    it("ohlc() passes days/interval params (no date param exists)", async () => {
       const spy = vi.spyOn(client as any, "request").mockResolvedValue({});
 
-      await client.futures.wti().ohlc("2024-01-15");
+      await client.futures.wti().ohlc({ days: 30, interval: "1d" });
 
       expect(spy).toHaveBeenCalledWith("/v1/futures/ice-wti/ohlc", {
-        date: "2024-01-15",
+        days: "30",
+        interval: "1d",
       });
     });
 

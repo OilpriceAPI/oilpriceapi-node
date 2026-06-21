@@ -245,16 +245,15 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
     it("search() passes query params", async () => {
       const s = spy([]);
       await client.ei.wellPermits.search({
-        state: "Texas",
-        operator: "ConocoPhillips",
-        formation: "Wolfcamp",
+        states: "TX,NM",
+        county: "Midland",
         start_date: "2024-01-01",
         end_date: "2024-12-31",
       });
+      // Search reads `states` (plural); operator/formation are not search params.
       expect(s).toHaveBeenCalledWith("/v1/ei/well-permits/search", {
-        state: "Texas",
-        operator: "ConocoPhillips",
-        formation: "Wolfcamp",
+        states: "TX,NM",
+        county: "Midland",
         start_date: "2024-01-01",
         end_date: "2024-12-31",
       });
@@ -295,10 +294,11 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
 
     it("search() passes query params", async () => {
       const s = spy([]);
-      await client.ei.fracFocus.search({ state: "Texas", chemical: "HCl" });
+      await client.ei.fracFocus.search({ states: "TX", county: "Midland" });
+      // Search reads `states` (plural); operator/chemical are not search params.
       expect(s).toHaveBeenCalledWith("/v1/ei/frac-focus/search", {
-        state: "Texas",
-        chemical: "HCl",
+        states: "TX",
+        county: "Midland",
       });
     });
 

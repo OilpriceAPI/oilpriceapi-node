@@ -25,6 +25,9 @@ export type {
   CategoriesResponse,
   DataConnectorPrice,
   DataConnectorOptions,
+  DemoPrice,
+  DemoPricesResponse,
+  DemoCommoditiesResponse,
 } from "./types.js";
 export type {
   DieselPrice,
@@ -102,9 +105,12 @@ export type {
   PerformanceOptions,
   StatisticalAnalysis,
   CorrelationAnalysis,
+  CorrelationOptions,
   TrendAnalysis,
+  TrendOptions,
   SpreadAnalysis,
-  ForecastPoint,
+  SpreadOptions,
+  ForecastOptions,
   PriceForecast as AnalyticsPriceForecast,
 } from "./resources/analytics.js";
 export type { MonthlyForecast, ForecastAccuracy, ArchivedForecast } from "./resources/forecasts.js";

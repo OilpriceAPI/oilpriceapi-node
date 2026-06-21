@@ -14,18 +14,16 @@ import { verifyWebhookSignature } from "../index.js";
 export interface WebhookEndpoint {
   /** Unique webhook identifier */
   id: string;
-  /** User-friendly webhook name */
-  name: string;
+  /** User-friendly description of the webhook */
+  description?: string;
   /** Webhook URL (must be HTTPS) */
   url: string;
   /** Event types to subscribe to */
   events: string[];
-  /** Whether the webhook is active */
-  enabled: boolean;
-  /** Optional secret for signature verification */
+  /** Lifecycle status (e.g. 'active', 'disabled') */
+  status?: string;
+  /** Optional secret for signature verification (generated server-side) */
   secret?: string;
-  /** Optional metadata */
-  metadata?: Record<string, unknown>;
   /** Number of successful deliveries */
   successful_deliveries: number;
   /** Number of failed deliveries */
@@ -42,38 +40,54 @@ export interface WebhookEndpoint {
 
 /**
  * Parameters for creating a webhook
+ *
+ * NOTE: The API permits a flat (un-nested) body with the fields below. Earlier
+ * SDK versions nested these under a `webhook` key and used `name`/`enabled`,
+ * which the controller dropped — the controller reads `description` and `status`.
  */
 export interface CreateWebhookParams {
-  /** User-friendly webhook name */
-  name: string;
   /** Webhook URL (must be HTTPS) */
   url: string;
   /** Event types to subscribe to */
   events: string[];
-  /** Whether to enable immediately (default: true) */
-  enabled?: boolean;
-  /** Optional secret for signature verification */
-  secret?: string;
-  /** Optional metadata */
-  metadata?: Record<string, unknown>;
+  /** User-friendly description */
+  description?: string;
+  /** Lifecycle status (e.g. 'active', 'disabled') */
+  status?: string;
+  /** Commodity codes to filter events to */
+  commodity_filters?: string[];
+  /** US state codes to filter events to */
+  state_filters?: string[];
+  /** Per-second delivery rate limit */
+  rate_limit_per_second?: number;
+  /** Delivery timeout in seconds */
+  timeout_seconds?: number;
+  /** Max delivery retry attempts */
+  max_retries?: number;
 }
 
 /**
  * Parameters for updating a webhook
  */
 export interface UpdateWebhookParams {
-  /** User-friendly webhook name */
-  name?: string;
   /** Webhook URL */
   url?: string;
   /** Event types to subscribe to */
   events?: string[];
-  /** Whether the webhook is active */
-  enabled?: boolean;
-  /** Secret for signature verification */
-  secret?: string;
-  /** Metadata */
-  metadata?: Record<string, unknown>;
+  /** User-friendly description */
+  description?: string;
+  /** Lifecycle status (e.g. 'active', 'disabled') */
+  status?: string;
+  /** Commodity codes to filter events to */
+  commodity_filters?: string[];
+  /** US state codes to filter events to */
+  state_filters?: string[];
+  /** Per-second delivery rate limit */
+  rate_limit_per_second?: number;
+  /** Delivery timeout in seconds */
+  timeout_seconds?: number;
+  /** Max delivery retry attempts */
+  max_retries?: number;
 }
 
 /**
@@ -236,9 +250,6 @@ export class WebhooksResource {
    * ```
    */
   async create(params: CreateWebhookParams): Promise<WebhookEndpoint> {
-    if (!params.name || typeof params.name !== "string") {
-      throw new ValidationError("Webhook name is required");
-    }
     if (!params.url || !params.url.startsWith("https://")) {
       throw new ValidationError("Webhook URL must use HTTPS protocol");
     }
@@ -246,21 +257,13 @@ export class WebhooksResource {
       throw new ValidationError("At least one event type is required");
     }
 
+    // The controller reads a flat (un-nested) body via params.permit(...).
     const response = await this.client["request"]<WebhookEndpoint | { webhook: WebhookEndpoint }>(
       "/v1/webhooks",
       {},
       {
         method: "POST",
-        body: {
-          webhook: {
-            name: params.name,
-            url: params.url,
-            events: params.events,
-            enabled: params.enabled ?? true,
-            secret: params.secret,
-            metadata: params.metadata,
-          },
-        },
+        body: { ...params },
       },
     );
 
@@ -309,7 +312,7 @@ export class WebhooksResource {
       {},
       {
         method: "PATCH",
-        body: { webhook: params },
+        body: { ...params },
       },
     );
 
