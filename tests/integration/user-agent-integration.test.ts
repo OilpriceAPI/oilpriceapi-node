@@ -26,9 +26,16 @@ describe("User-Agent Integration Tests", () => {
     });
   });
 
-  it("should export SDK_VERSION constant", () => {
+  it("should export SDK_VERSION constant", async () => {
+    // Derive the expected version from package.json (single source of truth)
+    // rather than hard-coding a literal. A hard-coded version here previously
+    // broke the publish test gate whenever the package version was bumped.
+    const packageJson = await import("../../package.json", {
+      assert: { type: "json" },
+    });
     expect(SDK_VERSION).toBeDefined();
-    expect(SDK_VERSION).toBe("0.8.0");
+    expect(SDK_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(SDK_VERSION).toBe(packageJson.default.version);
   });
 
   it("should export SDK_NAME constant", () => {
