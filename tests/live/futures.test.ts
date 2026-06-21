@@ -16,7 +16,7 @@
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import { OilPriceAPI } from "../../src/client.js";
-import type { FuturesPrice } from "../../src/resources/futures.js";
+import type { FuturesCurveData, FuturesPrice } from "../../src/resources/futures.js";
 
 const API_KEY = process.env.OILPRICEAPI_TEST_KEY;
 
@@ -28,9 +28,13 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const RATE_LIMIT_DELAY_MS = 1100;
 
 /**
- * Assert the response looks like a sane futures latest/curve payload.
- * The latest endpoint returns a curve envelope; we look for a front-month
- * price somewhere in the response and sanity-check the number.
+ * Assert the latest payload is the real TOP-LEVEL futures response shape.
+ *
+ * `GET /v1/futures/{slug}` returns a top-level object (NO `{ status, data }`
+ * envelope). The latest price lives at `front_month.last_price`, with the full
+ * term structure in `contracts[]`. We require a numeric front-month price in a
+ * sane range, and fall back to the first contract / a legacy flat `price` for
+ * resilience.
  */
 function expectSaneFuturesPayload(res: FuturesPrice | Record<string, unknown>) {
   expect(res).toBeDefined();
@@ -38,23 +42,59 @@ function expectSaneFuturesPayload(res: FuturesPrice | Record<string, unknown>) {
 
   const obj = res as Record<string, unknown>;
 
-  // Pull a representative price from one of the common shapes the latest
-  // endpoint can return (front_month, top-level price, or first contract).
+  // Primary contract: front_month.last_price (the documented latest price).
   const frontMonth = obj.front_month as Record<string, unknown> | undefined;
   const contracts = obj.contracts as Array<Record<string, unknown>> | undefined;
   const candidate =
-    (typeof obj.price === "number" ? obj.price : undefined) ??
     (frontMonth && typeof frontMonth.last_price === "number"
       ? (frontMonth.last_price as number)
       : undefined) ??
     (contracts && contracts.length > 0 && typeof contracts[0].last_price === "number"
       ? (contracts[0].last_price as number)
-      : undefined);
+      : undefined) ??
+    (typeof obj.price === "number" ? obj.price : undefined);
 
-  expect(candidate, "expected a numeric price in the futures payload").toBeTypeOf("number");
+  expect(candidate, "expected a numeric front_month.last_price in the futures payload").toBeTypeOf(
+    "number",
+  );
   // Energy futures trade in a wide but bounded range across commodities.
   expect(candidate as number).toBeGreaterThan(0);
   expect(candidate as number).toBeLessThan(100000);
+}
+
+/**
+ * Assert the curve payload is EITHER real curve data OR the documented
+ * no-data response. `GET /v1/futures/{slug}/curve` can legitimately return
+ * `{ error: "No futures data available for curve analysis", date: "..." }`
+ * when no curve can be built — that is a valid state, not a failure.
+ */
+function expectSaneCurveOrNoData(res: FuturesCurveData | Record<string, unknown>) {
+  expect(res).toBeDefined();
+  expect(typeof res).toBe("object");
+
+  const obj = res as Record<string, unknown>;
+
+  // No-data state: accept the documented error response without failing.
+  if (typeof obj.error === "string") {
+    expect(obj.error).toMatch(/no futures data available/i);
+    return;
+  }
+
+  // Otherwise we expect real curve data: an array of points with prices.
+  const curve = obj.curve as Array<Record<string, unknown>> | undefined;
+  expect(Array.isArray(curve), "expected a `curve` array when not a no-data response").toBe(true);
+  if (curve && curve.length > 0) {
+    const point = curve[0];
+    const price =
+      typeof point.price === "number"
+        ? point.price
+        : typeof point.last_price === "number"
+          ? (point.last_price as number)
+          : undefined;
+    expect(price, "expected a numeric price in the first curve point").toBeTypeOf("number");
+    expect(price as number).toBeGreaterThan(0);
+    expect(price as number).toBeLessThan(100000);
+  }
 }
 
 describeLive("LIVE futures latest endpoints (v0.9.1 path fix)", () => {
@@ -64,19 +104,19 @@ describeLive("LIVE futures latest endpoints (v0.9.1 path fix)", () => {
     client = new OilPriceAPI({ apiKey: API_KEY as string, retries: 1 });
   });
 
-  it("client.futures.brent().latest() returns 200 + a sane price (GET /v1/futures/ice-brent)", async () => {
+  it("client.futures.brent().latest() returns the top-level response with front_month.last_price (GET /v1/futures/ice-brent)", async () => {
     const res = await client.futures.brent().latest();
     expectSaneFuturesPayload(res);
     await sleep(RATE_LIMIT_DELAY_MS);
   });
 
-  it("top-level client.futures.latest('BZ') returns 200 + a sane price", async () => {
-    const res = await client.futures.latest("BZ");
-    expectSaneFuturesPayload(res);
+  it("client.futures.brent().curve() returns curve data OR the documented no-data response (tolerant)", async () => {
+    const res = await client.futures.brent().curve();
+    expectSaneCurveOrNoData(res);
     await sleep(RATE_LIMIT_DELAY_MS);
   });
 
-  it("top-level client.futures.latest('CL') (WTI) returns 200 + a sane price", async () => {
+  it("top-level client.futures.latest('CL') (WTI) returns a sane front-month price", async () => {
     const res = await client.futures.latest("CL");
     expectSaneFuturesPayload(res);
   });

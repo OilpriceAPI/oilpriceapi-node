@@ -9,23 +9,73 @@ import type { OilPriceAPI } from "../client.js";
 import { ValidationError } from "../errors.js";
 
 /**
- * Futures contract price data
+ * A single futures contract month within a {@link FuturesPrice} response.
+ *
+ * Returned at the top level under `front_month` and for every entry in
+ * `contracts[]`. The latest traded price is `last_price`.
+ */
+export interface FuturesContractMonth {
+  /** Contract code (e.g. "BRENT_FUTURES_2026_08"). */
+  code?: string;
+  /** Contract month in YYYY-MM form (e.g. "2026-08"). */
+  contract_month?: string;
+  /** Latest traded/settlement price for this contract month. */
+  last_price?: number;
+  /** Currency code (e.g. "USD"). */
+  currency?: string;
+  /** Opening price (may be returned as a string by the API). */
+  open?: number | string;
+  /** Closing price (may be returned as a string by the API). */
+  close?: number | string;
+  /** Session high. */
+  high?: number | string;
+  /** Session low. */
+  low?: number | string;
+  /** Any additional fields the API returns for a contract month. */
+  [key: string]: unknown;
+}
+
+/**
+ * Futures contract price data.
+ *
+ * `GET /v1/futures/{slug}` returns a TOP-LEVEL object (there is NO
+ * `{ status, data }` envelope). The latest price lives at
+ * `front_month.last_price`, with the full term structure in `contracts[]`.
+ *
+ * Legacy flat fields (`contract`, `price`, `currency`, `timestamp`) are kept
+ * optional for backward compatibility, but real responses populate
+ * `front_month` / `contracts` instead.
  */
 export interface FuturesPrice {
-  /** Contract symbol */
-  contract: string;
-  /** Current price */
-  price: number;
-  /** Formatted price string */
-  formatted?: string;
-  /** Currency code */
-  currency: string;
-  /** Contract expiration date */
-  expiration?: string;
-  /** ISO timestamp when price was recorded */
-  timestamp: string;
-  /** Additional metadata */
+  /** Commodity identifier (e.g. "BRENT_FUTURES"). */
+  commodity?: string;
+  /** Data source (e.g. "ICE"). */
+  source?: string;
+  /** ISO timestamp the data was last updated. */
+  updated_at?: string;
+  /** Settlement date for the prices. */
+  settlement_date?: string;
+  /** Front-month contract — the latest price is `front_month.last_price`. */
+  front_month?: FuturesContractMonth;
+  /** Full forward term structure, one entry per contract month. */
+  contracts?: FuturesContractMonth[];
+  /** Optional warning when the returned data is stale. */
+  data_age_warning?: unknown;
+  /** Additional metadata returned by the API. */
   metadata?: Record<string, unknown>;
+
+  /** @deprecated Legacy flat contract symbol — use `front_month.code`. */
+  contract?: string;
+  /** @deprecated Legacy flat price — use `front_month.last_price`. */
+  price?: number;
+  /** @deprecated Legacy formatted price string. */
+  formatted?: string;
+  /** @deprecated Legacy currency — use `front_month.currency`. */
+  currency?: string;
+  /** @deprecated Legacy contract expiration date. */
+  expiration?: string;
+  /** @deprecated Legacy ISO timestamp — use `updated_at`. */
+  timestamp?: string;
 }
 
 /**
@@ -153,15 +203,25 @@ export interface FuturesCurvePoint {
 }
 
 /**
- * Futures curve data
+ * Futures curve data.
+ *
+ * `GET /v1/futures/{slug}/curve` can legitimately return a no-data response of
+ * the form `{ error: "No futures data available for curve analysis", date }`
+ * when a curve cannot be built. That is a valid state (not an HTTP error), so
+ * `curve` is optional and `error` / `date` are surfaced for callers to detect
+ * the no-data case.
  */
 export interface FuturesCurveData {
   /** Base contract */
-  contract: string;
+  contract?: string;
   /** ISO timestamp when curve was generated */
-  timestamp: string;
-  /** Array of curve points */
-  curve: FuturesCurvePoint[];
+  timestamp?: string;
+  /** Array of curve points (absent in the no-data response) */
+  curve?: FuturesCurvePoint[];
+  /** Present in the no-data response: "No futures data available for curve analysis". */
+  error?: string;
+  /** Date associated with the no-data response. */
+  date?: string;
 }
 
 /**
