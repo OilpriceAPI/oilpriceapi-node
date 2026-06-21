@@ -186,7 +186,7 @@ describe("StreamingResource", () => {
       ws.serverSend({ identifier: "{}", type: "reject_subscription" });
 
       expect(onError).toHaveBeenCalledOnce();
-      expect((onError.mock.calls[0][0] as Error).message).toMatch(/Reservoir Mastery/);
+      expect((onError.mock.calls[0][0] as Error).message).toMatch(/Professional plan/);
       handle.close();
     });
   });
