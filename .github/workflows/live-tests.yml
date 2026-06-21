@@ -1,0 +1,38 @@
+name: Live API Tests
+
+# Runs the LIVE contract tests (tests/live/**) against the real OilPriceAPI.
+# These require the OILPRICEAPI_TEST_KEY repo secret. The job is gated so it
+# only runs when the secret is present, and the live suite itself skips
+# gracefully when the key env var is absent — so external forks (which cannot
+# read the secret) are never blocked or failed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  live:
+    name: Live API contract tests
+    runs-on: ubuntu-latest
+    # Only run when the secret is available (it is empty on forked-PR contexts).
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run live tests
+        # Guard at the step level too: skip if the secret is empty so the job
+        # is a no-op (green) rather than a failure when no key is configured.
+        if: ${{ secrets.OILPRICEAPI_TEST_KEY != '' }}
+        run: npm run test:live
+        env:
+          OILPRICEAPI_TEST_KEY: ${{ secrets.OILPRICEAPI_TEST_KEY }}

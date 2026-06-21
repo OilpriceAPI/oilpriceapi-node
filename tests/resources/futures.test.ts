@@ -19,9 +19,9 @@ describe("FuturesResource", () => {
   });
 
   describe("latest()", () => {
-    it("should fetch latest futures price", async () => {
+    it("should fetch latest futures price by contract code (maps to bare slug path)", async () => {
       const mockPrice: FuturesPrice = {
-        contract: "CL.1",
+        contract: "ice-wti",
         price: 75.5,
         formatted: "$75.50",
         currency: "USD",
@@ -29,16 +29,19 @@ describe("FuturesResource", () => {
         timestamp: "2024-01-15T10:00:00Z",
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockPrice);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockPrice);
 
-      const result = await client.futures.latest("CL.1");
+      // "CL" resolves to the ice-wti family; latest is the bare slug path
+      // (GET /v1/futures/ice-wti) — there is NO /latest suffix.
+      const result = await client.futures.latest("CL");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/CL.1", {});
+      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/ice-wti", {});
       expect(result).toEqual(mockPrice);
-      expect(result.contract).toBe("CL.1");
       expect(result.price).toBe(75.5);
+    });
+
+    it("should throw error for an unknown contract code/slug", async () => {
+      await expect(client.futures.latest("CL.1")).rejects.toThrow(/Unknown futures contract/);
     });
 
     it("should throw error for empty contract", async () => {
@@ -72,16 +75,11 @@ describe("FuturesResource", () => {
         },
       ];
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockPrices);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockPrices);
 
       const result = await client.futures.historical("CL.1");
 
-      expect(requestSpy).toHaveBeenCalledWith(
-        "/v1/futures/CL.1/historical",
-        {},
-      );
+      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/CL.1/historical", {});
       expect(result).toEqual(mockPrices);
       expect(result).toHaveLength(2);
     });
@@ -89,9 +87,7 @@ describe("FuturesResource", () => {
     it("should fetch historical prices with date filters", async () => {
       const mockPrices: HistoricalFuturesPrice[] = [];
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockPrices);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockPrices);
 
       await client.futures.historical("CL.1", {
         startDate: "2024-01-01",
@@ -132,9 +128,7 @@ describe("FuturesResource", () => {
         open_interest: 250000,
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockOHLC);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockOHLC);
 
       const result = await client.futures.ohlc("CL.1");
 
@@ -152,9 +146,7 @@ describe("FuturesResource", () => {
         close: 75.75,
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockOHLC);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockOHLC);
 
       await client.futures.ohlc("CL.1", "2024-01-15");
 
@@ -176,9 +168,7 @@ describe("FuturesResource", () => {
         ],
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
       const result = await client.futures.intraday("CL.1");
 
@@ -204,9 +194,7 @@ describe("FuturesResource", () => {
         timestamp: "2024-01-15T10:00:00Z",
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockSpread);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockSpread);
 
       const result = await client.futures.spreads("CL.1", "CL.2");
 
@@ -257,9 +245,7 @@ describe("FuturesResource", () => {
         ],
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockCurve);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockCurve);
 
       const result = await client.futures.curve("CL");
 
@@ -286,9 +272,7 @@ describe("FuturesResource", () => {
         ],
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
       const result = await client.futures.continuous("CL");
 
@@ -303,9 +287,7 @@ describe("FuturesResource", () => {
         prices: [],
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
       await client.futures.continuous("CL", 2);
 
