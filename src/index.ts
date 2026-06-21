@@ -175,6 +175,23 @@ export type {
   FracFocusSearchQuery,
 } from "./resources/ei/index.js";
 export type {
+  MarketBrief,
+  MarketBriefCommodity,
+  MarketBriefForecast,
+  MarketBriefOptions,
+} from "./resources/market-brief.js";
+export type {
+  Subscription,
+  SubscriptionStatus,
+  SubscriptionSource,
+  SubscriptionInterval,
+  CreateSubscriptionParams,
+  SubscriptionEvent,
+  SubscriptionEventsResult,
+  SubscriptionEventsOptions,
+} from "./resources/subscriptions.js";
+export { SubscriptionsResource, intervalToSeconds } from "./resources/subscriptions.js";
+export type {
   WebhookEndpoint,
   CreateWebhookParams,
   UpdateWebhookParams,

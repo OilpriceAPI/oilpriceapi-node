@@ -12,6 +12,7 @@ import type {
   DemoPricesResponse,
   DemoCommoditiesResponse,
 } from "./types.js";
+import type { MarketBrief, MarketBriefOptions } from "./resources/market-brief.js";
 import {
   OilPriceAPIError,
   AuthenticationError,
@@ -19,6 +20,7 @@ import {
   NotFoundError,
   ServerError,
   TimeoutError,
+  ValidationError,
 } from "./errors.js";
 import { DieselResource } from "./resources/diesel.js";
 import { AlertsResource } from "./resources/alerts.js";
@@ -39,6 +41,7 @@ import { SpreadsResource } from "./resources/spreads.js";
 import { IndicatorsResource } from "./resources/indicators.js";
 import { RawResource } from "./resources/raw.js";
 import { StreamingResource } from "./resources/streaming.js";
+import { SubscriptionsResource } from "./resources/subscriptions.js";
 
 /**
  * Raw HTTP response wrapper.
@@ -190,6 +193,12 @@ export class OilPriceAPI {
    */
   public readonly stream: StreamingResource;
 
+  /**
+   * Agent subscriptions ("watches") resource — persistent recurring watches
+   * over commodity codes plus an event poll endpoint (#3245 Phase 2).
+   */
+  public readonly subscriptions: SubscriptionsResource;
+
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     if (!this.apiKey) {
@@ -225,6 +234,7 @@ export class OilPriceAPI {
     this.indicators = new IndicatorsResource(this);
     this.raw = new RawResource(this);
     this.stream = new StreamingResource(this);
+    this.subscriptions = new SubscriptionsResource(this);
   }
 
   /**
@@ -324,7 +334,7 @@ export class OilPriceAPI {
   private async request<T>(
     endpoint: string,
     params?: Record<string, string>,
-    options?: { method?: string; body?: unknown },
+    options?: { method?: string; body?: unknown; headers?: Record<string, string> },
   ): Promise<T> {
     const { data } = await this.requestRaw<T>(endpoint, params, options);
     return data;
@@ -340,7 +350,7 @@ export class OilPriceAPI {
   private async requestRaw<T>(
     endpoint: string,
     params?: Record<string, string>,
-    options?: { method?: string; body?: unknown },
+    options?: { method?: string; body?: unknown; headers?: Record<string, string> },
   ): Promise<APIResponse<T>> {
     // Build URL with query parameters
     const url = new URL(`${this.baseUrl}${endpoint}`);
@@ -384,6 +394,15 @@ export class OilPriceAPI {
           }
           if (this.appName) {
             headers["X-App-Name"] = this.appName;
+          }
+
+          // Per-request headers (e.g. MCP attribution X-OPA-Source / X-OPA-Tool).
+          if (options?.headers) {
+            Object.entries(options.headers).forEach(([key, value]) => {
+              if (value !== undefined && value !== null) {
+                headers[key] = value;
+              }
+            });
           }
 
           const fetchOptions: RequestInit = {
@@ -738,6 +757,50 @@ export class OilPriceAPI {
    */
   async getCommodity(code: string): Promise<Commodity> {
     return this.request<Commodity>(`/v1/commodities/${code}`, {});
+  }
+
+  /**
+   * Get a multi-commodity market brief (OilPriceAPI #3245 Phase 1a).
+   *
+   * Returns a structured summary (latest price, 24h change, freshness, and a
+   * 1-month forecast band) for each requested commodity, optionally with a
+   * natural-language narrative. Counts as a single request against your quota,
+   * like `/v1/prices/batch`. The per-tier cap on `codes` is enforced server-side.
+   *
+   * @param codes - Commodity codes (e.g. ["BRENT_CRUDE_USD", "WTI_USD"]). Shorthand
+   *   codes like "WTI"/"BRENT" are accepted and resolved server-side.
+   * @param options - `{ narrative }` to request the natural-language summary.
+   * @returns The structured (and optional narrative) market brief.
+   *
+   * @throws {ValidationError} If `codes` is empty.
+   *
+   * @example
+   * ```typescript
+   * const brief = await client.getMarketBrief(['BRENT_CRUDE_USD', 'WTI_USD']);
+   * for (const c of brief.commodities) {
+   *   console.log(`${c.name}: $${c.price} (${c.change_24h_pct}%)`);
+   * }
+   *
+   * // With narrative
+   * const withText = await client.getMarketBrief(['BRENT_CRUDE_USD'], { narrative: true });
+   * console.log(withText.narrative);
+   * ```
+   */
+  async getMarketBrief(codes: string[], options?: MarketBriefOptions): Promise<MarketBrief> {
+    if (!Array.isArray(codes) || codes.length === 0) {
+      throw new ValidationError(
+        "codes is required and must be a non-empty array of commodity codes",
+      );
+    }
+
+    const params: Record<string, string> = {
+      codes: codes.join(","),
+    };
+    if (options?.narrative) {
+      params.narrative = "true";
+    }
+
+    return this.request<MarketBrief>("/v1/market-brief", params);
   }
 
   /**
