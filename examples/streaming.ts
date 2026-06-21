@@ -2,8 +2,8 @@
  * Real-time Streaming Example (WebSocket)
  *
  * Streams live oil & natural-gas price updates over the OilPriceAPI
- * ActionCable `/cable` endpoint. Requires a Reservoir Mastery (Professional+)
- * plan and a valid API key.
+ * ActionCable `/cable` endpoint. Requires a Professional plan ($99/mo) or
+ * higher and a valid API key.
  *
  * Run:
  *   OILPRICEAPI_KEY=your_key npx tsx examples/streaming.ts

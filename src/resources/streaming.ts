@@ -4,7 +4,7 @@
  * Real-time price streaming via the OilPriceAPI ActionCable endpoint
  * (`wss://api.oilpriceapi.com/cable`).
  *
- * Streaming is a **Reservoir Mastery (Professional+)** feature. Connections
+ * Streaming is a **Professional plan ($99/mo) or higher** feature. Connections
  * authenticate with your API key and subscribe to the `EnergyPricesChannel`,
  * which pushes an initial `welcome` snapshot followed by live `price_update`
  * and (for drilling-tier accounts) `rig_count_update` messages.
@@ -112,7 +112,7 @@ export interface WelcomeMessage {
 }
 
 /**
- * Rig-count update broadcast (drilling / Reservoir Mastery accounts).
+ * Rig-count update broadcast (drilling / Professional+ accounts).
  */
 export interface RigCountUpdateMessage {
   type: "rig_count_update";
@@ -319,8 +319,8 @@ export class PriceStreamSubscription extends EventEmitter {
       this.emit(
         "error",
         new Error(
-          "WebSocket subscription rejected. Streaming requires a Reservoir Mastery " +
-            "(Professional+) plan and a valid API key.",
+          "WebSocket subscription rejected. Streaming requires a Professional " +
+            "plan ($99/mo) or higher and a valid API key.",
         ),
       );
       return;

@@ -645,8 +645,8 @@ logs.forEach((log) => {
 
 Stream live price updates over a persistent WebSocket connection instead of
 polling. Streaming uses the server's ActionCable `/cable` endpoint and the
-`EnergyPricesChannel`, and is available on the **Reservoir Mastery
-(Professional+)** plan.
+`EnergyPricesChannel`, and is available on the **Professional plan
+($99/mo) or higher**.
 
 The `client.stream.prices()` method returns a subscription handle (an
 `EventEmitter`). It performs the ActionCable handshake, answers server pings,
