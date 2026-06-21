@@ -26,6 +26,7 @@ The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.co
 - 🔔 **NEW v0.5.0** - Price alerts with webhook notifications
 - 📊 **NEW v0.7.0** - Futures, storage, rig counts, analytics, drilling intelligence, webhooks, and energy intelligence
 - 🧰 **NEW** - Typed ICE Brent / Gasoil / WTI & gas/carbon futures helpers, `spreads`, `indicators`, and raw HTTP responses (`client.raw.*` with status + headers)
+- 🤖 **NEW v0.10.0** - `getMarketBrief()` (multi-commodity structured + narrative summary) and agent `subscriptions` (persistent watches + event polling)
 
 ## Installation
 
@@ -703,6 +704,81 @@ process.on("SIGINT", () => {
 `reconnectDelay`, `maxReconnectDelay`, `maxReconnectAttempts`.
 
 See [`examples/streaming.ts`](./examples/streaming.ts) for a complete runnable example.
+
+### Market Brief (New in v0.10.0)
+
+A single call returns a structured, multi-commodity market summary — latest
+price, 24h change, freshness, and a 1-month forecast band per commodity — with
+an optional natural-language narrative. Counts as one request against your quota.
+
+```typescript
+import { OilPriceAPI } from "oilpriceapi";
+
+const client = new OilPriceAPI({ apiKey: "your_api_key" });
+
+const brief = await client.getMarketBrief(["BRENT_CRUDE_USD", "WTI_USD"]);
+
+for (const c of brief.commodities) {
+  console.log(`${c.name}: $${c.price} (${c.change_24h_pct}% 24h)`);
+  if (c.forecast_1m) {
+    console.log(
+      `  1m forecast: ${c.forecast_1m.point} [${c.forecast_1m.low}–${c.forecast_1m.high}]`,
+    );
+  }
+}
+
+// Include a natural-language narrative
+const withNarrative = await client.getMarketBrief(["BRENT_CRUDE_USD"], {
+  narrative: true,
+});
+console.log(withNarrative.narrative);
+```
+
+### Agent Subscriptions / Watches (New in v0.10.0)
+
+Persistent server-side "watches" evaluate a set of commodity codes on a recurring
+interval and emit events you can poll for — ideal for autonomous agents that want
+change notifications without holding an open connection. The friendly `interval`
+("5m" / "15m" / "1h" / "daily", or a number of seconds) is mapped to the API's
+`interval_seconds`. Polling for events does **not** consume your request quota.
+
+```typescript
+import { OilPriceAPI } from "oilpriceapi";
+
+const client = new OilPriceAPI({ apiKey: "your_api_key" });
+
+// Create a watch (source defaults to "sdk-node"; pass `tool` for attribution)
+const watch = await client.subscriptions.create({
+  name: "Crude desk",
+  codes: ["BRENT_CRUDE_USD", "WTI_USD"],
+  interval: "5m",
+  tool: "my-trading-bot",
+});
+
+// List all watches
+const watches = await client.subscriptions.list();
+console.log(`You have ${watches.length} watch(es)`);
+
+// Poll for new events using a cursor (does not burn quota)
+let cursor = 0;
+while (true) {
+  const {
+    events,
+    cursor: next,
+    has_more,
+  } = await client.subscriptions.events({
+    since: cursor,
+  });
+  for (const event of events) {
+    console.log(`event #${event.seq} on ${event.code} (${event.type})`);
+  }
+  cursor = next;
+  if (!has_more) break;
+}
+
+// Remove a watch when you're done
+await client.subscriptions.delete(watch.id);
+```
 
 ### Advanced Configuration
 

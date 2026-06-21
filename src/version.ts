@@ -7,7 +7,7 @@
  * - X-Client-Version header
  * - Package.json (should match)
  */
-export const SDK_VERSION = "0.9.1";
+export const SDK_VERSION = "0.10.0";
 
 /**
  * SDK identifier used in User-Agent and X-Api-Client headers
