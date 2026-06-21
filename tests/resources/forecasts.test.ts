@@ -78,13 +78,11 @@ describe("ForecastsResource", () => {
         timestamp: "2024-01-15T00:00:00Z",
       };
 
-      const requestSpy = vi
-        .spyOn(client as any, "request")
-        .mockResolvedValue(mockData);
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
       const result = await client.forecasts.accuracy();
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/forecasts/accuracy", {});
+      expect(requestSpy).toHaveBeenCalledWith("/v1/forecasts/monthly/accuracy", {});
       expect(result.mape).toBe(8.5);
     });
   });

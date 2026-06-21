@@ -92,18 +92,34 @@ export interface PermitsByFormation {
 }
 
 /**
- * Well permit search query
+ * Well permit search query.
+ *
+ * Maps to the parameters the `search` action actually reads. Note: `operator`
+ * and `formation` are NOT search params (use the dedicated by-operator /
+ * by-formation endpoints); state filtering uses `states` (comma-separated, plural).
  */
 export interface WellPermitSearchQuery {
-  /** State filter */
-  state?: string;
-  /** Operator filter */
-  operator?: string;
-  /** Formation filter */
-  formation?: string;
-  /** Start date */
+  /** Comma-separated state codes (e.g. 'TX,NM') */
+  states?: string;
+  /** County name (partial match) */
+  county?: string;
+  /** Well name (partial match) */
+  well_name?: string;
+  /** Permit type */
+  permit_type?: string;
+  /** Well type */
+  well_type?: string;
+  /** Free-form address (geocoded to lat/lng) */
+  address?: string;
+  /** Latitude for radius search */
+  latitude?: number;
+  /** Longitude for radius search */
+  longitude?: number;
+  /** Radius in miles (1-100, default 10) for lat/lng search */
+  radius_miles?: number;
+  /** Start date (permit_date >=) */
   start_date?: string;
-  /** End date */
+  /** End date (permit_date <=) */
   end_date?: string;
 }
 
@@ -158,10 +174,7 @@ export class EIWellPermitsResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<WellPermitRecord>(
-      `/v1/ei/well-permits/${id}`,
-      {},
-    );
+    return this.client["request"]<WellPermitRecord>(`/v1/ei/well-permits/${id}`, {});
   }
 
   /**
@@ -170,10 +183,7 @@ export class EIWellPermitsResource {
    * @returns Latest well permit record
    */
   async latest(): Promise<WellPermitRecord> {
-    return this.client["request"]<WellPermitRecord>(
-      "/v1/ei/well-permits/latest",
-      {},
-    );
+    return this.client["request"]<WellPermitRecord>("/v1/ei/well-permits/latest", {});
   }
 
   /**
@@ -182,10 +192,7 @@ export class EIWellPermitsResource {
    * @returns Well permit summary statistics
    */
   async summary(): Promise<WellPermitSummary> {
-    return this.client["request"]<WellPermitSummary>(
-      "/v1/ei/well-permits/summary",
-      {},
-    );
+    return this.client["request"]<WellPermitSummary>("/v1/ei/well-permits/summary", {});
   }
 
   /**
@@ -194,9 +201,10 @@ export class EIWellPermitsResource {
    * @returns Array of permits grouped by state
    */
   async byState(): Promise<PermitsByState[]> {
-    const response = await this.client["request"]<
-      PermitsByState[] | { data: PermitsByState[] }
-    >("/v1/ei/well-permits/by-state", {});
+    const response = await this.client["request"]<PermitsByState[] | { data: PermitsByState[] }>(
+      "/v1/ei/well-permits/by-state",
+      {},
+    );
 
     return Array.isArray(response) ? response : response.data;
   }
@@ -236,9 +244,15 @@ export class EIWellPermitsResource {
   async search(query: WellPermitSearchQuery): Promise<WellPermitRecord[]> {
     const params: Record<string, string> = {};
 
-    if (query.state) params.state = query.state;
-    if (query.operator) params.operator = query.operator;
-    if (query.formation) params.formation = query.formation;
+    if (query.states) params.states = query.states;
+    if (query.county) params.county = query.county;
+    if (query.well_name) params.well_name = query.well_name;
+    if (query.permit_type) params.permit_type = query.permit_type;
+    if (query.well_type) params.well_type = query.well_type;
+    if (query.address) params.address = query.address;
+    if (query.latitude !== undefined) params.latitude = query.latitude.toString();
+    if (query.longitude !== undefined) params.longitude = query.longitude.toString();
+    if (query.radius_miles !== undefined) params.radius_miles = query.radius_miles.toString();
     if (query.start_date) params.start_date = query.start_date;
     if (query.end_date) params.end_date = query.end_date;
 

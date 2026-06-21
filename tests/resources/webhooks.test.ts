@@ -22,10 +22,10 @@ describe("WebhooksResource", () => {
       const mockWebhooks: WebhookEndpoint[] = [
         {
           id: "webhook-1",
-          name: "Price Updates",
+          description: "Price Updates",
           url: "https://example.com/webhook",
           events: ["price.updated", "alert.triggered"],
-          enabled: true,
+          status: "active",
           successful_deliveries: 100,
           failed_deliveries: 5,
           last_delivery_status: "success",
@@ -61,10 +61,10 @@ describe("WebhooksResource", () => {
     it("should fetch a specific webhook by ID", async () => {
       const mockWebhook: WebhookEndpoint = {
         id: "webhook-1",
-        name: "Price Updates",
+        description: "Price Updates",
         url: "https://example.com/webhook",
         events: ["price.updated"],
-        enabled: true,
+        status: "active",
         successful_deliveries: 100,
         failed_deliveries: 5,
         created_at: "2024-01-01T00:00:00Z",
@@ -95,12 +95,12 @@ describe("WebhooksResource", () => {
   });
 
   describe("create()", () => {
-    it("should create a new webhook", async () => {
+    it("should create a new webhook with a flat body using description/status", async () => {
       const params: CreateWebhookParams = {
-        name: "Price Alerts",
+        description: "Price Alerts",
         url: "https://example.com/webhook",
         events: ["price.updated", "alert.triggered"],
-        enabled: true,
+        status: "active",
       };
 
       const mockWebhook: WebhookEndpoint = {
@@ -119,39 +119,25 @@ describe("WebhooksResource", () => {
       const result = await client.webhooks.create(params);
 
       expect(result).toEqual(mockWebhook);
+      // Flat (un-nested) body — the controller permits these fields directly.
       expect(requestSpy).toHaveBeenCalledWith(
         "/v1/webhooks",
         {},
         {
           method: "POST",
           body: {
-            webhook: {
-              name: params.name,
-              url: params.url,
-              events: params.events,
-              enabled: true,
-              secret: undefined,
-              metadata: undefined,
-            },
+            description: params.description,
+            url: params.url,
+            events: params.events,
+            status: "active",
           },
         },
       );
     });
 
-    it("should validate webhook name", async () => {
-      await expect(
-        client.webhooks.create({
-          name: "",
-          url: "https://example.com",
-          events: ["price.updated"],
-        }),
-      ).rejects.toThrow("Webhook name is required");
-    });
-
     it("should validate HTTPS URL", async () => {
       await expect(
         client.webhooks.create({
-          name: "Test",
           url: "http://example.com",
           events: ["price.updated"],
         }),
@@ -161,7 +147,6 @@ describe("WebhooksResource", () => {
     it("should validate events array is not empty", async () => {
       await expect(
         client.webhooks.create({
-          name: "Test",
           url: "https://example.com",
           events: [],
         }),
@@ -170,17 +155,17 @@ describe("WebhooksResource", () => {
   });
 
   describe("update()", () => {
-    it("should update a webhook", async () => {
+    it("should update a webhook with a flat body", async () => {
       const params: UpdateWebhookParams = {
-        enabled: false,
+        status: "disabled",
       };
 
       const mockWebhook: WebhookEndpoint = {
         id: "webhook-1",
-        name: "Price Alerts",
+        description: "Price Alerts",
         url: "https://example.com/webhook",
         events: ["price.updated"],
-        enabled: false,
+        status: "disabled",
         successful_deliveries: 100,
         failed_deliveries: 5,
         created_at: "2024-01-01T00:00:00Z",
@@ -193,19 +178,19 @@ describe("WebhooksResource", () => {
 
       const result = await client.webhooks.update("webhook-1", params);
 
-      expect(result.enabled).toBe(false);
+      expect(result.status).toBe("disabled");
       expect(requestSpy).toHaveBeenCalledWith(
         "/v1/webhooks/webhook-1",
         {},
         {
           method: "PATCH",
-          body: { webhook: params },
+          body: { ...params },
         },
       );
     });
 
     it("should throw error for empty webhook ID", async () => {
-      await expect(client.webhooks.update("", { enabled: false })).rejects.toThrow(
+      await expect(client.webhooks.update("", { status: "disabled" })).rejects.toThrow(
         "Webhook ID must be a non-empty string",
       );
     });

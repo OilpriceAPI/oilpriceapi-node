@@ -13,9 +13,8 @@ import type {
 const makeDataSource = (overrides: Partial<DataSource> = {}): DataSource => ({
   id: "source-1",
   name: "Custom API Source",
-  type: "api",
-  config: { url: "https://internal.company.com/api/prices" },
-  enabled: true,
+  source_type: "api",
+  scraper_config: { url: "https://internal.company.com/api/prices" },
   status: "active",
   successful_syncs: 100,
   failed_syncs: 5,
@@ -36,7 +35,7 @@ describe("DataSourcesResource", () => {
     it("should fetch all data sources as array", async () => {
       const mockData: DataSource[] = [
         makeDataSource({ id: "source-1", name: "API Source" }),
-        makeDataSource({ id: "source-2", name: "SFTP Source", type: "sftp" }),
+        makeDataSource({ id: "source-2", name: "SFTP Source", source_type: "sftp" }),
       ];
 
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
@@ -46,7 +45,7 @@ describe("DataSourcesResource", () => {
       expect(requestSpy).toHaveBeenCalledWith("/v1/data-sources", {});
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe("source-1");
-      expect(result[1].type).toBe("sftp");
+      expect(result[1].source_type).toBe("sftp");
     });
 
     it("should unwrap data_sources property when response is wrapped", async () => {
@@ -77,7 +76,6 @@ describe("DataSourcesResource", () => {
         name: "Custom API Source",
         last_sync_at: "2024-01-15T10:00:00Z",
         next_sync_at: "2024-01-15T11:00:00Z",
-        sync_frequency_minutes: 60,
       });
 
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
@@ -115,12 +113,14 @@ describe("DataSourcesResource", () => {
   });
 
   describe("create()", () => {
-    it("should create a new data source with required fields", async () => {
+    it("should create a new data source using source_type/scraper_config/credentials", async () => {
       const params: CreateDataSourceParams = {
         name: "Internal Price Feed",
-        type: "api",
-        config: {
+        source_type: "api",
+        scraper_config: {
           url: "https://internal.company.com/api/prices",
+        },
+        credentials: {
           auth_type: "bearer",
           token: "secret-token",
         },
@@ -128,9 +128,8 @@ describe("DataSourcesResource", () => {
 
       const mockCreated = makeDataSource({
         name: params.name,
-        type: params.type,
-        config: params.config,
-        sync_frequency_minutes: 60,
+        source_type: params.source_type,
+        scraper_config: params.scraper_config,
       });
 
       const requestSpy = vi
@@ -147,11 +146,10 @@ describe("DataSourcesResource", () => {
           body: {
             data_source: {
               name: params.name,
-              type: params.type,
-              config: params.config,
-              enabled: true,
-              sync_frequency_minutes: 60,
-              metadata: undefined,
+              source_type: params.source_type,
+              status: undefined,
+              credentials: params.credentials,
+              scraper_config: params.scraper_config,
             },
           },
         },
@@ -159,14 +157,13 @@ describe("DataSourcesResource", () => {
       expect(result.name).toBe("Internal Price Feed");
     });
 
-    it("should create a data source with all optional fields", async () => {
+    it("should create a data source with status set", async () => {
       const params: CreateDataSourceParams = {
         name: "SFTP Feed",
-        type: "sftp",
-        config: { host: "sftp.example.com", username: "user" },
-        enabled: false,
-        sync_frequency_minutes: 1440,
-        metadata: { team: "ops" },
+        source_type: "sftp",
+        scraper_config: { host: "sftp.example.com", username: "user" },
+        credentials: { password: "secret" },
+        status: "paused",
       };
 
       const mockCreated = makeDataSource({ ...params, status: "paused" });
@@ -183,11 +180,10 @@ describe("DataSourcesResource", () => {
           body: {
             data_source: {
               name: params.name,
-              type: params.type,
-              config: params.config,
-              enabled: false,
-              sync_frequency_minutes: 1440,
-              metadata: { team: "ops" },
+              source_type: params.source_type,
+              status: "paused",
+              credentials: params.credentials,
+              scraper_config: params.scraper_config,
             },
           },
         },
@@ -196,42 +192,31 @@ describe("DataSourcesResource", () => {
     });
 
     it("should throw error when name is missing", async () => {
-      await expect(
-        client.dataSources.create({ name: "", type: "api", config: {} }),
-      ).rejects.toThrow("Data source name is required");
+      await expect(client.dataSources.create({ name: "", source_type: "api" })).rejects.toThrow(
+        "Data source name is required",
+      );
     });
 
-    it("should throw error when type is missing", async () => {
+    it("should throw error when source_type is missing", async () => {
       await expect(
         client.dataSources.create({
           name: "My Source",
-          type: "" as any,
-          config: {},
+          source_type: "" as any,
         }),
-      ).rejects.toThrow("Data source type is required");
-    });
-
-    it("should throw error when config is missing", async () => {
-      await expect(
-        client.dataSources.create({
-          name: "My Source",
-          type: "api",
-          config: null as any,
-        }),
-      ).rejects.toThrow("Data source config is required");
+      ).rejects.toThrow("Data source source_type is required");
     });
   });
 
   describe("update()", () => {
     it("should update a data source with partial fields", async () => {
       const updateParams: UpdateDataSourceParams = {
-        enabled: false,
-        sync_frequency_minutes: 120,
+        status: "paused",
+        scraper_config: { interval: 120 },
       };
 
       const mockUpdated = makeDataSource({
-        enabled: false,
-        sync_frequency_minutes: 120,
+        status: "paused",
+        scraper_config: { interval: 120 },
       });
 
       const requestSpy = vi
@@ -248,17 +233,15 @@ describe("DataSourcesResource", () => {
           body: { data_source: updateParams },
         },
       );
-      expect(result.enabled).toBe(false);
-      expect(result.sync_frequency_minutes).toBe(120);
+      expect(result.status).toBe("paused");
     });
 
     it("should update all fields", async () => {
       const updateParams: UpdateDataSourceParams = {
         name: "Updated Source",
-        config: { url: "https://new.endpoint.com/prices" },
-        enabled: true,
-        sync_frequency_minutes: 30,
-        metadata: { updated: true },
+        scraper_config: { url: "https://new.endpoint.com/prices" },
+        credentials: { token: "rotated" },
+        status: "active",
       };
 
       const mockUpdated = makeDataSource({ ...updateParams, id: "source-1" });
@@ -279,13 +262,13 @@ describe("DataSourcesResource", () => {
     });
 
     it("should throw error for empty source ID", async () => {
-      await expect(client.dataSources.update("", { enabled: false })).rejects.toThrow(
+      await expect(client.dataSources.update("", { status: "paused" })).rejects.toThrow(
         "Data source ID must be a non-empty string",
       );
     });
 
     it("should throw error for non-string source ID", async () => {
-      await expect(client.dataSources.update(null as any, { enabled: false })).rejects.toThrow(
+      await expect(client.dataSources.update(null as any, { status: "paused" })).rejects.toThrow(
         "Data source ID must be a non-empty string",
       );
     });
@@ -474,12 +457,13 @@ describe("DataSourcesResource", () => {
 
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockResponse);
 
-      const result = await client.dataSources.rotateCredentials("source-1");
+      const newCreds = { token: "new-token" };
+      const result = await client.dataSources.rotateCredentials("source-1", newCreds);
 
       expect(requestSpy).toHaveBeenCalledWith(
-        "/v1/data-sources/source-1/rotate-credentials",
+        "/v1/data-sources/source-1/rotate_credentials",
         {},
-        { method: "POST" },
+        { method: "POST", body: { credentials: newCreds } },
       );
       expect(result.success).toBe(true);
       expect(result.credential_id).toBe("cred-new-456");
@@ -493,22 +477,24 @@ describe("DataSourcesResource", () => {
 
       vi.spyOn(client as any, "request").mockResolvedValue(mockResponse);
 
-      const result = await client.dataSources.rotateCredentials("source-1");
+      const result = await client.dataSources.rotateCredentials("source-1", {
+        token: "x",
+      });
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Rotation failed");
     });
 
     it("should throw error for empty source ID", async () => {
-      await expect(client.dataSources.rotateCredentials("")).rejects.toThrow(
+      await expect(client.dataSources.rotateCredentials("", { token: "x" })).rejects.toThrow(
         "Data source ID must be a non-empty string",
       );
     });
 
     it("should throw error for non-string source ID", async () => {
-      await expect(client.dataSources.rotateCredentials(null as any)).rejects.toThrow(
-        "Data source ID must be a non-empty string",
-      );
+      await expect(
+        client.dataSources.rotateCredentials(null as any, { token: "x" }),
+      ).rejects.toThrow("Data source ID must be a non-empty string");
     });
   });
 });

@@ -48,10 +48,11 @@ export interface HistoricalStorageData {
  * Options for historical storage query
  */
 export interface HistoricalStorageOptions {
-  /** Start date in ISO 8601 format (YYYY-MM-DD) */
-  startDate?: string;
-  /** End date in ISO 8601 format (YYYY-MM-DD) */
-  endDate?: string;
+  /**
+   * Lookback period. The API reads a `period` token, one of
+   * '7d' | '30d' | '90d' (default) | '1y' | 'all' — not arbitrary date ranges.
+   */
+  period?: "7d" | "30d" | "90d" | "1y" | "all";
 }
 
 /**
@@ -172,10 +173,7 @@ export class StorageResource {
     const params: Record<string, string> = {};
     if (region) params.region = region;
 
-    return this.client["request"]<StorageData | StorageData[]>(
-      "/v1/storage/regional",
-      params,
-    );
+    return this.client["request"]<StorageData | StorageData[]>("/v1/storage/regional", params);
   }
 
   /**
@@ -211,12 +209,13 @@ export class StorageResource {
     }
 
     const params: Record<string, string> = {};
-    if (options?.startDate) params.start_date = options.startDate;
-    if (options?.endDate) params.end_date = options.endDate;
+    if (options?.period) params.period = options.period;
 
+    // Route is GET /v1/storage/history/:code (the :code segment comes AFTER
+    // `history`), and the controller reads a `period` token.
     const response = await this.client["request"]<
       HistoricalStorageData[] | { data: HistoricalStorageData[] }
-    >(`/v1/storage/${code}/history`, params);
+    >(`/v1/storage/history/${code}`, params);
 
     return Array.isArray(response) ? response : response.data;
   }

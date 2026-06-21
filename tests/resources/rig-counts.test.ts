@@ -104,19 +104,20 @@ describe("RigCountsResource", () => {
         endDate: "2024-01-31",
       });
 
+      // Controller reads nested by_period[from]/by_period[to], not start_date/end_date.
       expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/historical", {
-        start_date: "2024-01-01",
-        end_date: "2024-01-31",
+        "by_period[from]": "2024-01-01",
+        "by_period[to]": "2024-01-31",
       });
     });
 
-    it("should pass only startDate if endDate is omitted", async () => {
+    it("should pass only by_period[from] if endDate is omitted", async () => {
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue([]);
 
       await client.rigCounts.historical({ startDate: "2024-01-01" });
 
       expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/historical", {
-        start_date: "2024-01-01",
+        "by_period[from]": "2024-01-01",
       });
     });
 

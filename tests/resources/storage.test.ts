@@ -217,38 +217,33 @@ describe("StorageResource", () => {
 
       const result = await client.storage.history("US");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/storage/US/history", {});
+      // Path is /v1/storage/history/:code (code AFTER `history`).
+      expect(requestSpy).toHaveBeenCalledWith("/v1/storage/history/US", {});
       expect(result).toHaveLength(3);
       expect(result[0].date).toBe("2024-01-01");
       expect(result[2].level).toBe(450000);
     });
 
-    it("should fetch history with date filters", async () => {
+    it("should fetch history with a period token", async () => {
       const mockData: HistoricalStorageData[] = [
         { date: "2024-01-15", level: 25000, unit: "thousand_barrels" },
       ];
 
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
 
-      await client.storage.history("CUSHING", {
-        startDate: "2024-01-01",
-        endDate: "2024-01-31",
-      });
+      await client.storage.history("CUSHING", { period: "30d" });
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/storage/CUSHING/history", {
-        start_date: "2024-01-01",
-        end_date: "2024-01-31",
+      expect(requestSpy).toHaveBeenCalledWith("/v1/storage/history/CUSHING", {
+        period: "30d",
       });
     });
 
-    it("should pass only startDate when endDate is omitted", async () => {
+    it("should send no period param when omitted", async () => {
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue([]);
 
-      await client.storage.history("SPR", { startDate: "2024-01-01" });
+      await client.storage.history("SPR");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/storage/SPR/history", {
-        start_date: "2024-01-01",
-      });
+      expect(requestSpy).toHaveBeenCalledWith("/v1/storage/history/SPR", {});
     });
 
     it("should unwrap data property when response is wrapped", async () => {

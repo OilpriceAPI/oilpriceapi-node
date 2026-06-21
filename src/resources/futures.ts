@@ -45,13 +45,35 @@ export interface HistoricalFuturesPrice {
 }
 
 /**
- * Options for historical futures query
+ * Options for historical futures query.
+ *
+ * The controller reads `from` / `to` (dates) plus optional `interval` and
+ * `contracts` — NOT `start_date` / `end_date`.
  */
 export interface HistoricalFuturesOptions {
   /** Start date in ISO 8601 format (YYYY-MM-DD) */
   startDate?: string;
   /** End date in ISO 8601 format (YYYY-MM-DD) */
   endDate?: string;
+  /** Aggregation interval (e.g. '1d') */
+  interval?: string;
+  /** Specific contracts to include */
+  contracts?: string;
+}
+
+/**
+ * Options for futures OHLC query.
+ *
+ * The controller reads `days`, `contract` and `interval` — there is no `date`
+ * parameter for OHLC.
+ */
+export interface FuturesOHLCOptions {
+  /** Number of days of OHLC bars (default 30, clamped 1-365) */
+  days?: number;
+  /** Specific contract */
+  contract?: string;
+  /** Aggregation interval */
+  interval?: string;
 }
 
 /**
@@ -291,8 +313,10 @@ export class FuturesContractFamily {
    */
   async historical(options?: HistoricalFuturesOptions): Promise<HistoricalFuturesPrice[]> {
     const params: Record<string, string> = {};
-    if (options?.startDate) params.start_date = options.startDate;
-    if (options?.endDate) params.end_date = options.endDate;
+    if (options?.startDate) params.from = options.startDate;
+    if (options?.endDate) params.to = options.endDate;
+    if (options?.interval) params.interval = options.interval;
+    if (options?.contracts) params.contracts = options.contracts;
 
     const response = await this.client["request"]<
       HistoricalFuturesPrice[] | { prices: HistoricalFuturesPrice[] }
@@ -304,11 +328,13 @@ export class FuturesContractFamily {
   /**
    * Get OHLC data for this contract family.
    *
-   * @param date - Optional date (YYYY-MM-DD); defaults to latest.
+   * @param options - `{ days, contract, interval }` (the API has no `date` param here).
    */
-  async ohlc(date?: string): Promise<FuturesOHLC> {
+  async ohlc(options?: FuturesOHLCOptions): Promise<FuturesOHLC> {
     const params: Record<string, string> = {};
-    if (date) params.date = date;
+    if (options?.days !== undefined) params.days = options.days.toString();
+    if (options?.contract) params.contract = options.contract;
+    if (options?.interval) params.interval = options.interval;
     return this.client["request"]<FuturesOHLC>(`/v1/futures/${this.slug}/ohlc`, params);
   }
 

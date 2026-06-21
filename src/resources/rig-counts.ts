@@ -187,12 +187,13 @@ export class RigCountsResource {
    * });
    * ```
    */
-  async historical(
-    options?: HistoricalRigCountOptions,
-  ): Promise<HistoricalRigCountData[]> {
+  async historical(options?: HistoricalRigCountOptions): Promise<HistoricalRigCountData[]> {
+    // The controller filters via `has_scope :by_period, using: %i[from to], type: :hash`,
+    // i.e. it reads nested `by_period[from]` / `by_period[to]` query params — NOT
+    // flat `start_date` / `end_date` (which were silently ignored by earlier SDKs).
     const params: Record<string, string> = {};
-    if (options?.startDate) params.start_date = options.startDate;
-    if (options?.endDate) params.end_date = options.endDate;
+    if (options?.startDate) params["by_period[from]"] = options.startDate;
+    if (options?.endDate) params["by_period[to]"] = options.endDate;
 
     const response = await this.client["request"]<
       HistoricalRigCountData[] | { data: HistoricalRigCountData[] }
@@ -224,10 +225,7 @@ export class RigCountsResource {
     const params: Record<string, string> = {};
     if (period) params.period = period;
 
-    return this.client["request"]<RigCountTrend>(
-      "/v1/rig-counts/trends",
-      params,
-    );
+    return this.client["request"]<RigCountTrend>("/v1/rig-counts/trends", params);
   }
 
   /**
@@ -253,9 +251,6 @@ export class RigCountsResource {
    * ```
    */
   async summary(): Promise<RigCountSummary> {
-    return this.client["request"]<RigCountSummary>(
-      "/v1/rig-counts/summary",
-      {},
-    );
+    return this.client["request"]<RigCountSummary>("/v1/rig-counts/summary", {});
   }
 }

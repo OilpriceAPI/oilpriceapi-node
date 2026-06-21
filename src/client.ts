@@ -9,6 +9,8 @@ import type {
   CategoriesResponse,
   DataConnectorPrice,
   DataConnectorOptions,
+  DemoPricesResponse,
+  DemoCommoditiesResponse,
 } from "./types.js";
 import {
   OilPriceAPIError,
@@ -736,5 +738,91 @@ export class OilPriceAPI {
    */
   async getCommodity(code: string): Promise<Commodity> {
     return this.request<Commodity>(`/v1/commodities/${code}`, {});
+  }
+
+  /**
+   * Fetch live sample prices from the public, no-auth demo endpoint.
+   *
+   * Hits `GET /v1/demo/prices` (no API key required) and returns the parsed
+   * `{ prices, meta }` envelope. Useful for trying the client without
+   * credentials. Subject to the demo rate limit (~20 requests/hour).
+   *
+   * @example
+   * ```typescript
+   * const demo = await client.getDemoPrices();
+   * const brent = demo.prices.find(p => p.code === 'BRENT_CRUDE_USD');
+   * console.log(brent?.price);
+   * ```
+   */
+  async getDemoPrices(): Promise<DemoPricesResponse> {
+    return this.requestDemo<DemoPricesResponse>("/v1/demo/prices");
+  }
+
+  /**
+   * Fetch the catalogue of commodities from the public, no-auth demo endpoint.
+   *
+   * Hits `GET /v1/demo/commodities` (no API key required) and returns the parsed
+   * `{ commodities, meta }` envelope, where `meta.free_commodities` lists the
+   * codes available on the free demo tier.
+   *
+   * @example
+   * ```typescript
+   * const demo = await client.getDemoCommodities();
+   * console.log(demo.meta.total, demo.meta.free_commodities);
+   * ```
+   */
+  async getDemoCommodities(): Promise<DemoCommoditiesResponse> {
+    return this.requestDemo<DemoCommoditiesResponse>("/v1/demo/commodities");
+  }
+
+  /**
+   * Minimal fetch for the no-auth demo endpoints.
+   *
+   * Unlike {@link request}, this does NOT run the latest/historical response
+   * shaping (which would strip the `meta` block) and does NOT require an API
+   * key — it returns the raw `data` envelope from `{ status, data }`.
+   */
+  private async requestDemo<T>(endpoint: string): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    this.log(`Demo request: ${url}`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": buildUserAgent(),
+          "X-SDK-Name": SDK_NAME,
+          "X-SDK-Version": SDK_VERSION,
+        },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        let message = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const json = JSON.parse(body);
+          message = json.message || json.error || message;
+        } catch {
+          // non-JSON error body
+        }
+        throw new OilPriceAPIError(message, response.status, "HTTP_ERROR");
+      }
+
+      const parsed: any = JSON.parse(await response.text());
+      // Demo envelope is { status: "success", data: { ... } }.
+      return (parsed.data !== undefined ? parsed.data : parsed) as T;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new TimeoutError("Request timeout", this.timeout);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 }

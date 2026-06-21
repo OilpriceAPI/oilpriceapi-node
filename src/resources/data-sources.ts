@@ -10,13 +10,7 @@ import { ValidationError } from "../errors.js";
 /**
  * Data source types
  */
-export type DataSourceType =
-  | "api"
-  | "database"
-  | "file"
-  | "sftp"
-  | "webhook"
-  | "custom";
+export type DataSourceType = "api" | "database" | "file" | "sftp" | "webhook" | "custom";
 
 /**
  * Data source status
@@ -25,6 +19,10 @@ export type DataSourceStatus = "active" | "paused" | "error" | "pending";
 
 /**
  * Data source configuration
+ *
+ * NOTE: The API reads `source_type`, `scraper_config`, `status` and `credentials`
+ * (nested under `data_source`). Earlier SDK versions used `type`/`config`/`enabled`,
+ * which the controller silently dropped.
  */
 export interface DataSource {
   /** Unique data source identifier */
@@ -32,27 +30,21 @@ export interface DataSource {
   /** User-friendly name */
   name: string;
   /** Data source type */
-  type: DataSourceType;
-  /** Connection configuration (encrypted) */
-  config: Record<string, unknown>;
-  /** Whether the data source is active */
-  enabled: boolean;
+  source_type: DataSourceType;
+  /** Scraper / connection configuration */
+  scraper_config?: Record<string, unknown>;
   /** Current status */
   status: DataSourceStatus;
   /** Last successful sync timestamp */
   last_sync_at?: string;
   /** Next scheduled sync timestamp */
   next_sync_at?: string;
-  /** Sync frequency in minutes */
-  sync_frequency_minutes?: number;
   /** Number of successful syncs */
-  successful_syncs: number;
+  successful_syncs?: number;
   /** Number of failed syncs */
-  failed_syncs: number;
+  failed_syncs?: number;
   /** Last error message */
   last_error?: string;
-  /** Optional metadata */
-  metadata?: Record<string, unknown>;
   /** ISO timestamp when source was created */
   created_at: string;
   /** ISO timestamp when source was last updated */
@@ -60,37 +52,39 @@ export interface DataSource {
 }
 
 /**
- * Parameters for creating a data source
+ * Parameters for creating a data source.
+ *
+ * Maps to the controller's `data_source_params` strong params:
+ * `source_type`, `name`, `status`, `credentials`, `scraper_config`.
  */
 export interface CreateDataSourceParams {
   /** User-friendly name */
   name: string;
   /** Data source type */
-  type: DataSourceType;
-  /** Connection configuration */
-  config: Record<string, unknown>;
-  /** Whether to enable immediately (default: true) */
-  enabled?: boolean;
-  /** Sync frequency in minutes (default: 60) */
-  sync_frequency_minutes?: number;
-  /** Optional metadata */
-  metadata?: Record<string, unknown>;
+  source_type: DataSourceType;
+  /** Scraper / connection configuration */
+  scraper_config?: Record<string, unknown>;
+  /** Credentials (encrypted server-side) */
+  credentials?: Record<string, unknown>;
+  /** Lifecycle status */
+  status?: DataSourceStatus;
 }
 
 /**
- * Parameters for updating a data source
+ * Parameters for updating a data source.
+ *
+ * Maps to `data_source_update_params`: `name`, `status`, `credentials`,
+ * `scraper_config` (source_type cannot be changed).
  */
 export interface UpdateDataSourceParams {
   /** User-friendly name */
   name?: string;
-  /** Connection configuration */
-  config?: Record<string, unknown>;
-  /** Whether the data source is active */
-  enabled?: boolean;
-  /** Sync frequency in minutes */
-  sync_frequency_minutes?: number;
-  /** Metadata */
-  metadata?: Record<string, unknown>;
+  /** Scraper / connection configuration */
+  scraper_config?: Record<string, unknown>;
+  /** Credentials (encrypted server-side) */
+  credentials?: Record<string, unknown>;
+  /** Lifecycle status */
+  status?: DataSourceStatus;
 }
 
 /**
@@ -224,9 +218,10 @@ export class DataSourcesResource {
    * ```
    */
   async list(): Promise<DataSource[]> {
-    const response = await this.client["request"]<
-      DataSource[] | { data_sources: DataSource[] }
-    >("/v1/data-sources", {});
+    const response = await this.client["request"]<DataSource[] | { data_sources: DataSource[] }>(
+      "/v1/data-sources",
+      {},
+    );
 
     return Array.isArray(response) ? response : response.data_sources;
   }
@@ -252,9 +247,10 @@ export class DataSourcesResource {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      DataSource | { data_source: DataSource }
-    >(`/v1/data-sources/${id}`, {});
+    const response = await this.client["request"]<DataSource | { data_source: DataSource }>(
+      `/v1/data-sources/${id}`,
+      {},
+    );
 
     return "data_source" in response ? response.data_source : response;
   }
@@ -287,16 +283,11 @@ export class DataSourcesResource {
     if (!params.name || typeof params.name !== "string") {
       throw new ValidationError("Data source name is required");
     }
-    if (!params.type) {
-      throw new ValidationError("Data source type is required");
-    }
-    if (!params.config || typeof params.config !== "object") {
-      throw new ValidationError("Data source config is required");
+    if (!params.source_type) {
+      throw new ValidationError("Data source source_type is required");
     }
 
-    const response = await this.client["request"]<
-      DataSource | { data_source: DataSource }
-    >(
+    const response = await this.client["request"]<DataSource | { data_source: DataSource }>(
       "/v1/data-sources",
       {},
       {
@@ -304,11 +295,10 @@ export class DataSourcesResource {
         body: {
           data_source: {
             name: params.name,
-            type: params.type,
-            config: params.config,
-            enabled: params.enabled ?? true,
-            sync_frequency_minutes: params.sync_frequency_minutes ?? 60,
-            metadata: params.metadata,
+            source_type: params.source_type,
+            status: params.status,
+            credentials: params.credentials,
+            scraper_config: params.scraper_config,
           },
         },
       },
@@ -338,17 +328,12 @@ export class DataSourcesResource {
    * });
    * ```
    */
-  async update(
-    id: string,
-    params: UpdateDataSourceParams,
-  ): Promise<DataSource> {
+  async update(id: string, params: UpdateDataSourceParams): Promise<DataSource> {
     if (!id || typeof id !== "string") {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      DataSource | { data_source: DataSource }
-    >(
+    const response = await this.client["request"]<DataSource | { data_source: DataSource }>(
       `/v1/data-sources/${id}`,
       {},
       {
@@ -379,11 +364,7 @@ export class DataSourcesResource {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    await this.client["request"](
-      `/v1/data-sources/${id}`,
-      {},
-      { method: "DELETE" },
-    );
+    await this.client["request"](`/v1/data-sources/${id}`, {}, { method: "DELETE" });
   }
 
   /**
@@ -442,9 +423,10 @@ export class DataSourcesResource {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      DataSourceLog[] | { logs: DataSourceLog[] }
-    >(`/v1/data-sources/${id}/logs`, {});
+    const response = await this.client["request"]<DataSourceLog[] | { logs: DataSourceLog[] }>(
+      `/v1/data-sources/${id}/logs`,
+      {},
+    );
 
     return Array.isArray(response) ? response : response.logs;
   }
@@ -471,10 +453,7 @@ export class DataSourcesResource {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    return this.client["request"]<DataSourceHealth>(
-      `/v1/data-sources/${id}/health`,
-      {},
-    );
+    return this.client["request"]<DataSourceHealth>(`/v1/data-sources/${id}/health`, {});
   }
 
   /**
@@ -494,15 +473,23 @@ export class DataSourcesResource {
    * console.log(`Credential rotation: ${result.success ? 'success' : 'failed'}`);
    * ```
    */
-  async rotateCredentials(id: string): Promise<CredentialRotationResponse> {
+  async rotateCredentials(
+    id: string,
+    credentials: Record<string, unknown>,
+  ): Promise<CredentialRotationResponse> {
     if (!id || typeof id !== "string") {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
+    if (!credentials || typeof credentials !== "object") {
+      throw new ValidationError("New credentials object is required");
+    }
 
+    // Route is POST /v1/data-sources/:id/rotate_credentials (underscore) and
+    // the controller does params.require(:credentials).
     return this.client["request"]<CredentialRotationResponse>(
-      `/v1/data-sources/${id}/rotate-credentials`,
+      `/v1/data-sources/${id}/rotate_credentials`,
       {},
-      { method: "POST" },
+      { method: "POST", body: { credentials } },
     );
   }
 }

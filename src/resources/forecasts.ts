@@ -159,10 +159,8 @@ export class ForecastsResource {
    * ```
    */
   async accuracy(): Promise<ForecastAccuracy> {
-    return this.client["request"]<ForecastAccuracy>(
-      "/v1/forecasts/accuracy",
-      {},
-    );
+    // Route is /v1/forecasts/monthly/accuracy (the bare /accuracy 404s).
+    return this.client["request"]<ForecastAccuracy>("/v1/forecasts/monthly/accuracy", {});
   }
 
   /**
@@ -194,13 +192,17 @@ export class ForecastsResource {
    * });
    * ```
    */
-  async archive(year?: number): Promise<ArchivedForecast[]> {
+  async archive(options?: { page?: number; perPage?: number }): Promise<ArchivedForecast[]> {
+    // Route is /v1/forecasts/monthly/archive (the bare /archive 404s). The
+    // controller reads only `page` / `per_page` — it does NOT filter by year,
+    // so the previous `year` argument was silently ignored.
     const params: Record<string, string> = {};
-    if (year) params.year = year.toString();
+    if (options?.page !== undefined) params.page = options.page.toString();
+    if (options?.perPage !== undefined) params.per_page = options.perPage.toString();
 
     const response = await this.client["request"]<
       ArchivedForecast[] | { forecasts: ArchivedForecast[] }
-    >("/v1/forecasts/archive", params);
+    >("/v1/forecasts/monthly/archive", params);
 
     return Array.isArray(response) ? response : response.forecasts;
   }
@@ -236,9 +238,6 @@ export class ForecastsResource {
     const params: Record<string, string> = {};
     if (commodity) params.commodity = commodity;
 
-    return this.client["request"]<MonthlyForecast>(
-      `/v1/forecasts/monthly/${period}`,
-      params,
-    );
+    return this.client["request"]<MonthlyForecast>(`/v1/forecasts/monthly/${period}`, params);
   }
 }

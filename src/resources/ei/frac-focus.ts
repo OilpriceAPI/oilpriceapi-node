@@ -109,18 +109,32 @@ export interface WellChemical {
 }
 
 /**
- * FracFocus search query
+ * FracFocus search query.
+ *
+ * Maps to the parameters the `search` action actually reads. Note: `operator`
+ * and `chemical` are NOT search params (use the dedicated by-operator /
+ * by-chemical endpoints); state filtering uses `states` (comma-separated, plural).
  */
 export interface FracFocusSearchQuery {
-  /** State filter */
-  state?: string;
-  /** Operator filter */
-  operator?: string;
-  /** Chemical filter */
-  chemical?: string;
-  /** Start date */
+  /** Comma-separated state codes (e.g. 'TX,NM') */
+  states?: string;
+  /** County name (partial match) */
+  county?: string;
+  /** Well name (partial match) */
+  well_name?: string;
+  /** API well number (partial match) */
+  api_number?: string;
+  /** Minimum total base water volume (gallons) */
+  min_water_gallons?: number;
+  /** Latitude for radius search */
+  latitude?: number;
+  /** Longitude for radius search */
+  longitude?: number;
+  /** Radius in miles (1-100, default 10) for lat/lng search */
+  radius_miles?: number;
+  /** Start date (job_start_date >=) */
   start_date?: string;
-  /** End date */
+  /** End date (job_start_date <=) */
   end_date?: string;
 }
 
@@ -161,9 +175,10 @@ export class EIFracFocusResource {
    * @returns Array of disclosure records
    */
   async list(): Promise<FracFocusRecord[]> {
-    const response = await this.client["request"]<
-      FracFocusRecord[] | { data: FracFocusRecord[] }
-    >("/v1/ei/frac-focus", {});
+    const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
+      "/v1/ei/frac-focus",
+      {},
+    );
 
     return Array.isArray(response) ? response : response.data;
   }
@@ -179,10 +194,7 @@ export class EIFracFocusResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<FracFocusRecord>(
-      `/v1/ei/frac-focus/${id}`,
-      {},
-    );
+    return this.client["request"]<FracFocusRecord>(`/v1/ei/frac-focus/${id}`, {});
   }
 
   /**
@@ -191,10 +203,7 @@ export class EIFracFocusResource {
    * @returns Latest disclosure record
    */
   async latest(): Promise<FracFocusRecord> {
-    return this.client["request"]<FracFocusRecord>(
-      "/v1/ei/frac-focus/latest",
-      {},
-    );
+    return this.client["request"]<FracFocusRecord>("/v1/ei/frac-focus/latest", {});
   }
 
   /**
@@ -203,10 +212,7 @@ export class EIFracFocusResource {
    * @returns Disclosure summary statistics
    */
   async summary(): Promise<FracFocusSummary> {
-    return this.client["request"]<FracFocusSummary>(
-      "/v1/ei/frac-focus/summary",
-      {},
-    );
+    return this.client["request"]<FracFocusSummary>("/v1/ei/frac-focus/summary", {});
   }
 
   /**
@@ -241,9 +247,10 @@ export class EIFracFocusResource {
    * @returns Array of chemicals used in fracturing
    */
   async byChemical(): Promise<ChemicalUsage[]> {
-    const response = await this.client["request"]<
-      ChemicalUsage[] | { data: ChemicalUsage[] }
-    >("/v1/ei/frac-focus/by-chemical", {});
+    const response = await this.client["request"]<ChemicalUsage[] | { data: ChemicalUsage[] }>(
+      "/v1/ei/frac-focus/by-chemical",
+      {},
+    );
 
     return Array.isArray(response) ? response : response.data;
   }
@@ -257,15 +264,22 @@ export class EIFracFocusResource {
   async search(query: FracFocusSearchQuery): Promise<FracFocusRecord[]> {
     const params: Record<string, string> = {};
 
-    if (query.state) params.state = query.state;
-    if (query.operator) params.operator = query.operator;
-    if (query.chemical) params.chemical = query.chemical;
+    if (query.states) params.states = query.states;
+    if (query.county) params.county = query.county;
+    if (query.well_name) params.well_name = query.well_name;
+    if (query.api_number) params.api_number = query.api_number;
+    if (query.min_water_gallons !== undefined)
+      params.min_water_gallons = query.min_water_gallons.toString();
+    if (query.latitude !== undefined) params.latitude = query.latitude.toString();
+    if (query.longitude !== undefined) params.longitude = query.longitude.toString();
+    if (query.radius_miles !== undefined) params.radius_miles = query.radius_miles.toString();
     if (query.start_date) params.start_date = query.start_date;
     if (query.end_date) params.end_date = query.end_date;
 
-    const response = await this.client["request"]<
-      FracFocusRecord[] | { data: FracFocusRecord[] }
-    >("/v1/ei/frac-focus/search", params);
+    const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
+      "/v1/ei/frac-focus/search",
+      params,
+    );
 
     return Array.isArray(response) ? response : response.data;
   }
@@ -281,9 +295,10 @@ export class EIFracFocusResource {
       throw new ValidationError("Disclosure ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      WellChemical[] | { chemicals: WellChemical[] }
-    >(`/v1/ei/frac-focus/${id}/chemicals`, {});
+    const response = await this.client["request"]<WellChemical[] | { chemicals: WellChemical[] }>(
+      `/v1/ei/frac-focus/${id}/chemicals`,
+      {},
+    );
 
     return Array.isArray(response) ? response : response.chemicals;
   }
@@ -299,9 +314,10 @@ export class EIFracFocusResource {
       throw new ValidationError("API number must be a non-empty string");
     }
 
-    const response = await this.client["request"]<
-      FracFocusRecord[] | { data: FracFocusRecord[] }
-    >(`/v1/ei/frac-focus/for-well/${apiNumber}`, {});
+    const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
+      `/v1/ei/frac-focus/for-well/${apiNumber}`,
+      {},
+    );
 
     return Array.isArray(response) ? response : response.data;
   }
