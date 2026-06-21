@@ -33,6 +33,26 @@ import { EnergyIntelligenceResource } from "./resources/ei/index.js";
 import { WebhooksResource } from "./resources/webhooks.js";
 import { DataSourcesResource } from "./resources/data-sources.js";
 import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
+import { SpreadsResource } from "./resources/spreads.js";
+import { IndicatorsResource } from "./resources/indicators.js";
+import { RawResource } from "./resources/raw.js";
+
+/**
+ * Raw HTTP response wrapper.
+ *
+ * Returned by {@link OilPriceAPI.raw} accessors to expose the underlying
+ * HTTP status code and response headers alongside the parsed data.
+ *
+ * @typeParam T - The parsed response body type.
+ */
+export interface APIResponse<T> {
+  /** Parsed response data (same shape the non-raw method would return). */
+  data: T;
+  /** HTTP status code (e.g., 200, 201). */
+  status: number;
+  /** Response headers. */
+  headers: Headers;
+}
 
 /**
  * Official Node.js client for Oil Price API
@@ -141,6 +161,25 @@ export class OilPriceAPI {
    */
   public readonly dataSources: DataSourcesResource;
 
+  /**
+   * Spreads resource (crack, basis, curve structure, margin, physical premium)
+   */
+  public readonly spreads: SpreadsResource;
+
+  /**
+   * Indicators resource (fuel switching, price context, storage analytics,
+   * annotations, CFTC positioning, congressional trades)
+   */
+  public readonly indicators: IndicatorsResource;
+
+  /**
+   * Raw-response accessor.
+   *
+   * Mirrors the top-level price/commodity methods but returns the underlying
+   * HTTP status and headers alongside the parsed data via {@link APIResponse}.
+   */
+  public readonly raw: RawResource;
+
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     if (!this.apiKey) {
@@ -172,6 +211,9 @@ export class OilPriceAPI {
     this.ei = new EnergyIntelligenceResource(this);
     this.webhooks = new WebhooksResource(this);
     this.dataSources = new DataSourcesResource(this);
+    this.spreads = new SpreadsResource(this);
+    this.indicators = new IndicatorsResource(this);
+    this.raw = new RawResource(this);
   }
 
   /**
@@ -235,6 +277,35 @@ export class OilPriceAPI {
   }
 
   /**
+   * Shape a parsed JSON response body into the value returned to callers.
+   *
+   * Centralizes the response-structure handling so that both {@link request}
+   * and {@link requestRaw} return identical data. Handles the latest/historical
+   * envelope shapes as well as the generic `{ data }` fallback used by resource
+   * mutations, alerts, webhooks, etc.
+   */
+  private shapeResponseData<T>(responseData: any): T {
+    // Handle different response structures
+    // Latest endpoint: { status, data: { price, ... } }
+    // Historical endpoint: { status, data: { prices: [...] } }
+    if (responseData.status === "success" && responseData.data) {
+      if (responseData.data.prices) {
+        // Historical endpoint - return prices array
+        this.log(`Returning ${responseData.data.prices.length} prices`);
+        return responseData.data.prices as T;
+      } else if (responseData.data.price !== undefined) {
+        // Latest endpoint - wrap single price in array
+        this.log("Returning single price (wrapped in array)");
+        return [responseData.data] as T;
+      }
+    }
+
+    // Fallback - return data as-is (used by resource mutations, alerts, webhooks, etc.)
+    this.log("Returning data as-is");
+    return (responseData.data !== undefined ? responseData.data : responseData) as T;
+  }
+
+  /**
    * Internal method to make HTTP requests with retry and timeout.
    * Supports all HTTP methods (GET, POST, PATCH, DELETE) with consistent
    * retry logic, timeout handling, and typed error responses.
@@ -244,6 +315,22 @@ export class OilPriceAPI {
     params?: Record<string, string>,
     options?: { method?: string; body?: unknown },
   ): Promise<T> {
+    const { data } = await this.requestRaw<T>(endpoint, params, options);
+    return data;
+  }
+
+  /**
+   * Internal method identical to {@link request} but returns the underlying
+   * HTTP status and headers alongside the parsed data.
+   *
+   * Used by the public {@link raw} accessor to expose response metadata
+   * (issue #7) without changing the return shape of existing methods.
+   */
+  private async requestRaw<T>(
+    endpoint: string,
+    params?: Record<string, string>,
+    options?: { method?: string; body?: unknown },
+  ): Promise<APIResponse<T>> {
     // Build URL with query parameters
     const url = new URL(`${this.baseUrl}${endpoint}`);
     if (params) {
@@ -354,7 +441,11 @@ export class OilPriceAPI {
           const responseText = await response.text();
           if (!responseText) {
             this.log("Empty response body");
-            return {} as T;
+            return {
+              data: {} as T,
+              status: response.status,
+              headers: response.headers,
+            };
           }
 
           // Parse successful response
@@ -365,24 +456,11 @@ export class OilPriceAPI {
             hasData: !!responseData.data,
           });
 
-          // Handle different response structures
-          // Latest endpoint: { status, data: { price, ... } }
-          // Historical endpoint: { status, data: { prices: [...] } }
-          if (responseData.status === "success" && responseData.data) {
-            if (responseData.data.prices) {
-              // Historical endpoint - return prices array
-              this.log(`Returning ${responseData.data.prices.length} prices`);
-              return responseData.data.prices as T;
-            } else if (responseData.data.price !== undefined) {
-              // Latest endpoint - wrap single price in array
-              this.log("Returning single price (wrapped in array)");
-              return [responseData.data] as T;
-            }
-          }
-
-          // Fallback - return data as-is (used by resource mutations, alerts, webhooks, etc.)
-          this.log("Returning data as-is");
-          return (responseData.data !== undefined ? responseData.data : responseData) as T;
+          return {
+            data: this.shapeResponseData<T>(responseData),
+            status: response.status,
+            headers: response.headers,
+          };
         } catch (error) {
           // Handle abort (timeout)
           if (error instanceof Error && error.name === "AbortError") {

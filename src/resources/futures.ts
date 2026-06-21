@@ -167,6 +167,189 @@ export interface ContinuousFuturesData {
 }
 
 /**
+ * Spread-history data point for a contract family.
+ */
+export interface FuturesSpreadHistoryPoint {
+  /** ISO date */
+  date: string;
+  /** Spread value */
+  spread: number;
+  /** Optional percentage spread */
+  spread_percent?: number;
+}
+
+/**
+ * Spread-history data for a contract family.
+ */
+export interface FuturesSpreadHistory {
+  /** Contract family slug (e.g., "ice-brent") */
+  family: string;
+  /** Array of historical spread points */
+  history: FuturesSpreadHistoryPoint[];
+}
+
+/**
+ * Slugs for the supported ICE / gas / carbon futures contract families.
+ *
+ * These map to the `GET /v1/futures/{slug}/...` endpoints. Each family
+ * supports `/latest`, `/historical`, `/ohlc`, `/intraday`, `/spreads`,
+ * `/curve`, and `/spread-history`.
+ */
+export type FuturesContractFamilySlug =
+  | "ice-brent"
+  | "ice-gasoil"
+  | "ice-wti"
+  | "natural-gas"
+  | "ttf-gas"
+  | "lng-jkm"
+  | "eua-carbon"
+  | "uk-carbon";
+
+/**
+ * Ergonomic contract codes for the most-requested futures families (issue #1).
+ *
+ * Use with the generic {@link FuturesResource} methods, or use the typed
+ * {@link FuturesResource.family} helper for direct access to a family's
+ * endpoints.
+ *
+ * @example
+ * ```typescript
+ * import { FUTURES_CONTRACTS } from 'oilpriceapi';
+ *
+ * const brent = await client.futures.latest(FUTURES_CONTRACTS.BRENT); // "BZ"
+ * const gasoil = await client.futures.family('ice-gasoil').latest();
+ * ```
+ */
+export const FUTURES_CONTRACTS = {
+  /** ICE Brent crude */
+  BRENT: "BZ",
+  /** NYMEX WTI crude */
+  WTI: "CL",
+  /** ICE Gasoil */
+  GASOIL: "G",
+  /** Henry Hub natural gas */
+  NATURAL_GAS: "NG",
+  /** TTF natural gas (Europe) */
+  TTF_GAS: "TTF",
+  /** LNG JKM (Asia) */
+  LNG_JKM: "JKM",
+  /** EU carbon allowance */
+  EUA_CARBON: "EUA",
+  /** UK carbon allowance */
+  UK_CARBON: "UKA",
+} as const;
+
+/**
+ * Mapping of ergonomic contract codes to their API contract-family slugs.
+ *
+ * Lets you resolve a contract code (e.g., `"BZ"`) to the `/v1/futures/{slug}`
+ * path segment used by the typed family helpers.
+ */
+export const FUTURES_FAMILY_SLUGS: Record<string, FuturesContractFamilySlug> = {
+  [FUTURES_CONTRACTS.BRENT]: "ice-brent",
+  [FUTURES_CONTRACTS.WTI]: "ice-wti",
+  [FUTURES_CONTRACTS.GASOIL]: "ice-gasoil",
+  [FUTURES_CONTRACTS.NATURAL_GAS]: "natural-gas",
+  [FUTURES_CONTRACTS.TTF_GAS]: "ttf-gas",
+  [FUTURES_CONTRACTS.LNG_JKM]: "lng-jkm",
+  [FUTURES_CONTRACTS.EUA_CARBON]: "eua-carbon",
+  [FUTURES_CONTRACTS.UK_CARBON]: "uk-carbon",
+};
+
+/**
+ * Typed helper for a single futures contract family (e.g., ICE Brent, Gasoil).
+ *
+ * Provides ergonomic access to the family's endpoints without having to
+ * remember the URL slug. Obtain an instance via {@link FuturesResource.family},
+ * {@link FuturesResource.brent}, {@link FuturesResource.gasoil}, etc.
+ *
+ * @example
+ * ```typescript
+ * const gasoil = client.futures.gasoil();
+ * const latest = await gasoil.latest();
+ * const curve = await gasoil.curve();
+ * ```
+ */
+export class FuturesContractFamily {
+  constructor(
+    private client: OilPriceAPI,
+    /** The contract-family slug used in the API path. */
+    public readonly slug: FuturesContractFamilySlug,
+  ) {}
+
+  /**
+   * Get the latest price for this contract family.
+   */
+  async latest(): Promise<FuturesPrice> {
+    return this.client["request"]<FuturesPrice>(`/v1/futures/${this.slug}/latest`, {});
+  }
+
+  /**
+   * Get historical prices for this contract family.
+   *
+   * @param options - Optional date range filters.
+   */
+  async historical(options?: HistoricalFuturesOptions): Promise<HistoricalFuturesPrice[]> {
+    const params: Record<string, string> = {};
+    if (options?.startDate) params.start_date = options.startDate;
+    if (options?.endDate) params.end_date = options.endDate;
+
+    const response = await this.client["request"]<
+      HistoricalFuturesPrice[] | { prices: HistoricalFuturesPrice[] }
+    >(`/v1/futures/${this.slug}/historical`, params);
+
+    return Array.isArray(response) ? response : response.prices;
+  }
+
+  /**
+   * Get OHLC data for this contract family.
+   *
+   * @param date - Optional date (YYYY-MM-DD); defaults to latest.
+   */
+  async ohlc(date?: string): Promise<FuturesOHLC> {
+    const params: Record<string, string> = {};
+    if (date) params.date = date;
+    return this.client["request"]<FuturesOHLC>(`/v1/futures/${this.slug}/ohlc`, params);
+  }
+
+  /**
+   * Get intraday price data for this contract family.
+   */
+  async intraday(): Promise<IntradayFuturesData> {
+    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${this.slug}/intraday`, {});
+  }
+
+  /**
+   * Get the spreads for this contract family.
+   */
+  async spreads(): Promise<FuturesSpread[]> {
+    const response = await this.client["request"]<FuturesSpread[] | { data: FuturesSpread[] }>(
+      `/v1/futures/${this.slug}/spreads`,
+      {},
+    );
+
+    return Array.isArray(response) ? response : response.data;
+  }
+
+  /**
+   * Get the forward curve for this contract family.
+   */
+  async curve(): Promise<FuturesCurveData> {
+    return this.client["request"]<FuturesCurveData>(`/v1/futures/${this.slug}/curve`, {});
+  }
+
+  /**
+   * Get historical spread data for this contract family.
+   */
+  async spreadHistory(): Promise<FuturesSpreadHistory> {
+    return this.client["request"]<FuturesSpreadHistory>(
+      `/v1/futures/${this.slug}/spread-history`,
+      {},
+    );
+  }
+}
+
+/**
  * Futures Resource
  *
  * Access futures contract data including latest, historical, OHLC, intraday,
@@ -284,10 +467,7 @@ export class FuturesResource {
     const params: Record<string, string> = {};
     if (date) params.date = date;
 
-    return this.client["request"]<FuturesOHLC>(
-      `/v1/futures/${contract}/ohlc`,
-      params,
-    );
+    return this.client["request"]<FuturesOHLC>(`/v1/futures/${contract}/ohlc`, params);
   }
 
   /**
@@ -314,10 +494,7 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<IntradayFuturesData>(
-      `/v1/futures/${contract}/intraday`,
-      {},
-    );
+    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${contract}/intraday`, {});
   }
 
   /**
@@ -378,10 +555,7 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<FuturesCurveData>(
-      `/v1/futures/${contract}/curve`,
-      {},
-    );
+    return this.client["request"]<FuturesCurveData>(`/v1/futures/${contract}/curve`, {});
   }
 
   /**
@@ -403,10 +577,7 @@ export class FuturesResource {
    * console.log(`${continuous.prices.length} data points`);
    * ```
    */
-  async continuous(
-    contract: string,
-    months?: number,
-  ): Promise<ContinuousFuturesData> {
+  async continuous(contract: string, months?: number): Promise<ContinuousFuturesData> {
     if (!contract || typeof contract !== "string") {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
@@ -418,5 +589,69 @@ export class FuturesResource {
       `/v1/futures/${contract}/continuous`,
       params,
     );
+  }
+
+  /**
+   * Get a typed helper for a specific contract family (issue #1).
+   *
+   * Provides ergonomic access to the ICE Brent / WTI / Gasoil and gas/carbon
+   * family endpoints (`/latest`, `/historical`, `/ohlc`, `/intraday`,
+   * `/spreads`, `/curve`, `/spread-history`) without remembering the URL slug.
+   *
+   * @param slug - Contract family slug (e.g., `"ice-brent"`, `"ice-gasoil"`).
+   * @returns A {@link FuturesContractFamily} bound to the slug.
+   *
+   * @example
+   * ```typescript
+   * const brent = client.futures.family('ice-brent');
+   * const latest = await brent.latest();
+   * const curve = await brent.curve();
+   * ```
+   */
+  family(slug: FuturesContractFamilySlug): FuturesContractFamily {
+    if (!slug || typeof slug !== "string") {
+      throw new ValidationError("Contract family slug must be a non-empty string");
+    }
+    return new FuturesContractFamily(this.client, slug);
+  }
+
+  /** ICE Brent crude futures family helper (issue #1). */
+  brent(): FuturesContractFamily {
+    return this.family("ice-brent");
+  }
+
+  /** ICE WTI crude futures family helper. */
+  wti(): FuturesContractFamily {
+    return this.family("ice-wti");
+  }
+
+  /** ICE Gasoil futures family helper (issue #1). */
+  gasoil(): FuturesContractFamily {
+    return this.family("ice-gasoil");
+  }
+
+  /** Henry Hub natural gas futures family helper. */
+  naturalGas(): FuturesContractFamily {
+    return this.family("natural-gas");
+  }
+
+  /** TTF natural gas (Europe) futures family helper. */
+  ttfGas(): FuturesContractFamily {
+    return this.family("ttf-gas");
+  }
+
+  /** LNG JKM (Asia) futures family helper. */
+  lngJkm(): FuturesContractFamily {
+    return this.family("lng-jkm");
+  }
+
+  /** EU carbon allowance (EUA) futures family helper. */
+  euaCarbon(): FuturesContractFamily {
+    return this.family("eua-carbon");
+  }
+
+  /** UK carbon allowance (UKA) futures family helper. */
+  ukCarbon(): FuturesContractFamily {
+    return this.family("uk-carbon");
   }
 }
