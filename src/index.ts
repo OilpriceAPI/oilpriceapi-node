@@ -218,6 +218,21 @@ export {
 } from "./resources/ei/index.js";
 export { WebhooksResource } from "./resources/webhooks.js";
 export { DataSourcesResource } from "./resources/data-sources.js";
+export {
+  StreamingResource,
+  PriceStreamSubscription,
+  ENERGY_PRICES_CHANNEL,
+} from "./resources/streaming.js";
+export type {
+  StreamPricesOptions,
+  PriceUpdateHandler,
+  StreamMessage,
+  WelcomeMessage,
+  PriceUpdateMessage,
+  RigCountUpdateMessage,
+  StreamedPrice,
+  StreamedPriceMap,
+} from "./resources/streaming.js";
 
 /**
  * Standalone webhook signature verification.

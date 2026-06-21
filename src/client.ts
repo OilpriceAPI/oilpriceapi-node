@@ -36,6 +36,7 @@ import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
 import { SpreadsResource } from "./resources/spreads.js";
 import { IndicatorsResource } from "./resources/indicators.js";
 import { RawResource } from "./resources/raw.js";
+import { StreamingResource } from "./resources/streaming.js";
 
 /**
  * Raw HTTP response wrapper.
@@ -180,6 +181,13 @@ export class OilPriceAPI {
    */
   public readonly raw: RawResource;
 
+  /**
+   * Real-time price streaming resource (WebSocket / ActionCable).
+   *
+   * Streaming requires a Reservoir Mastery (Professional+) plan.
+   */
+  public readonly stream: StreamingResource;
+
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     if (!this.apiKey) {
@@ -214,6 +222,7 @@ export class OilPriceAPI {
     this.spreads = new SpreadsResource(this);
     this.indicators = new IndicatorsResource(this);
     this.raw = new RawResource(this);
+    this.stream = new StreamingResource(this);
   }
 
   /**

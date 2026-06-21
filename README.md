@@ -641,6 +641,69 @@ logs.forEach((log) => {
 });
 ```
 
+### Real-time Streaming (WebSocket)
+
+Stream live price updates over a persistent WebSocket connection instead of
+polling. Streaming uses the server's ActionCable `/cable` endpoint and the
+`EnergyPricesChannel`, and is available on the **Reservoir Mastery
+(Professional+)** plan.
+
+The `client.stream.prices()` method returns a subscription handle (an
+`EventEmitter`). It performs the ActionCable handshake, answers server pings,
+auto-reconnects with exponential backoff, and surfaces typed events. Call
+`.close()` for a clean teardown.
+
+```typescript
+import { OilPriceAPI } from "oilpriceapi";
+
+const client = new OilPriceAPI({ apiKey: process.env.OILPRICEAPI_KEY });
+
+// Optional onUpdate callback fires on every live price_update.
+const sub = client.stream.prices(
+  { commodities: ["WTI_USD", "BRENT_CRUDE_USD"] }, // optional client-side filter
+  (update) => {
+    const wti = update.prices.oil.wti;
+    if (wti) {
+      console.log(`WTI ${wti.original_price} ${wti.original_currency} @ ${update.timestamp}`);
+    }
+  },
+);
+
+// Lifecycle + typed events
+sub.on("connected", () => console.log("subscription confirmed"));
+sub.on("welcome", (snapshot) => console.log("initial snapshot", snapshot.data));
+sub.on("price_update", (update) => console.log("oil:", update.prices.oil));
+sub.on("rig_count_update", (m) => console.log(`${m.rig_count.region}: ${m.rig_count.count} rigs`));
+sub.on("reconnecting", ({ attempt, delay }) => console.log(`reconnect #${attempt} in ${delay}ms`));
+sub.on("disconnected", ({ code }) => console.log("socket closed", code));
+sub.on("error", (err) => console.error("stream error:", err.message));
+
+// Clean teardown (unsubscribe + close socket)
+process.on("SIGINT", () => {
+  sub.close();
+  process.exit(0);
+});
+```
+
+**Events emitted by the subscription handle:**
+
+| Event              | Payload                 | Description                                            |
+| ------------------ | ----------------------- | ------------------------------------------------------ |
+| `connected`        | —                       | Channel subscription confirmed by the server           |
+| `welcome`          | `WelcomeMessage`        | Initial price snapshot sent on subscribe               |
+| `price_update`     | `PriceUpdateMessage`    | Live price broadcast (oil + natural gas)               |
+| `rig_count_update` | `RigCountUpdateMessage` | Drilling rig-count broadcast (drilling-tier accounts)  |
+| `message`          | `StreamMessage`         | Every decoded channel message (incl. unknown types)    |
+| `reconnecting`     | `{ attempt, delay }`    | A reconnect attempt has been scheduled                 |
+| `disconnected`     | `{ code, reason }`      | The transport closed                                   |
+| `error`            | `Error`                 | Transport error, rejected subscription, or retries out |
+| `close`            | —                       | The subscription was closed via `.close()`             |
+
+**Options** (`StreamPricesOptions`): `commodities`, `autoReconnect`,
+`reconnectDelay`, `maxReconnectDelay`, `maxReconnectAttempts`.
+
+See [`examples/streaming.ts`](./examples/streaming.ts) for a complete runnable example.
+
 ### Advanced Configuration
 
 ```typescript
