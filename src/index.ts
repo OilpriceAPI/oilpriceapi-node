@@ -9,6 +9,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export { OilPriceAPI } from "./client.js";
+export type { APIResponse } from "./client.js";
 export { SDK_VERSION, SDK_NAME } from "./version.js";
 export type {
   OilPriceAPIConfig,
@@ -49,7 +50,33 @@ export type {
   FuturesCurveData,
   ContinuousContractPrice,
   ContinuousFuturesData,
+  FuturesSpreadHistoryPoint,
+  FuturesSpreadHistory,
+  FuturesContractFamilySlug,
 } from "./resources/futures.js";
+export {
+  FUTURES_CONTRACTS,
+  FUTURES_FAMILY_SLUGS,
+  FuturesContractFamily,
+} from "./resources/futures.js";
+export type {
+  SpreadType,
+  SpreadValue,
+  HistoricalSpreadValue,
+  HistoricalSpreadOptions,
+} from "./resources/spreads.js";
+export { SpreadsResource } from "./resources/spreads.js";
+export type {
+  IndicatorType,
+  FuelSwitchingIndicator,
+  PriceContextIndicator,
+  StorageAnalyticsIndicator,
+  AnnotationIndicator,
+  CFTCPositioningIndicator,
+  CongressionalTradeIndicator,
+} from "./resources/indicators.js";
+export { IndicatorsResource } from "./resources/indicators.js";
+export { RawResource } from "./resources/raw.js";
 export type {
   StorageData,
   HistoricalStorageData,

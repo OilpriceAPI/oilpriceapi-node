@@ -25,6 +25,7 @@ The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.co
 - ⛽ **NEW v0.4.0** - Diesel prices (state averages + station-level pricing)
 - 🔔 **NEW v0.5.0** - Price alerts with webhook notifications
 - 📊 **NEW v0.7.0** - Futures, storage, rig counts, analytics, drilling intelligence, webhooks, and energy intelligence
+- 🧰 **NEW** - Typed ICE Brent / Gasoil / WTI & gas/carbon futures helpers, `spreads`, `indicators`, and raw HTTP responses (`client.raw.*` with status + headers)
 
 ## Installation
 
@@ -267,9 +268,7 @@ console.log("Alert deleted successfully");
 const result = await client.alerts.testWebhook("https://your-app.com/webhook");
 
 if (result.success) {
-  console.log(
-    `Webhook OK (${result.status_code}) - ${result.response_time_ms}ms`,
-  );
+  console.log(`Webhook OK (${result.status_code}) - ${result.response_time_ms}ms`);
 } else {
   console.error(`Webhook failed: ${result.error}`);
 }
@@ -341,6 +340,138 @@ curve.curve.forEach((point) => {
 });
 ```
 
+#### Typed contract-family helpers (ICE Brent, Gasoil, WTI, gas & carbon)
+
+The generic `futures.*` methods take raw contract codes. For the most-requested
+families you can use ergonomic, typed helpers that map to the
+`/v1/futures/{family}/...` endpoints — no need to remember URL slugs. Each
+family supports `latest`, `historical`, `ohlc`, `intraday`, `spreads`, `curve`,
+and `spreadHistory`.
+
+```typescript
+import { OilPriceAPI, FUTURES_CONTRACTS } from "oilpriceapi";
+
+const client = new OilPriceAPI({ apiKey: "your_key" });
+
+// ICE Brent
+const brent = await client.futures.brent().latest();
+console.log(`Brent: $${brent.price}`);
+
+// ICE Gasoil
+const gasoil = await client.futures.gasoil().curve();
+
+// ICE WTI
+const wti = await client.futures.wti().ohlc("2024-01-15");
+
+// Natural gas families
+await client.futures.naturalGas().latest(); // Henry Hub
+await client.futures.ttfGas().historical({ startDate: "2024-01-01" }); // TTF (Europe)
+await client.futures.lngJkm().spreads(); // LNG JKM (Asia)
+
+// Carbon
+await client.futures.euaCarbon().latest(); // EU carbon allowance
+await client.futures.ukCarbon().spreadHistory(); // UK carbon allowance
+
+// Or address a family by slug
+const fam = client.futures.family("ice-brent");
+await fam.intraday();
+
+// Ergonomic contract-code constants for the generic methods
+const brentLatest = await client.futures.latest(FUTURES_CONTRACTS.BRENT); // "BZ"
+const gasoilCode = FUTURES_CONTRACTS.GASOIL; // "G"
+```
+
+Available families: `ice-brent`, `ice-gasoil`, `ice-wti`, `natural-gas`,
+`ttf-gas`, `lng-jkm`, `eua-carbon`, `uk-carbon`.
+
+### Spreads
+
+Crack spreads, basis differentials, curve structure (contango/backwardation),
+refining margins, and physical premiums. Each spread type supports the latest
+value, full history, and an `all` listing
+(`/v1/spreads/{type}`, `/v1/spreads/{type}/historical`, `/v1/spreads/{type}/all`).
+
+```typescript
+// Latest values via named helpers
+const crack = await client.spreads.crack();
+console.log(`Crack spread: ${crack.value} ${crack.unit}`);
+
+await client.spreads.basis();
+await client.spreads.curveStructure();
+await client.spreads.margin();
+await client.spreads.physicalPremium();
+
+// Or address a type directly
+const margin = await client.spreads.get("margin");
+
+// Historical spread series
+const history = await client.spreads.historical("basis", {
+  startDate: "2024-01-01",
+  endDate: "2024-12-31",
+});
+
+// All values for a spread type
+const allCrack = await client.spreads.all("crack");
+```
+
+### Indicators
+
+Derived market indicators and signals: fuel-switching economics, price context,
+storage analytics, market annotations, CFTC positioning, and congressional
+energy-sector trades (`/v1/indicators/{type}`).
+
+```typescript
+// Fuel-switching economics
+const fs = await client.indicators.fuelSwitching();
+console.log(`Switching economical: ${fs.economical}`);
+
+// Where the current price sits historically
+const ctx = await client.indicators.priceContext();
+console.log(`Percentile: ${ctx.percentile}`);
+
+// Storage analytics
+await client.indicators.storageAnalytics();
+
+// Market annotations (notable events)
+const annotations = await client.indicators.annotations();
+
+// CFTC positioning (Commitment of Traders)
+const cftc = await client.indicators.cftcPositioning();
+cftc.forEach((p) => console.log(`${p.market}: net ${p.net_position}`));
+
+// Congressional energy-sector trades
+const trades = await client.indicators.congressionalTrades();
+
+// Or address a type directly
+const custom = await client.indicators.get("price-context");
+```
+
+### Raw HTTP responses (status + headers)
+
+By default the SDK returns just the parsed data. When you also need the
+underlying HTTP status code and response headers (e.g. rate-limit headers),
+use the `client.raw.*` accessor. It returns `{ data, status, headers }` while
+`data` keeps the exact same shape as the equivalent non-raw method.
+
+```typescript
+const { data, status, headers } = await client.raw.getLatestPrices({
+  commodity: "WTI_USD",
+});
+
+console.log(`HTTP ${status}`);
+console.log(`Rate limit remaining: ${headers.get("x-ratelimit-remaining")}`);
+console.log(`Price: ${data[0].price}`);
+
+// Also available: getHistoricalPrices, getCommodities,
+// getCommodityCategories, getCommodity
+const commodities = await client.raw.getCommodities();
+console.log(commodities.status, commodities.headers.get("content-type"));
+
+// Generic raw GET for any endpoint without a dedicated helper
+const futures = await client.raw.get("/v1/futures/CL.1");
+console.log(futures.status, futures.data);
+```
+
 ### Storage Levels (New in v0.7.0)
 
 ```typescript
@@ -383,11 +514,7 @@ console.log(`30-day return: ${perf.return_percent}%`);
 console.log(`Volatility: ${perf.volatility}`);
 
 // Analyze correlation between commodities
-const corr = await client.analytics.correlation(
-  "WTI_USD",
-  "BRENT_CRUDE_USD",
-  90,
-);
+const corr = await client.analytics.correlation("WTI_USD", "BRENT_CRUDE_USD", 90);
 console.log(`Correlation: ${corr.correlation} (${corr.strength})`);
 ```
 
@@ -510,9 +637,7 @@ console.log(`Connection ${test.success ? "OK" : "failed"}`);
 // View sync logs
 const logs = await client.dataSources.logs(source.id);
 logs.forEach((log) => {
-  console.log(
-    `${log.timestamp}: ${log.status} - ${log.records_synced} records`,
-  );
+  console.log(`${log.timestamp}: ${log.status} - ${log.records_synced} records`);
 });
 ```
 
@@ -557,11 +682,7 @@ try {
   if (error instanceof AuthenticationError) {
     console.error("Invalid API key:", error.message);
   } else if (error instanceof RateLimitError) {
-    console.error(
-      "Rate limit exceeded. Retry after:",
-      error.retryAfter,
-      "seconds",
-    );
+    console.error("Rate limit exceeded. Retry after:", error.retryAfter, "seconds");
   } else if (error instanceof TimeoutError) {
     console.error("Request timed out:", error.message);
   } else if (error instanceof ServerError) {
@@ -812,9 +933,7 @@ const result = await client.diesel.getStations({
 console.log(`Found ${result.stations.length} stations`);
 console.log(`Regional average: $${result.regional_average.price}/gallon`);
 
-const cheapest = result.stations.reduce((min, s) =>
-  s.diesel_price < min.diesel_price ? s : min,
-);
+const cheapest = result.stations.reduce((min, s) => (s.diesel_price < min.diesel_price ? s : min));
 console.log(`Cheapest: ${cheapest.name} at ${cheapest.formatted_price}`);
 ```
 
