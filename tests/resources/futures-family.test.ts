@@ -4,6 +4,7 @@ import {
   FUTURES_CONTRACTS,
   FUTURES_FAMILY_SLUGS,
   FuturesContractFamily,
+  resolveFuturesFamilySlug,
 } from "../../src/resources/futures.js";
 
 /**
@@ -66,14 +67,15 @@ describe("Futures contract families (issue #1)", () => {
   });
 
   describe("family endpoint coverage", () => {
-    it("latest() hits /v1/futures/{slug}/latest", async () => {
+    it("latest() hits the bare slug path /v1/futures/{slug} (NO /latest suffix)", async () => {
       const spy = vi
         .spyOn(client as any, "request")
         .mockResolvedValue({ contract: "ice-gasoil", price: 800, currency: "USD", timestamp: "t" });
 
       await client.futures.gasoil().latest();
 
-      expect(spy).toHaveBeenCalledWith("/v1/futures/ice-gasoil/latest", {});
+      // The correct latest endpoint is the bare slug; `/latest` 404s.
+      expect(spy).toHaveBeenCalledWith("/v1/futures/ice-gasoil", {});
     });
 
     it("historical() passes date params", async () => {
@@ -137,6 +139,79 @@ describe("Futures contract families (issue #1)", () => {
       const spy = vi.spyOn(client as any, "request").mockResolvedValue({});
       await client.futures.euaCarbon().spreadHistory();
       expect(spy).toHaveBeenCalledWith("/v1/futures/eua-carbon/spread-history", {});
+    });
+  });
+
+  describe("resolveFuturesFamilySlug()", () => {
+    it.each([
+      ["BZ", "ice-brent"],
+      ["CL", "ice-wti"],
+      ["G", "ice-gasoil"],
+      ["QS", "ice-gasoil"], // Gasoil also trades under the QS ticker prefix
+      ["NG", "natural-gas"],
+      ["TTF", "ttf-gas"],
+      ["JKM", "lng-jkm"],
+      ["EUA", "eua-carbon"],
+      ["UKA", "uk-carbon"],
+    ])("resolves code %s -> %s", (code, slug) => {
+      expect(resolveFuturesFamilySlug(code)).toBe(slug);
+    });
+
+    it("resolves codes case-insensitively", () => {
+      expect(resolveFuturesFamilySlug("bz")).toBe("ice-brent");
+      expect(resolveFuturesFamilySlug("qs")).toBe("ice-gasoil");
+    });
+
+    it("passes through already-valid family slugs", () => {
+      expect(resolveFuturesFamilySlug("ice-brent")).toBe("ice-brent");
+      expect(resolveFuturesFamilySlug("ICE-BRENT")).toBe("ice-brent");
+    });
+
+    it("returns null for unknown codes/slugs", () => {
+      expect(resolveFuturesFamilySlug("ZZZ")).toBeNull();
+      expect(resolveFuturesFamilySlug("crude")).toBeNull();
+    });
+  });
+
+  describe("top-level futures.latest(code) maps code -> /v1/futures/{slug}", () => {
+    it.each([
+      ["BZ", "ice-brent"],
+      ["CL", "ice-wti"],
+      ["G", "ice-gasoil"],
+      ["QS", "ice-gasoil"],
+      ["NG", "natural-gas"],
+      ["TTF", "ttf-gas"],
+      ["JKM", "lng-jkm"],
+      ["EUA", "eua-carbon"],
+      ["UKA", "uk-carbon"],
+    ])("latest('%s') -> GET /v1/futures/%s (no /latest suffix)", async (code, slug) => {
+      const spy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ contract: slug, price: 1, currency: "USD", timestamp: "t" });
+
+      await client.futures.latest(code);
+
+      expect(spy).toHaveBeenCalledWith(`/v1/futures/${slug}`, {});
+    });
+
+    it("accepts a family slug directly", async () => {
+      const spy = vi
+        .spyOn(client as any, "request")
+        .mockResolvedValue({ contract: "ice-wti", price: 1, currency: "USD", timestamp: "t" });
+
+      await client.futures.latest("ice-wti");
+
+      expect(spy).toHaveBeenCalledWith("/v1/futures/ice-wti", {});
+    });
+
+    it("throws ValidationError for an unknown contract", async () => {
+      await expect(client.futures.latest("NOPE")).rejects.toThrow(/Unknown futures contract/);
+    });
+
+    it("throws ValidationError for an empty contract", async () => {
+      await expect(client.futures.latest("")).rejects.toThrow(
+        "Contract symbol must be a non-empty string",
+      );
     });
   });
 });

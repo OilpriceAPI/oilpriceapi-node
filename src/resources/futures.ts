@@ -9,23 +9,73 @@ import type { OilPriceAPI } from "../client.js";
 import { ValidationError } from "../errors.js";
 
 /**
- * Futures contract price data
+ * A single futures contract month within a {@link FuturesPrice} response.
+ *
+ * Returned at the top level under `front_month` and for every entry in
+ * `contracts[]`. The latest traded price is `last_price`.
+ */
+export interface FuturesContractMonth {
+  /** Contract code (e.g. "BRENT_FUTURES_2026_08"). */
+  code?: string;
+  /** Contract month in YYYY-MM form (e.g. "2026-08"). */
+  contract_month?: string;
+  /** Latest traded/settlement price for this contract month. */
+  last_price?: number;
+  /** Currency code (e.g. "USD"). */
+  currency?: string;
+  /** Opening price (may be returned as a string by the API). */
+  open?: number | string;
+  /** Closing price (may be returned as a string by the API). */
+  close?: number | string;
+  /** Session high. */
+  high?: number | string;
+  /** Session low. */
+  low?: number | string;
+  /** Any additional fields the API returns for a contract month. */
+  [key: string]: unknown;
+}
+
+/**
+ * Futures contract price data.
+ *
+ * `GET /v1/futures/{slug}` returns a TOP-LEVEL object (there is NO
+ * `{ status, data }` envelope). The latest price lives at
+ * `front_month.last_price`, with the full term structure in `contracts[]`.
+ *
+ * Legacy flat fields (`contract`, `price`, `currency`, `timestamp`) are kept
+ * optional for backward compatibility, but real responses populate
+ * `front_month` / `contracts` instead.
  */
 export interface FuturesPrice {
-  /** Contract symbol */
-  contract: string;
-  /** Current price */
-  price: number;
-  /** Formatted price string */
-  formatted?: string;
-  /** Currency code */
-  currency: string;
-  /** Contract expiration date */
-  expiration?: string;
-  /** ISO timestamp when price was recorded */
-  timestamp: string;
-  /** Additional metadata */
+  /** Commodity identifier (e.g. "BRENT_FUTURES"). */
+  commodity?: string;
+  /** Data source (e.g. "ICE"). */
+  source?: string;
+  /** ISO timestamp the data was last updated. */
+  updated_at?: string;
+  /** Settlement date for the prices. */
+  settlement_date?: string;
+  /** Front-month contract — the latest price is `front_month.last_price`. */
+  front_month?: FuturesContractMonth;
+  /** Full forward term structure, one entry per contract month. */
+  contracts?: FuturesContractMonth[];
+  /** Optional warning when the returned data is stale. */
+  data_age_warning?: unknown;
+  /** Additional metadata returned by the API. */
   metadata?: Record<string, unknown>;
+
+  /** @deprecated Legacy flat contract symbol — use `front_month.code`. */
+  contract?: string;
+  /** @deprecated Legacy flat price — use `front_month.last_price`. */
+  price?: number;
+  /** @deprecated Legacy formatted price string. */
+  formatted?: string;
+  /** @deprecated Legacy currency — use `front_month.currency`. */
+  currency?: string;
+  /** @deprecated Legacy contract expiration date. */
+  expiration?: string;
+  /** @deprecated Legacy ISO timestamp — use `updated_at`. */
+  timestamp?: string;
 }
 
 /**
@@ -153,15 +203,25 @@ export interface FuturesCurvePoint {
 }
 
 /**
- * Futures curve data
+ * Futures curve data.
+ *
+ * `GET /v1/futures/{slug}/curve` can legitimately return a no-data response of
+ * the form `{ error: "No futures data available for curve analysis", date }`
+ * when a curve cannot be built. That is a valid state (not an HTTP error), so
+ * `curve` is optional and `error` / `date` are surfaced for callers to detect
+ * the no-data case.
  */
 export interface FuturesCurveData {
   /** Base contract */
-  contract: string;
+  contract?: string;
   /** ISO timestamp when curve was generated */
-  timestamp: string;
-  /** Array of curve points */
-  curve: FuturesCurvePoint[];
+  timestamp?: string;
+  /** Array of curve points (absent in the no-data response) */
+  curve?: FuturesCurvePoint[];
+  /** Present in the no-data response: "No futures data available for curve analysis". */
+  error?: string;
+  /** Date associated with the no-data response. */
+  date?: string;
 }
 
 /**
@@ -213,9 +273,10 @@ export interface FuturesSpreadHistory {
 /**
  * Slugs for the supported ICE / gas / carbon futures contract families.
  *
- * These map to the `GET /v1/futures/{slug}/...` endpoints. Each family
- * supports `/latest`, `/historical`, `/ohlc`, `/intraday`, `/spreads`,
- * `/curve`, and `/spread-history`.
+ * These map to the `GET /v1/futures/{slug}` (latest) endpoint plus the
+ * `GET /v1/futures/{slug}/...` sub-resources. Latest is the bare slug path
+ * (there is NO `/latest` suffix). Each family also supports `/historical`,
+ * `/ohlc`, `/intraday`, `/spreads`, `/curve`, and `/spread-history`.
  */
 export type FuturesContractFamilySlug =
   | "ice-brent"
@@ -268,15 +329,34 @@ export const FUTURES_CONTRACTS = {
  * path segment used by the typed family helpers.
  */
 export const FUTURES_FAMILY_SLUGS: Record<string, FuturesContractFamilySlug> = {
-  [FUTURES_CONTRACTS.BRENT]: "ice-brent",
-  [FUTURES_CONTRACTS.WTI]: "ice-wti",
-  [FUTURES_CONTRACTS.GASOIL]: "ice-gasoil",
-  [FUTURES_CONTRACTS.NATURAL_GAS]: "natural-gas",
-  [FUTURES_CONTRACTS.TTF_GAS]: "ttf-gas",
-  [FUTURES_CONTRACTS.LNG_JKM]: "lng-jkm",
-  [FUTURES_CONTRACTS.EUA_CARBON]: "eua-carbon",
-  [FUTURES_CONTRACTS.UK_CARBON]: "uk-carbon",
+  [FUTURES_CONTRACTS.BRENT]: "ice-brent", // BZ
+  [FUTURES_CONTRACTS.WTI]: "ice-wti", // CL
+  [FUTURES_CONTRACTS.GASOIL]: "ice-gasoil", // G
+  QS: "ice-gasoil", // ICE Gasoil also trades under the QS ticker prefix
+  [FUTURES_CONTRACTS.NATURAL_GAS]: "natural-gas", // NG
+  [FUTURES_CONTRACTS.TTF_GAS]: "ttf-gas", // TTF
+  [FUTURES_CONTRACTS.LNG_JKM]: "lng-jkm", // JKM
+  [FUTURES_CONTRACTS.EUA_CARBON]: "eua-carbon", // EUA
+  [FUTURES_CONTRACTS.UK_CARBON]: "uk-carbon", // UKA
 };
+
+/**
+ * Resolve a futures contract code (e.g. `"BZ"`, `"QS"`) or an already-valid
+ * family slug (e.g. `"ice-brent"`) to its `/v1/futures/{slug}` path segment.
+ *
+ * Matching is case-insensitive for codes. Returns `null` if the input maps to
+ * neither a known code nor a known family slug.
+ */
+export function resolveFuturesFamilySlug(codeOrSlug: string): FuturesContractFamilySlug | null {
+  const trimmed = codeOrSlug.trim();
+  // Direct code match (case-insensitive — codes are upper-case).
+  const byCode = FUTURES_FAMILY_SLUGS[trimmed.toUpperCase()];
+  if (byCode) return byCode;
+  // Already a valid family slug?
+  const lower = trimmed.toLowerCase();
+  const isSlug = Object.values(FUTURES_FAMILY_SLUGS).includes(lower as FuturesContractFamilySlug);
+  return isSlug ? (lower as FuturesContractFamilySlug) : null;
+}
 
 /**
  * Typed helper for a single futures contract family (e.g., ICE Brent, Gasoil).
@@ -301,9 +381,12 @@ export class FuturesContractFamily {
 
   /**
    * Get the latest price for this contract family.
+   *
+   * Latest is served from the bare slug path `GET /v1/futures/{slug}` —
+   * there is NO `/latest` suffix (that path 404s).
    */
   async latest(): Promise<FuturesPrice> {
-    return this.client["request"]<FuturesPrice>(`/v1/futures/${this.slug}/latest`, {});
+    return this.client["request"]<FuturesPrice>(`/v1/futures/${this.slug}`, {});
   }
 
   /**
@@ -387,16 +470,13 @@ export class FuturesContractFamily {
  *
  * const client = new OilPriceAPI({ apiKey: 'your_key' });
  *
- * // Get latest price
- * const latest = await client.futures.latest('CL.1');
+ * // Get the latest curve by contract code (resolves to GET /v1/futures/ice-wti)
+ * const latest = await client.futures.latest('CL');
  * console.log(`${latest.contract}: $${latest.price}`);
  *
- * // Get OHLC data
- * const ohlc = await client.futures.ohlc('CL.1', '2024-01-15');
- * console.log(`High: $${ohlc.high}, Low: $${ohlc.low}`);
- *
- * // Get futures curve
- * const curve = await client.futures.curve('CL');
+ * // Typed family helpers are the most ergonomic option:
+ * const brent = await client.futures.brent().latest();
+ * const curve = await client.futures.brent().curve();
  * curve.curve.forEach(point => {
  *   console.log(`${point.months_out}mo: $${point.price}`);
  * });
@@ -406,18 +486,28 @@ export class FuturesResource {
   constructor(private client: OilPriceAPI) {}
 
   /**
-   * Get latest price for a futures contract
+   * Get the latest curve/quote for a futures contract family.
    *
-   * @param contract - Contract symbol (e.g., "CL.1", "BZ.2")
-   * @returns Latest futures price data
+   * Accepts an ergonomic contract code (e.g. `"BZ"`, `"CL"`, `"QS"`) or a
+   * family slug (e.g. `"ice-brent"`). The code is resolved to its family slug
+   * and the request is sent to `GET /v1/futures/{slug}` — the bare slug path,
+   * with NO `/latest` suffix (the suffixed path 404s).
    *
-   * @throws {NotFoundError} If contract not found
+   * Supported codes: BZ (Brent), CL (WTI), G/QS (Gasoil), NG (Natural Gas),
+   * TTF, JKM, EUA, UKA. Slugs: ice-brent, ice-wti, ice-gasoil, natural-gas,
+   * ttf-gas, lng-jkm, eua-carbon, uk-carbon.
+   *
+   * @param contract - Contract code (e.g. "BZ") or family slug (e.g. "ice-brent").
+   * @returns Latest futures price/curve data
+   *
+   * @throws {ValidationError} If the code/slug is empty or unrecognized.
    * @throws {OilPriceAPIError} If API request fails
    *
    * @example
    * ```typescript
-   * const price = await client.futures.latest('CL.1');
-   * console.log(`WTI Front Month: $${price.price}`);
+   * import { FUTURES_CONTRACTS } from 'oilpriceapi';
+   * const price = await client.futures.latest(FUTURES_CONTRACTS.BRENT); // "BZ"
+   * const wti = await client.futures.latest('ice-wti');
    * ```
    */
   async latest(contract: string): Promise<FuturesPrice> {
@@ -425,7 +515,17 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<FuturesPrice>(`/v1/futures/${contract}`, {});
+    const slug = resolveFuturesFamilySlug(contract);
+    if (!slug) {
+      throw new ValidationError(
+        `Unknown futures contract "${contract}". Use a contract code ` +
+          `(BZ, CL, G, QS, NG, TTF, JKM, EUA, UKA) or a family slug ` +
+          `(ice-brent, ice-wti, ice-gasoil, natural-gas, ttf-gas, lng-jkm, ` +
+          `eua-carbon, uk-carbon).`,
+      );
+    }
+
+    return this.client["request"]<FuturesPrice>(`/v1/futures/${slug}`, {});
   }
 
   /**
