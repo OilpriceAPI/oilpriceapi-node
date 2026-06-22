@@ -13,6 +13,7 @@
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import { OilPriceAPI } from "../../src/client.js";
+import { sleep, RATE_LIMIT_DELAY_MS, skipIfRateLimited } from "./helpers.js";
 
 describe("LIVE demo endpoints", () => {
   let client: OilPriceAPI;
@@ -23,37 +24,49 @@ describe("LIVE demo endpoints", () => {
     client = new OilPriceAPI({ apiKey: "demo", retries: 1 });
   });
 
-  it("getDemoPrices() parses the real prices envelope", async () => {
-    const res = await client.getDemoPrices();
+  it("getDemoPrices() parses the real prices envelope", async (ctx) => {
+    try {
+      const res = await client.getDemoPrices();
 
-    expect(Array.isArray(res.prices)).toBe(true);
-    // The demo tier exposes a fixed set of free commodities (currently 9).
-    expect(res.prices.length).toBeGreaterThanOrEqual(5);
+      expect(Array.isArray(res.prices)).toBe(true);
+      // The demo tier exposes a fixed set of free commodities (currently 9).
+      expect(res.prices.length).toBeGreaterThanOrEqual(5);
 
-    const brent = res.prices.find((p) => p.code === "BRENT_CRUDE_USD");
-    expect(brent, "BRENT_CRUDE_USD should be in the demo prices").toBeDefined();
-    expect(typeof brent!.price).toBe("number");
-    // Sanity range check — Brent has traded ~$60-$120/bbl historically.
-    expect(brent!.price).toBeGreaterThan(20);
-    expect(brent!.price).toBeLessThan(300);
+      const brent = res.prices.find((p) => p.code === "BRENT_CRUDE_USD");
+      expect(brent, "BRENT_CRUDE_USD should be in the demo prices").toBeDefined();
+      expect(typeof brent!.price).toBe("number");
+      // Sanity range check — Brent has traded ~$60-$120/bbl historically.
+      expect(brent!.price).toBeGreaterThan(20);
+      expect(brent!.price).toBeLessThan(300);
 
-    expect(res.meta).toBeDefined();
-    expect(res.meta.demo_mode).toBe(true);
+      expect(res.meta).toBeDefined();
+      expect(res.meta.demo_mode).toBe(true);
+    } catch (e) {
+      skipIfRateLimited(e, ctx);
+    } finally {
+      await sleep(RATE_LIMIT_DELAY_MS);
+    }
   });
 
-  it("getDemoCommodities() parses the real commodities envelope", async () => {
-    const res = await client.getDemoCommodities();
+  it("getDemoCommodities() parses the real commodities envelope", async (ctx) => {
+    try {
+      const res = await client.getDemoCommodities();
 
-    // commodities is grouped by category key -> array of commodity metadata.
-    expect(res.commodities).toBeDefined();
-    expect(typeof res.commodities).toBe("object");
-    expect(Object.keys(res.commodities).length).toBeGreaterThan(0);
+      // commodities is grouped by category key -> array of commodity metadata.
+      expect(res.commodities).toBeDefined();
+      expect(typeof res.commodities).toBe("object");
+      expect(Object.keys(res.commodities).length).toBeGreaterThan(0);
 
-    expect(res.meta).toBeDefined();
-    // Hundreds of commodities are catalogued (442 at time of writing).
-    expect(res.meta.total).toBeGreaterThan(100);
-    expect(Array.isArray(res.meta.free_commodities)).toBe(true);
-    expect(res.meta.free_commodities).toContain("BRENT_CRUDE_USD");
-    expect(res.meta.free_commodities).toContain("WTI_USD");
+      expect(res.meta).toBeDefined();
+      // Hundreds of commodities are catalogued (442 at time of writing).
+      expect(res.meta.total).toBeGreaterThan(100);
+      expect(Array.isArray(res.meta.free_commodities)).toBe(true);
+      expect(res.meta.free_commodities).toContain("BRENT_CRUDE_USD");
+      expect(res.meta.free_commodities).toContain("WTI_USD");
+    } catch (e) {
+      skipIfRateLimited(e, ctx);
+    } finally {
+      await sleep(RATE_LIMIT_DELAY_MS);
+    }
   });
 });

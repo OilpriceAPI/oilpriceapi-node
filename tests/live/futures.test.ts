@@ -17,15 +17,12 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { OilPriceAPI } from "../../src/client.js";
 import type { FuturesCurveData, FuturesPrice } from "../../src/resources/futures.js";
+import { sleep, RATE_LIMIT_DELAY_MS, skipIfRateLimited } from "./helpers.js";
 
 const API_KEY = process.env.OILPRICEAPI_TEST_KEY;
 
 // Skip the entire suite (rather than fail) when no key is available.
 const describeLive = API_KEY ? describe : describe.skip;
-
-/** Space requests to respect the 1 req/sec rate limit. */
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const RATE_LIMIT_DELAY_MS = 1100;
 
 /**
  * Assert the latest payload is the real TOP-LEVEL futures response shape.
@@ -104,16 +101,26 @@ describeLive("LIVE futures latest endpoints (v0.9.1 path fix)", () => {
     client = new OilPriceAPI({ apiKey: API_KEY as string, retries: 1 });
   });
 
-  it("client.futures.brent().latest() returns the top-level response with front_month.last_price (GET /v1/futures/ice-brent)", async () => {
-    const res = await client.futures.brent().latest();
-    expectSaneFuturesPayload(res);
-    await sleep(RATE_LIMIT_DELAY_MS);
+  it("client.futures.brent().latest() returns the top-level response with front_month.last_price (GET /v1/futures/ice-brent)", async (ctx) => {
+    try {
+      const res = await client.futures.brent().latest();
+      expectSaneFuturesPayload(res);
+    } catch (e) {
+      skipIfRateLimited(e, ctx);
+    } finally {
+      await sleep(RATE_LIMIT_DELAY_MS);
+    }
   });
 
-  it("client.futures.brent().curve() returns curve data OR the documented no-data response (tolerant)", async () => {
-    const res = await client.futures.brent().curve();
-    expectSaneCurveOrNoData(res);
-    await sleep(RATE_LIMIT_DELAY_MS);
+  it("client.futures.brent().curve() returns curve data OR the documented no-data response (tolerant)", async (ctx) => {
+    try {
+      const res = await client.futures.brent().curve();
+      expectSaneCurveOrNoData(res);
+    } catch (e) {
+      skipIfRateLimited(e, ctx);
+    } finally {
+      await sleep(RATE_LIMIT_DELAY_MS);
+    }
   });
 
   // Note: the shared CI test key is rate-limited to ~1 req/sec. We keep the live
