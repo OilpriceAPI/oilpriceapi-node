@@ -15,7 +15,7 @@ The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.co
 
 - ✅ **Simple** - Get started in 5 lines of code
 - 🔒 **Type-Safe** - Full TypeScript support with detailed type definitions
-- ⚡ **Fast** - Zero dependencies, uses native fetch (Node 18+)
+- ⚡ **Fast** - No runtime dependencies except `ws` (WebSocket streaming), uses native fetch (Node 18+)
 - 🎯 **Comprehensive** - Covers all API endpoints including diesel prices & alerts
 - 🚀 **Modern** - ES Modules, async/await, Promise-based
 - 🛡️ **Robust** - Custom error classes for better error handling
