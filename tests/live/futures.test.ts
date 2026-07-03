@@ -96,18 +96,28 @@ function expectSaneCurveOrNoData(res: FuturesCurveData | Record<string, unknown>
     return;
   }
 
-  // Otherwise we expect real curve data: an array of points with prices.
-  const curve = obj.curve as Array<Record<string, unknown>> | undefined;
-  expect(Array.isArray(curve), "expected a `curve` array when not a no-data response").toBe(true);
-  if (curve && curve.length > 0) {
-    const point = curve[0];
+  // Otherwise we expect real curve data. VERIFIED against production
+  // 2026-07-03 (first live run): the payload has `contracts[]` (NOT `curve`),
+  // and `settlement_price` is serialized as a STRING ("71.56") — a known
+  // backend serialization issue (oilpriceapi-api#3889). Accept `contracts`
+  // as primary, tolerate a legacy/future `curve` array, and parse prices
+  // from string or number.
+  const points = (obj.contracts ?? obj.curve) as Array<Record<string, unknown>> | undefined;
+  expect(
+    Array.isArray(points),
+    "expected a `contracts` (or `curve`) array when not a no-data response",
+  ).toBe(true);
+  if (points && points.length > 0) {
+    const point = points[0];
+    const rawPrice = point.settlement_price ?? point.price ?? point.last_price;
     const price =
-      typeof point.price === "number"
-        ? point.price
-        : typeof point.last_price === "number"
-          ? (point.last_price as number)
+      typeof rawPrice === "number"
+        ? rawPrice
+        : typeof rawPrice === "string"
+          ? Number.parseFloat(rawPrice)
           : undefined;
-    expect(price, "expected a numeric price in the first curve point").toBeTypeOf("number");
+    expect(price, "expected a parseable price in the first curve point").toBeTypeOf("number");
+    expect(Number.isFinite(price as number)).toBe(true);
     expect(price as number).toBeGreaterThan(0);
     expect(price as number).toBeLessThan(100000);
   }
