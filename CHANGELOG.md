@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-07-03
+
+First stable release. The public API surface is now covered by semantic
+versioning: breaking changes will only ship in major versions.
+
+### Breaking
+
+- **Bunker fuels response types corrected to match the live API** (#29):
+  - `bunkerFuels.port()`: `prices` is an **array** of per-grade entries
+    (`{ grade, grade_name, price, currency, unit, change_24h, change_pct_24h, last_updated, ... }`),
+    not a `{ VLSFO: number }` keyed object. `port` is an info object
+    (`{ code, name, country, ... }`), not a string. Response also includes
+    `spreads` and `metadata` blocks.
+  - `bunkerFuels.all()` returns `{ ports, metadata }` with port data keyed by
+    port code (previously typed as a flat array; at runtime it returned
+    `undefined` because the declared shape never matched the API).
+  - `bunkerFuels.compare()` returns `{ comparison, spreads, metadata }` with
+    per-port data keyed by port code (previously typed as `{ fuel_type, ports: [...] }`).
+  - `bunkerFuels.spreads()` returns `{ from_port, to_port, fuel_grade, spreads, metadata }`.
+  - `bunkerFuels.historical()` returns `{ port, historical_data, period, metadata }`
+    (previously typed as a flat array; at runtime it returned `undefined`).
+  - `bunkerFuels.export()` is typed as `BunkerExportRow[]` (JSON format).
+  - New exported types: `BunkerPortInfo`, `BunkerSpreadValue`,
+    `BunkerResponseMetadata`, `PortPricesEntry`, `AllBunkerPrices`,
+    `PortToPortSpreadDetail`, `HistoricalBunkerData`, `BunkerExportRow`.
+    `BunkerFuelPrice`, `PortBunkerPrices`, `PortPriceComparison`,
+    `BunkerFuelSpreads`, and `HistoricalBunkerPrice` have new shapes.
+
+### Fixed
+
+- README bunker examples now use valid 3-letter port codes (`SIN`, not
+  `SGSIN` — the route only accepts `[A-Z]{3}`) and the correct
+  `compare(["SIN", "RTM"])` signature.
+
 ## [0.7.0] - 2026-02-11
 
 ### Added

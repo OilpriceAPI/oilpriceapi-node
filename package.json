@@ -1,6 +1,6 @@
 {
   "name": "oilpriceapi",
-  "version": "0.10.0",
+  "version": "1.0.0",
   "description": "Official Node.js SDK for Oil Price API - Real-time and historical oil & commodity prices",
   "type": "module",
   "main": "./dist/cjs/index.js",
