@@ -8,7 +8,7 @@
 [![Tests](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml/badge.svg)](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**[Get a Free API Key](https://www.oilpriceapi.com/auth/signup?utm_source=node-sdk)** · **[Documentation](https://docs.oilpriceapi.com)** · **[Pricing](https://www.oilpriceapi.com/pricing?utm_source=node-sdk-limit)** · **[Quick start ↓](#quick-start)**
+**[Get a Free API Key](https://www.oilpriceapi.com/auth/signup?utm_source=node-sdk)** · **[Documentation](https://docs.oilpriceapi.com)** · **[Pricing](https://www.oilpriceapi.com/pricing?utm_source=node-sdk-limit)** · **[API Explorer](https://api.oilpriceapi.com/swagger)** · **[Quick start ↓](#quick-start)**
 
 The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.com), the commodity price API behind fintech dashboards, fleet & logistics tools, maritime compliance platforms and energy analytics products — serving **2M+ API requests every month**.
 
@@ -1277,6 +1277,11 @@ We welcome contributions! Please see our [Contributing Guide](https://github.com
 - Email: support@oilpriceapi.com
 - Issues: [GitHub Issues](https://github.com/OilpriceAPI/oilpriceapi-node/issues)
 - Docs: [Documentation](https://docs.oilpriceapi.com)
+
+## Explore the API
+
+- 🧭 **Interactive explorer**: [api.oilpriceapi.com/swagger](https://api.oilpriceapi.com/swagger) — try every endpoint in the browser (works in demo mode, no key needed)
+- 📜 **OpenAPI spec**: [swagger.json](https://api.oilpriceapi.com/swagger.json) — import into Postman/Insomnia or generate clients
 
 ## License
 
