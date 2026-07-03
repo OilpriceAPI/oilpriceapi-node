@@ -1,15 +1,16 @@
 # Oil Price API - Node.js SDK
 
-> **Real-time oil and commodity price data for Node.js** - Professional-grade API at 98% less cost than Bloomberg Terminal
+> **Real-time oil, gas, LNG, carbon and fuel prices in your Node.js app in under 60 seconds** — fully typed TypeScript, native fetch, zero runtime dependencies (except `ws` for streaming).
 
-[![npm version](https://badge.fury.io/js/oilpriceapi.svg)](https://www.npmjs.com/package/oilpriceapi)
+[![npm version](https://img.shields.io/npm/v/oilpriceapi)](https://www.npmjs.com/package/oilpriceapi)
 [![npm downloads](https://img.shields.io/npm/dm/oilpriceapi)](https://www.npmjs.com/package/oilpriceapi)
+[![Node.js Version](https://img.shields.io/node/v/oilpriceapi)](https://www.npmjs.com/package/oilpriceapi)
 [![Tests](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml/badge.svg)](https://github.com/OilpriceAPI/oilpriceapi-node/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**[Get Free API Key](https://www.oilpriceapi.com/signup?utm_source=npm&utm_medium=sdk&utm_campaign=readme)** | **[Documentation](https://docs.oilpriceapi.com)** | **[Pricing](https://www.oilpriceapi.com/pricing?utm_source=npm&utm_medium=sdk&utm_campaign=pricing)**
+**[Get a Free API Key](https://www.oilpriceapi.com/auth/signup?utm_source=node-sdk)** · **[Documentation](https://docs.oilpriceapi.com)** · **[Pricing](https://www.oilpriceapi.com/pricing?utm_source=node-sdk-limit)** · **[API Explorer](https://api.oilpriceapi.com/swagger)** · **[Quick start ↓](#quick-start)**
 
-The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.com) - Real-time and historical oil prices for Brent Crude, WTI, Natural Gas, and 100+ commodities.
+The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.com), the commodity price API behind fintech dashboards, fleet & logistics tools, maritime compliance platforms and energy analytics products — serving **2M+ API requests every month**.
 
 ## Features
 
@@ -27,6 +28,23 @@ The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.co
 - 📊 Futures, storage, rig counts, analytics, drilling intelligence, webhooks, and energy intelligence
 - 🧰 **NEW** - Typed ICE Brent / Gasoil / WTI & gas/carbon futures helpers, `spreads`, `indicators`, and raw HTTP responses (`client.raw.*` with status + headers)
 - 🤖 `getMarketBrief()` (multi-commodity structured + narrative summary) and agent `subscriptions` (persistent watches + event polling)
+
+## What can you get?
+
+110+ commodities across the energy complex. The ones our customers poll the most:
+
+| Code              | What it is                 | Typical use                                 |
+| ----------------- | -------------------------- | ------------------------------------------- |
+| `BRENT_CRUDE_USD` | Brent crude (global)       | dashboards, market context, deal models     |
+| `WTI_USD`         | WTI crude (US)             | trading tools, macro models                 |
+| `NATURAL_GAS_USD` | Henry Hub natural gas      | energy analytics, procurement               |
+| `DUTCH_TTF_EUR`   | TTF gas (Europe)           | European energy, LNG analytics              |
+| `JKM_LNG_USD`     | JKM LNG (Asia)             | LNG trading & shipping                      |
+| `EU_CARBON_EUR`   | EU ETS carbon allowances   | CBAM reporting, maritime compliance, ESG    |
+| `DIESEL_USD`      | Diesel (Gulf Coast)        | fleet fuel-surcharge calculators, logistics |
+| `JET_FUEL_USD`    | Jet fuel                   | aviation ops & charter pricing              |
+| `VLSFO_USD`       | Marine bunker fuel (0.5%S) | voyage costing, bunker procurement          |
+| `GOLD_USD`        | Gold                       | macro & portfolio context                   |
 
 ## Installation
 
@@ -1237,6 +1255,19 @@ This package is written in TypeScript and includes full type definitions. You ge
 - ✅ Detailed JSDoc comments
 - ✅ Type-safe error handling
 
+## The whole OilPriceAPI toolbox
+
+Same data, every stack:
+
+| Tool                                                                                | Install                                        |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------- |
+| [Python SDK](https://github.com/OilpriceAPI/python-sdk)                             | `pip install oilpriceapi`                      |
+| [Go SDK](https://github.com/OilpriceAPI/oilpriceapi-go)                             | `go get github.com/OilpriceAPI/oilpriceapi-go` |
+| [PHP SDK](https://github.com/OilpriceAPI/oilpriceapi-php)                           | `composer require oilpriceapi/oilpriceapi`     |
+| [MCP server](https://github.com/OilpriceAPI/mcp-server) (Claude, Cursor, AI agents) | `npx -y oilpriceapi-mcp`                       |
+| [WordPress plugin](https://github.com/OilpriceAPI/oilpriceapi-wordpress-plugin)     | wordpress.org, no code                         |
+| [Google Sheets Add-on](https://github.com/OilpriceAPI/google-sheets-addin)          | custom spreadsheet functions                   |
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](https://github.com/OilpriceAPI/oilpriceapi-node/blob/main/CONTRIBUTING.md) for details.
@@ -1246,6 +1277,11 @@ We welcome contributions! Please see our [Contributing Guide](https://github.com
 - Email: support@oilpriceapi.com
 - Issues: [GitHub Issues](https://github.com/OilpriceAPI/oilpriceapi-node/issues)
 - Docs: [Documentation](https://docs.oilpriceapi.com)
+
+## Explore the API
+
+- 🧭 **Interactive explorer**: [api.oilpriceapi.com/swagger](https://api.oilpriceapi.com/swagger) — try every endpoint in the browser (works in demo mode, no key needed)
+- 📜 **OpenAPI spec**: [swagger.json](https://api.oilpriceapi.com/swagger.json) — import into Postman/Insomnia or generate clients
 
 ## License
 
@@ -1275,15 +1311,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **Free tier** with 100 requests to get started
 
 **[Start Free](https://www.oilpriceapi.com/signup?utm_source=npm&utm_medium=sdk&utm_campaign=readme)** | **[View Pricing](https://www.oilpriceapi.com/pricing?utm_source=npm&utm_medium=sdk&utm_campaign=pricing)** | **[Read Docs](https://docs.oilpriceapi.com)**
-
----
-
-## Also Available As
-
-- **[Python SDK](https://pypi.org/project/oilpriceapi/)** - Python client with Pandas integration
-- **[Go SDK](https://github.com/OilpriceAPI/oilpriceapi-go)** - Idiomatic Go client
-- **[MCP Server](https://www.npmjs.com/package/oilpriceapi-mcp)** - Model Context Protocol server for Claude, Cursor, and VS Code
-- **[Google Sheets Add-on](https://github.com/OilpriceAPI/google-sheets-addin)** - Custom functions for spreadsheets
 
 ---
 
