@@ -93,12 +93,21 @@ export type {
   RigCountSummary,
 } from "./resources/rig-counts.js";
 export type {
+  BunkerPortInfo,
   BunkerFuelPrice,
+  BunkerSpreadValue,
+  BunkerResponseMetadata,
+  PortPricesEntry,
+  AllBunkerPrices,
   PortBunkerPrices,
   PortPriceComparison,
+  PortToPortSpreadDetail,
   BunkerFuelSpreads,
   HistoricalBunkerPrice,
+  HistoricalBunkerData,
+  BunkerExportRow,
   HistoricalBunkerOptions,
+  BunkerSpreadOptions,
 } from "./resources/bunker-fuels.js";
 export type {
   PerformanceMetrics,

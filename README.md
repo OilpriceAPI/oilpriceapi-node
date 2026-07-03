@@ -22,11 +22,11 @@ The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.co
 - 🔄 **Resilient** - Automatic retries with exponential backoff
 - ⏱️ **Reliable** - Request timeouts and smart error handling
 - 🐛 **Debuggable** - Built-in debug logging mode
-- ⛽ **NEW v0.4.0** - Diesel prices (state averages + station-level pricing)
-- 🔔 **NEW v0.5.0** - Price alerts with webhook notifications
-- 📊 **NEW v0.7.0** - Futures, storage, rig counts, analytics, drilling intelligence, webhooks, and energy intelligence
+- ⛽ Diesel prices (state averages + station-level pricing)
+- 🔔 Price alerts with webhook notifications
+- 📊 Futures, storage, rig counts, analytics, drilling intelligence, webhooks, and energy intelligence
 - 🧰 **NEW** - Typed ICE Brent / Gasoil / WTI & gas/carbon futures helpers, `spreads`, `indicators`, and raw HTTP responses (`client.raw.*` with status + headers)
-- 🤖 **NEW v0.10.0** - `getMarketBrief()` (multi-commodity structured + narrative summary) and agent `subscriptions` (persistent watches + event polling)
+- 🤖 `getMarketBrief()` (multi-commodity structured + narrative summary) and agent `subscriptions` (persistent watches + event polling)
 
 ## Installation
 
@@ -130,7 +130,7 @@ const prices = await client.getHistoricalPrices({
 console.log(`Got ${prices.length} data points for 2024`);
 ```
 
-### Performance Optimization (New in v0.6.0)
+### Performance Optimization
 
 For year-long queries, use the `interval` parameter to dramatically improve response times:
 
@@ -149,7 +149,7 @@ console.log(`Got ${yearlyPrices.length} daily averages`);
 // Only use 'raw' when you need every individual price point
 ```
 
-### Get Diesel Prices (New in v0.4.0)
+### Get Diesel Prices
 
 #### Get State Average Diesel Price
 
@@ -226,7 +226,7 @@ console.log(
 
 **Note:** Station-level diesel prices are available on paid tiers (Exploration and above). State averages are free.
 
-### Price Alerts (New in v0.5.0)
+### Price Alerts
 
 #### Create a Price Alert
 
@@ -328,7 +328,7 @@ When an alert triggers, a POST request is sent to your webhook URL with:
 - Condition value: Must be between $0.01 and $1,000,000
 - Webhook URL: Must use HTTPS protocol
 
-### Commodities Metadata (New in v0.7.0)
+### Commodities Metadata
 
 ```typescript
 // List all available commodities
@@ -345,7 +345,7 @@ const categories = await client.commodities.categories();
 console.log(`Oil category: ${categories.oil.commodities.length} commodities`);
 ```
 
-### Futures Contracts (New in v0.7.0)
+### Futures Contracts
 
 ```typescript
 // Get latest futures price
@@ -495,7 +495,7 @@ const futures = await client.raw.get("/v1/futures/CL.1");
 console.log(futures.status, futures.data);
 ```
 
-### Storage Levels (New in v0.7.0)
+### Storage Levels
 
 ```typescript
 // Get total US crude storage
@@ -511,7 +511,7 @@ const spr = await client.storage.spr();
 console.log(`SPR: ${spr.level} ${spr.unit}`);
 ```
 
-### Rig Counts (New in v0.7.0)
+### Rig Counts
 
 ```typescript
 // Get latest Baker Hughes rig count
@@ -525,7 +525,7 @@ console.log(`Week-over-week: ${summary.week_change}`);
 console.log(`Year-over-year: ${summary.year_change}`);
 ```
 
-### Analytics (New in v0.7.0)
+### Analytics
 
 ```typescript
 // Get performance metrics
@@ -541,7 +541,7 @@ const corr = await client.analytics.correlation("WTI_USD", "BRENT_CRUDE_USD", 90
 console.log(`Correlation: ${corr.correlation} (${corr.strength})`);
 ```
 
-### Drilling Intelligence (New in v0.7.0)
+### Drilling Intelligence
 
 ```typescript
 // Get latest drilling activity
@@ -555,7 +555,7 @@ console.log(`Permian rigs: ${permian.active_rigs}`);
 console.log(`DUC wells: ${permian.duc_wells}`);
 ```
 
-### Energy Intelligence (New in v0.7.0)
+### Energy Intelligence
 
 Access comprehensive energy market intelligence from EIA, Baker Hughes, and FracFocus.
 
@@ -579,7 +579,7 @@ timeline.events.forEach((e) => {
 });
 ```
 
-### Webhooks (New in v0.7.0)
+### Webhooks
 
 ```typescript
 // Create a webhook
@@ -601,25 +601,32 @@ webhooks.forEach((wh) => {
 });
 ```
 
-### Bunker Fuels (New in v0.7.0)
+### Bunker Fuels
 
 ```typescript
-// Get bunker fuel prices at all ports
-const bunkerPrices = await client.bunkerFuels.all();
-console.log(`${bunkerPrices.length} port prices available`);
+// Get bunker fuel prices at all ports (Professional plan or above),
+// keyed by port code
+const all = await client.bunkerFuels.all();
+console.log(`${Object.keys(all.ports).length} ports available`);
 
-// Get prices at specific port
-const singapore = await client.bunkerFuels.port("SGSIN");
-console.log(`Singapore VLSFO: $${singapore.prices.VLSFO}/MT`);
+// Get prices at a specific port — `prices` is an ARRAY of per-grade entries
+const singapore = await client.bunkerFuels.port("SIN");
+const vlsfo = singapore.prices.find((p) => p.grade === "VLSFO");
+console.log(`${singapore.port.name} VLSFO: $${vlsfo?.price}/MT`);
 
-// Compare prices across ports
-const comparison = await client.bunkerFuels.compare("VLSFO");
-comparison.ports.forEach((p) => {
-  console.log(`${p.port_name}: $${p.price}/MT (rank ${p.rank})`);
-});
+// Compare prices across ports (2-10 port codes)
+const comparison = await client.bunkerFuels.compare(["SIN", "RTM", "HOU"]);
+for (const [code, entry] of Object.entries(comparison.comparison)) {
+  const p = entry.prices.find((p) => p.grade === "VLSFO");
+  console.log(`${entry.port.name}: $${p?.price}/MT`);
+}
 ```
 
-### Forecasts (New in v0.7.0)
+> **Changed in v1.0.0:** the port response's `prices` field is an array of
+> per-grade entries (matching the live API), not a `{ VLSFO: number }` keyed
+> object. See [#29](https://github.com/OilpriceAPI/oilpriceapi-node/issues/29).
+
+### Forecasts
 
 ```typescript
 // Get monthly forecasts
@@ -640,7 +647,7 @@ const wtiQ2 = await client.forecasts.get({
 console.log(`WTI Q2 forecast: $${wtiQ2.forecast_price}`);
 ```
 
-### Data Sources (New in v0.7.0)
+### Data Sources
 
 Manage custom data source integrations for Bring Your Own Source (BYOS).
 
@@ -727,7 +734,7 @@ process.on("SIGINT", () => {
 
 See [`examples/streaming.ts`](./examples/streaming.ts) for a complete runnable example.
 
-### Market Brief (New in v0.10.0)
+### Market Brief
 
 A single call returns a structured, multi-commodity market summary — latest
 price, 24h change, freshness, and a 1-month forecast band per commodity — with
@@ -756,7 +763,7 @@ const withNarrative = await client.getMarketBrief(["BRENT_CRUDE_USD"], {
 console.log(withNarrative.narrative);
 ```
 
-### Agent Subscriptions / Watches (New in v0.10.0)
+### Agent Subscriptions / Watches
 
 Persistent server-side "watches" evaluate a set of commodity codes on a recurring
 interval and emit events you can poll for — ideal for autonomous agents that want
