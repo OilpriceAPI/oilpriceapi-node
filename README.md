@@ -51,6 +51,28 @@ const prices = await client.getLatestPrices();
 console.log(prices);
 ```
 
+## Beyond Oil — Gas, LNG, Carbon & Fuels
+
+The same client covers EU ETS carbon, European gas (TTF), LNG (JKM), and marine/road/aviation fuels — for maritime compliance (EU ETS / FuelEU Maritime), fleet & logistics fuel costing, LNG and European gas analytics, and CBAM reporting.
+
+```typescript
+// EU ETS carbon allowances (EUAs) — typed futures helper
+const eua = await client.futures.euaCarbon().latest();
+console.log(eua.front_month?.last_price); // €XX.XX per tonne CO2
+
+// Dutch TTF natural gas — front month + full forward curve
+// (also: .lngJkm(), .naturalGas(), .ukCarbon(), .brent(), .wti(), .gasoil())
+const ttf = await client.futures.ttfGas().latest();
+console.log(ttf.front_month?.last_price); // €XX.XX/MWh
+
+// Marine and aviation fuels — spot prices by commodity code
+const [vlsfo] = await client.getLatestPrices({ commodity: "VLSFO_USD" });
+const [jet] = await client.getLatestPrices({ commodity: "JET_FUEL_USD" });
+console.log(vlsfo.formatted, jet.formatted); // $XXX.XX $X.XX
+```
+
+More spot codes for these markets: `EU_CARBON_EUR`, `DUTCH_TTF_EUR`, `JKM_LNG_USD`, `DIESEL_USD`, `NATURAL_GAS_USD` — and `client.bunkerFuels` for port-level VLSFO/MGO/IFO380. (Futures and bunker endpoints require a plan with futures data — spot prices work on every tier.)
+
 ## Usage Examples
 
 ### Get Latest Prices (All Commodities)
