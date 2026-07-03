@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-07-03
+
+### Changed
+
+- docs: registry storefront README — hero, "What can you get?" commodity table, and cross-SDK toolbox table so the npm page matches the other OilPriceAPI SDKs. No code changes.
+
 ## [1.0.0] - 2026-07-03
 
 First stable release. The public API surface is now covered by semantic
