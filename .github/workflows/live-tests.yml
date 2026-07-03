@@ -30,9 +30,15 @@ jobs:
         run: npm ci
 
       - name: Run live tests
-        # Guard at the step level too: skip if the secret is empty so the job
-        # is a no-op (green) rather than a failure when no key is configured.
-        if: ${{ secrets.OILPRICEAPI_TEST_KEY != '' }}
-        run: npm run test:live
+        # Shell-level guard: the `secrets` context is NOT available in step
+        # `if:` conditions — using it there makes GitHub reject the ENTIRE
+        # workflow file (red X on every push, tests never ran — issue #25).
+        # Same pattern as python-sdk: skip gracefully when no key (forks).
+        run: |
+          if [ -z "$OILPRICEAPI_TEST_KEY" ]; then
+            echo "OILPRICEAPI_TEST_KEY not set — skipping live tests (fork or unconfigured)."
+            exit 0
+          fi
+          npm run test:live
         env:
           OILPRICEAPI_TEST_KEY: ${{ secrets.OILPRICEAPI_TEST_KEY }}
