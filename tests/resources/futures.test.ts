@@ -25,7 +25,7 @@ describe("FuturesResource", () => {
       // structure in contracts[].
       const mockPrice: FuturesPrice = {
         commodity: "WTI_FUTURES",
-        source: "ICE",
+        source: "market_reporting",
         updated_at: "2024-01-15T10:00:00Z",
         settlement_date: "2024-01-15",
         front_month: {

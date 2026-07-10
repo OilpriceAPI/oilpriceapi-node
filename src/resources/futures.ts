@@ -49,7 +49,7 @@ export interface FuturesContractMonth {
 export interface FuturesPrice {
   /** Commodity identifier (e.g. "BRENT_FUTURES"). */
   commodity?: string;
-  /** Data source (e.g. "ICE"). */
+  /** Data source label (e.g. "market_reporting", or a government label like "EIA"). */
   source?: string;
   /** ISO timestamp the data was last updated. */
   updated_at?: string;
