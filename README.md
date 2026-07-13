@@ -573,6 +573,40 @@ console.log(`Permian rigs: ${permian.active_rigs}`);
 console.log(`DUC wells: ${permian.duc_wells}`);
 ```
 
+### Well Production
+
+US oil & gas production data: national/state monthly aggregates (EIA), well-level production from state regulatory agencies, and permit-to-production cycle-time analytics. Requires the drilling-intelligence tier.
+
+> **Beta coverage caveat:** well-level production is only available for the states collected from regulatory agencies so far — this is **not** complete US well-level coverage. State-level aggregates (EIA) are the comprehensive layer. Check `summary().coverage` before assuming a state or well is covered.
+
+```typescript
+// National overview: latest rollup, top states, data sources, coverage
+const summary = await client.wellProduction.summary();
+console.log(summary.top_states[0]); // { state: 'TX', period: '2026-04', oil_bbl: ..., ... }
+console.log(summary.coverage?.well_level_states_with_data); // e.g. ['AK', 'ND', 'NM', 'PA', 'TX']
+
+// Latest state-level production (or a specific month)
+const states = await client.wellProduction.states({ period: "2026-04" });
+
+// Production history for one state
+const tx = await client.wellProduction.stateDetail("TX", { start_date: "2026-01-01" });
+tx.data.forEach((r) => console.log(`${r.period}: ${r.oil_bbl} bbl oil`));
+
+// Production history for one well (14-digit API number)
+const well = await client.wellProduction.wellDetail("42-477-31122-00-00");
+console.log(`${well.well_name} (${well.operator}): ${well.count} months`);
+
+// Top producing wells in a state
+const top = await client.wellProduction.topProducers({ state_code: "TX", limit: 10 });
+
+// Permit-to-production cycle times
+const cycle = await client.wellProduction.cycleTime({ state: "TX" });
+console.log(`Median: ${cycle.cycle_time_stats.median_days} days`);
+
+// Cycle-time cohort comparison (quarterly by default)
+const cohorts = await client.wellProduction.cycleTimeCohorts({ state: "TX" });
+```
+
 ### Energy Intelligence
 
 Access comprehensive energy market intelligence from EIA, Baker Hughes, and FracFocus.

@@ -221,8 +221,14 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
   // -------------------------------------------------------------------------
   describe("wellPermits", () => {
     it("covers list/latest/summary/byState/byOperator/byFormation", async () => {
-      spy({ id: "1", state: "TX", issue_date: "d", timestamp: "t" });
-      await client.ei.wellPermits.latest();
+      // latest() returns the live collection envelope { well_permits, meta } (#32).
+      spy({
+        well_permits: [{ api_number: "42", state_code: "TX", operator: { name: "Op" } }],
+        meta: { count: 1, limit: 25 },
+      });
+      const latest = await client.ei.wellPermits.latest();
+      expect(latest.well_permits).toHaveLength(1);
+      expect(latest.meta?.count).toBe(1);
 
       spy({ total_permits: 1, as_of_date: "d" });
       await client.ei.wellPermits.summary();

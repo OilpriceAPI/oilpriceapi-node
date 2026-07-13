@@ -175,6 +175,8 @@ export type {
   PermitsByOperator,
   PermitsByFormation,
   WellPermitSearchQuery,
+  LatestWellPermit,
+  WellPermitLatestResponse,
   FracFocusRecord,
   FracFocusSummary,
   DisclosuresByState,
@@ -200,6 +202,27 @@ export type {
   SubscriptionEventsOptions,
 } from "./resources/subscriptions.js";
 export { SubscriptionsResource, intervalToSeconds } from "./resources/subscriptions.js";
+export { WellProductionResource } from "./resources/well-production.js";
+export type {
+  WellProductionRecord,
+  StateProductionSummary,
+  WellProductionSummary,
+  StatesProductionResponse,
+  StateProductionDetail,
+  WellProductionDetail,
+  TopProducingWell,
+  TopProducersResponse,
+  StatesOptions,
+  StateDetailOptions,
+  TopProducersOptions,
+  CycleTimeStats,
+  CycleTimeWell,
+  CycleTimeAnalysis,
+  CycleTimeCohort,
+  CycleTimeCohortsResponse,
+  CycleTimeQuery,
+  CycleTimeCohortsQuery,
+} from "./resources/well-production.js";
 export type {
   WebhookEndpoint,
   CreateWebhookParams,

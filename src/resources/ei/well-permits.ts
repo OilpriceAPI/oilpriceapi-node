@@ -92,6 +92,84 @@ export interface PermitsByFormation {
 }
 
 /**
+ * Well permit record returned by the `latest` endpoint.
+ *
+ * The live `/v1/ei/well-permits/latest` endpoint returns richer, nested
+ * records than the flat {@link WellPermitRecord} shape used elsewhere.
+ */
+export interface LatestWellPermit {
+  /** 14-digit API well number */
+  api_number: string | null;
+  /** Two-letter state code */
+  state_code: string;
+  /** County name */
+  county: string | null;
+  /** Permit number */
+  permit_number: string | null;
+  /** Permit type (e.g., "new_drill") */
+  permit_type: string | null;
+  /** Permit status (e.g., "approved") */
+  permit_status: string | null;
+  /** Permit date (YYYY-MM-DD) */
+  permit_date: string | null;
+  /** Operator details */
+  operator: {
+    name: string | null;
+    name_normalized: string | null;
+    number: string | null;
+  };
+  /** Well details */
+  well: {
+    name: string | null;
+    number: string | null;
+    type: string | null;
+  };
+  /** Surface location */
+  location: {
+    latitude: string | null;
+    longitude: string | null;
+  };
+  /** Target formation/depth */
+  target: {
+    formation: string | null;
+    formation_normalized: string | null;
+    total_depth_proposed: number | null;
+  };
+  /** Source provenance */
+  provenance: {
+    source: string | null;
+    fetched_at: string | null;
+  };
+}
+
+/**
+ * Envelope returned by `GET /v1/ei/well-permits/latest`.
+ *
+ * The live API returns a collection plus a `meta` block (lookback window,
+ * covered states, per-state data-quality notes) — not a single record.
+ */
+export interface WellPermitLatestResponse {
+  /** Most recent permits across covered states */
+  well_permits: LatestWellPermit[];
+  /** Collection metadata */
+  meta?: {
+    /** Lookback window in days */
+    days?: number;
+    /** States included in the response */
+    states?: string[];
+    /** Max records returned */
+    limit?: number;
+    /** Records returned */
+    count?: number;
+    /** Snapshot timestamp */
+    as_of?: string;
+    /** Per-state data-quality notes */
+    data_quality?: Record<string, { date_coverage?: string; source?: string; note?: string }>;
+    [key: string]: unknown;
+  };
+}
+
+/**
  * Well permit search query.
  *
  * Maps to the parameters the `search` action actually reads. Note: `operator`
@@ -132,9 +210,11 @@ export interface WellPermitSearchQuery {
  * ```typescript
  * const client = new OilPriceAPI({ apiKey: 'your_key' });
  *
- * // Get latest permits
+ * // Get latest permits (collection + meta envelope)
  * const latest = await client.ei.wellPermits.latest();
- * console.log(`Permit: ${latest.permit_number} - ${latest.operator}`);
+ * latest.well_permits.forEach(p =>
+ *   console.log(`${p.permit_number}: ${p.operator.name} (${p.state_code})`)
+ * );
  *
  * // Get permits by state
  * const states = await client.ei.wellPermits.byState();
@@ -142,8 +222,8 @@ export interface WellPermitSearchQuery {
  *
  * // Search permits
  * const results = await client.ei.wellPermits.search({
- *   state: 'Texas',
- *   operator: 'ConocoPhillips'
+ *   states: 'TX,NM',
+ *   well_name: 'Eagle'
  * });
  * ```
  */
@@ -178,12 +258,16 @@ export class EIWellPermitsResource {
   }
 
   /**
-   * Get latest well permit
+   * Get the latest well permits across covered states.
    *
-   * @returns Latest well permit record
+   * Returns the API's collection envelope (`{ well_permits, meta }`), not a
+   * single record — the previous `WellPermitRecord` return type did not match
+   * the live API response (see OilpriceAPI/oilpriceapi-node#32).
+   *
+   * @returns Latest well permits with collection metadata
    */
-  async latest(): Promise<WellPermitRecord> {
-    return this.client["request"]<WellPermitRecord>("/v1/ei/well-permits/latest", {});
+  async latest(): Promise<WellPermitLatestResponse> {
+    return this.client["request"]<WellPermitLatestResponse>("/v1/ei/well-permits/latest", {});
   }
 
   /**
