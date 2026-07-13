@@ -1,6 +1,11 @@
 import { OilPriceAPI } from './src/index.js';
 
-const API_KEY = '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11';
+// Reads your API key from the OILPRICEAPI_KEY environment variable.
+const API_KEY = process.env.OILPRICEAPI_KEY;
+if (!API_KEY) {
+  console.error('Set OILPRICEAPI_KEY to run this example.');
+  process.exit(1);
+}
 
 async function testCommoditiesEndpoints() {
   const client = new OilPriceAPI({ apiKey: API_KEY, debug: true });

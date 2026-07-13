@@ -1,9 +1,10 @@
 import { OilPriceAPI } from './src/index.js';
 
 async function main() {
-  // Initialize with admin API key for testing
+  // Reads your API key from the OILPRICEAPI_KEY environment variable.
+  // Get a key at https://www.oilpriceapi.com — never commit real keys.
   const client = new OilPriceAPI({
-    apiKey: '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11'
+    apiKey: process.env.OILPRICEAPI_KEY
   });
 
   console.log('Testing Oil Price API Node.js SDK...\n');
