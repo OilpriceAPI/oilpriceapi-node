@@ -204,6 +204,8 @@ export type {
   PermitsByOperator,
   PermitsByFormation,
   WellPermitSearchQuery,
+  LatestWellPermit,
+  WellPermitLatestResponse,
 } from "./well-permits.js";
 export type {
   FracFocusRecord,

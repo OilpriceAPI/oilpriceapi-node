@@ -24,6 +24,9 @@ jobs:
       - name: TypeScript build check
         run: npx tsc --noEmit
 
+      - name: Check for hardcoded API keys
+        run: npm run check:secrets
+
       - name: ESLint
         run: npx eslint src/
 

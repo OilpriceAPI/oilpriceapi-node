@@ -1,12 +1,20 @@
 import { OilPriceAPI } from './src/index.js';
 
+// Reads your API key from the OILPRICEAPI_KEY environment variable.
+// Never commit real keys — use 'your-api-key-here' only as a placeholder.
+const API_KEY = process.env.OILPRICEAPI_KEY;
+if (!API_KEY) {
+  console.error('Set OILPRICEAPI_KEY to run this example.');
+  process.exit(1);
+}
+
 async function main() {
   console.log('Testing Oil Price API Node.js SDK v0.2.0 (Walk Phase)\n');
 
   // Test 1: Basic request with retries
   console.log('1. Testing basic request with retry logic...');
   const client = new OilPriceAPI({
-    apiKey: '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11',
+    apiKey: API_KEY,
     retries: 3,
     retryDelay: 1000,
     retryStrategy: 'exponential',
@@ -19,7 +27,7 @@ async function main() {
   // Test 2: Debug mode
   console.log('2. Testing debug logging...');
   const debugClient = new OilPriceAPI({
-    apiKey: '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11',
+    apiKey: API_KEY,
     debug: true
   });
 
@@ -29,7 +37,7 @@ async function main() {
   // Test 3: Different retry strategies
   console.log('3. Testing retry strategies...');
   const linearClient = new OilPriceAPI({
-    apiKey: '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11',
+    apiKey: API_KEY,
     retryStrategy: 'linear',
     retries: 2
   });
@@ -43,7 +51,7 @@ async function main() {
   // Test 4: Custom timeout
   console.log('4. Testing custom timeout (5 seconds)...');
   const shortTimeoutClient = new OilPriceAPI({
-    apiKey: '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11',
+    apiKey: API_KEY,
     timeout: 5000  // 5 seconds
   });
 

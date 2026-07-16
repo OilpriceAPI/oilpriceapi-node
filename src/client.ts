@@ -42,6 +42,7 @@ import { IndicatorsResource } from "./resources/indicators.js";
 import { RawResource } from "./resources/raw.js";
 import { StreamingResource } from "./resources/streaming.js";
 import { SubscriptionsResource } from "./resources/subscriptions.js";
+import { WellProductionResource } from "./resources/well-production.js";
 
 /**
  * Raw HTTP response wrapper.
@@ -199,6 +200,15 @@ export class OilPriceAPI {
    */
   public readonly subscriptions: SubscriptionsResource;
 
+  /**
+   * Well production resource (US national/state/well-level oil & gas
+   * production plus permit-to-production cycle-time analytics).
+   *
+   * Requires the drilling-intelligence tier. Well-level coverage is beta —
+   * limited to states collected from regulatory agencies so far.
+   */
+  public readonly wellProduction: WellProductionResource;
+
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     if (!this.apiKey) {
@@ -235,6 +245,7 @@ export class OilPriceAPI {
     this.raw = new RawResource(this);
     this.stream = new StreamingResource(this);
     this.subscriptions = new SubscriptionsResource(this);
+    this.wellProduction = new WellProductionResource(this);
   }
 
   /**

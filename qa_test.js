@@ -3,7 +3,13 @@
  */
 import { OilPriceAPI } from './dist/index.js';
 
-const API_KEY = process.env.OIL_PRICE_API_KEY || '3839c085460dd3a9dac1291f937f5a6d1740e8c668c766bc9f95e166af59cb11';
+// Live QA needs a real key — set OILPRICEAPI_KEY (or legacy OIL_PRICE_API_KEY).
+const API_KEY = process.env.OILPRICEAPI_KEY || process.env.OIL_PRICE_API_KEY;
+
+if (!API_KEY) {
+  console.log('SKIP: set OILPRICEAPI_KEY to run live QA tests.');
+  process.exit(0);
+}
 
 async function runQATests() {
   console.log('=== Node.js SDK v0.3.0 QA Tests ===\n');
