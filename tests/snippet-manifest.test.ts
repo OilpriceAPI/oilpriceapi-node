@@ -54,6 +54,10 @@ describe("versioned snippet manifest", () => {
       403,
       429,
     ]);
+    for (const example of manifest.examples) {
+      expect(example.code).toContain("OILPRICEAPI_KEY");
+      expect(example.code).not.toContain("_shared");
+    }
   });
 
   it("executes the exact success files against fixtures", async () => {

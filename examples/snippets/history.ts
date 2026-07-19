@@ -1,9 +1,11 @@
+import { pathToFileURL } from "node:url";
+
 import { OilPriceAPI } from "oilpriceapi";
-import { fixtureBaseUrl, isMain } from "./_shared.js";
 
 export async function run() {
   const client = new OilPriceAPI({
-    baseUrl: fixtureBaseUrl(),
+    apiKey: process.env.OILPRICEAPI_KEY,
+    baseUrl: process.env.OILPRICEAPI_BASE_URL,
     retries: 0,
   });
   const prices = await client.getHistoricalPrices({
@@ -20,6 +22,6 @@ export async function run() {
   };
 }
 
-if (isMain(import.meta.url)) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log(JSON.stringify(await run()));
 }
