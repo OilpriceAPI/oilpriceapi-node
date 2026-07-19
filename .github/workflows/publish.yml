@@ -9,7 +9,7 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
@@ -35,6 +35,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build signed snippet manifest
+        run: npm run snippets:build -- --source-commit "$GITHUB_SHA"
+
+      - name: Attach snippet manifest to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" artifacts/snippets/* --clobber
 
       # Authentication via OIDC Trusted Publishing (configured on npmjs.com).
       # No NODE_AUTH_TOKEN needed; OIDC also satisfies the package 2FA requirement

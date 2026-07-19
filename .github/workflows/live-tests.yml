@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build package
+        run: npm run build
+
       - name: Run live tests
         # Shell-level guard: the `secrets` context is NOT available in step
         # `if:` conditions — using it there makes GitHub reject the ENTIRE
@@ -42,3 +45,14 @@ jobs:
           npm run test:live
         env:
           OILPRICEAPI_TEST_KEY: ${{ secrets.OILPRICEAPI_TEST_KEY }}
+
+      - name: Run canonical success snippets against production
+        env:
+          OILPRICEAPI_KEY: ${{ secrets.OILPRICEAPI_TEST_KEY }}
+        run: |
+          if [ -z "$OILPRICEAPI_KEY" ]; then
+            echo "OILPRICEAPI_TEST_KEY not set; canonical snippet smoke skipped."
+            exit 0
+          fi
+          npx tsx examples/snippets/latest-price.ts
+          npx tsx examples/snippets/history.ts

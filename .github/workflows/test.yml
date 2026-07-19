@@ -24,6 +24,9 @@ jobs:
       - name: TypeScript build check
         run: npx tsc --noEmit
 
+      - name: Canonical snippet type check
+        run: npx tsc --noEmit -p tsconfig.snippets.json
+
       - name: Check for hardcoded API keys
         run: npm run check:secrets
 
@@ -54,3 +57,37 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Build executable snippet manifest
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: npm run snippets:build -- --source-commit "$SOURCE_COMMIT"
+
+      - name: Upload snippet manifest
+        if: matrix.node-version == '22'
+        uses: actions/upload-artifact@v4
+        with:
+          name: oilpriceapi-node-snippets-${{ github.sha }}
+          path: artifacts/snippets/
+          if-no-files-found: error
+
+  node18-snippets:
+    name: Executable snippets (Node 18)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SDK and validate exact snippet files
+        run: |
+          npm run build
+          npx tsc --noEmit -p tsconfig.snippets.json
+          npm run snippets:fixtures
+          npm run snippets:build -- --source-commit "$GITHUB_SHA"

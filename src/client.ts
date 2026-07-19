@@ -392,7 +392,7 @@ export class OilPriceAPI {
         try {
           // Build headers with optional telemetry
           const headers: Record<string, string> = {
-            Authorization: `Bearer ${this.apiKey}`,
+            Authorization: `Token ${this.apiKey}`,
             "Content-Type": "application/json",
             "User-Agent": buildUserAgent(),
             "X-SDK-Name": SDK_NAME,

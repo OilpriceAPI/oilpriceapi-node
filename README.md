@@ -10,6 +10,12 @@
 
 **[Get a Free API Key](https://www.oilpriceapi.com/auth/signup?utm_source=node-sdk)** · **[Documentation](https://docs.oilpriceapi.com)** · **[Pricing](https://www.oilpriceapi.com/pricing?utm_source=node-sdk-limit)** · **[API Explorer](https://api.oilpriceapi.com/swagger)** · **[Quick start ↓](#quick-start)**
 
+Canonical website and documentation snippets live in `examples/snippets/` and
+are executed in CI against deterministic fixtures. `npm run snippets:build`
+packages those exact files with runtime, package, response-shape, source-commit,
+and SHA-256 metadata. Release builds attach the manifest and checksum so
+downstream sites can pin reviewed SDK examples instead of copying code by hand.
+
 The official Node.js/TypeScript SDK for [OilPriceAPI](https://www.oilpriceapi.com), the commodity price API behind fintech dashboards, fleet & logistics tools, maritime compliance platforms and energy analytics products — serving **2M+ API requests every month**.
 
 ## Features

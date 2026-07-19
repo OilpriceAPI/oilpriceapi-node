@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "package": {
+    "name": "oilpriceapi",
+    "language": "typescript",
+    "minimum_runtime": "18"
+  },
+  "examples": [
+    {
+      "id": "node.latest-price",
+      "path": "examples/snippets/latest-price.ts",
+      "kind": "success",
+      "endpoint": "GET /v1/prices/latest",
+      "docs_url": "https://docs.oilpriceapi.com/quick-start/javascript",
+      "expected_response_shape": {
+        "commodity": "string",
+        "currency": "string",
+        "valueType": "string",
+        "timestampType": "string"
+      }
+    },
+    {
+      "id": "node.history",
+      "path": "examples/snippets/history.ts",
+      "kind": "success",
+      "endpoint": "GET /v1/prices/past_year",
+      "docs_url": "https://docs.oilpriceapi.com/quick-start/javascript",
+      "expected_response_shape": {
+        "commodity": "string",
+        "count": "integer",
+        "valueType": "string"
+      }
+    },
+    {
+      "id": "node.authentication-error",
+      "path": "examples/snippets/authentication-error.ts",
+      "kind": "recovery",
+      "endpoint": "GET /v1/prices/latest",
+      "http_status": 401,
+      "docs_url": "https://docs.oilpriceapi.com/guides/authentication",
+      "expected_response_shape": {"handled": "boolean", "statusCode": "integer"}
+    },
+    {
+      "id": "node.entitlement-error",
+      "path": "examples/snippets/entitlement-error.ts",
+      "kind": "recovery",
+      "endpoint": "GET /v1/prices/latest",
+      "http_status": 403,
+      "docs_url": "https://docs.oilpriceapi.com/guides/error-codes",
+      "expected_response_shape": {"handled": "boolean", "statusCode": "integer"}
+    },
+    {
+      "id": "node.rate-limit-error",
+      "path": "examples/snippets/rate-limit-error.ts",
+      "kind": "recovery",
+      "endpoint": "GET /v1/prices/latest",
+      "http_status": 429,
+      "docs_url": "https://docs.oilpriceapi.com/guides/error-codes",
+      "expected_response_shape": {"handled": "boolean", "statusCode": "integer"}
+    },
+    {
+      "id": "node.timeout-error",
+      "path": "examples/snippets/timeout-error.ts",
+      "kind": "recovery",
+      "endpoint": "GET /v1/prices/latest",
+      "docs_url": "https://docs.oilpriceapi.com/guides/error-codes",
+      "expected_response_shape": {"handled": "boolean", "errorType": "string"}
+    }
+  ]
+}
