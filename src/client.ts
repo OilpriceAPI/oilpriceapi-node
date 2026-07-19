@@ -15,12 +15,11 @@ import type {
 import type { MarketBrief, MarketBriefOptions } from "./resources/market-brief.js";
 import {
   OilPriceAPIError,
-  AuthenticationError,
   RateLimitError,
-  NotFoundError,
   ServerError,
   TimeoutError,
   ValidationError,
+  errorFromResponse,
 } from "./errors.js";
 import { DieselResource } from "./resources/diesel.js";
 import { AlertsResource } from "./resources/alerts.js";
@@ -435,47 +434,15 @@ export class OilPriceAPI {
           // Handle error responses
           if (!response.ok) {
             const errorBody = await response.text();
-            let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            const apiError = errorFromResponse(response, errorBody, this.apiKey);
+            this.log(`Error response: ${apiError.message}`);
 
-            // Try to parse JSON error response
-            try {
-              const errorJson = JSON.parse(errorBody);
-              errorMessage = errorJson.message || errorJson.error || errorMessage;
-            } catch {
-              // Use default error message if response isn't JSON
+            if (apiError instanceof RateLimitError && attempt < this.retries && apiError.retryAfter) {
+              this.log(`Rate limited. Waiting ${apiError.retryAfter}s`);
+              await this.sleep(apiError.retryAfter * 1000);
+              continue;
             }
-
-            this.log(`Error response: ${errorMessage}`);
-
-            // Throw specific error types based on status code
-            switch (response.status) {
-              case 401:
-                throw new AuthenticationError(errorMessage);
-              case 404:
-                throw new NotFoundError(errorMessage);
-              case 429:
-                const retryAfter = response.headers.get("Retry-After");
-                const rateLimitError = new RateLimitError(
-                  errorMessage,
-                  retryAfter ? parseInt(retryAfter, 10) : undefined,
-                );
-
-                // If rate limited and we have retries left, wait and retry
-                if (attempt < this.retries && rateLimitError.retryAfter) {
-                  this.log(`Rate limited. Waiting ${rateLimitError.retryAfter}s`);
-                  await this.sleep(rateLimitError.retryAfter * 1000);
-                  continue;
-                }
-
-                throw rateLimitError;
-              case 500:
-              case 502:
-              case 503:
-              case 504:
-                throw new ServerError(errorMessage, response.status);
-              default:
-                throw new OilPriceAPIError(errorMessage, response.status, "HTTP_ERROR");
-            }
+            throw apiError;
           }
 
           // Handle empty responses (e.g., 204 No Content from DELETE)
@@ -877,14 +844,7 @@ export class OilPriceAPI {
 
       if (!response.ok) {
         const body = await response.text();
-        let message = `HTTP ${response.status}: ${response.statusText}`;
-        try {
-          const json = JSON.parse(body);
-          message = json.message || json.error || message;
-        } catch {
-          // non-JSON error body
-        }
-        throw new OilPriceAPIError(message, response.status, "HTTP_ERROR");
+        throw errorFromResponse(response, body);
       }
 
       const parsed: any = JSON.parse(await response.text());

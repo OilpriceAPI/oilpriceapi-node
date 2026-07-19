@@ -7,6 +7,9 @@ import {
   ServerError,
   TimeoutError,
   OilPriceAPIError,
+  isEntitlementError,
+  isQuotaError,
+  isRateLimitError,
 } from "../src/index.js";
 
 /**
@@ -121,6 +124,76 @@ describe("Error Handling", () => {
         expect(error).toBeInstanceOf(RateLimitError);
         expect((error as RateLimitError).retryAfter).toBe(60);
       }
+    });
+  });
+
+  describe("Structured API errors", () => {
+    it("normalizes the canonical nested envelope and recovery metadata", async () => {
+      const noRetryClient = new OilPriceAPI({ apiKey: "test_key_12345", retries: 0 });
+      const headers = new Headers({ "x-request-id": "req_123", "retry-after": "30" });
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 429,
+        statusText: "Too Many Requests",
+        headers,
+        text: async () => JSON.stringify({
+          error: {
+            code: "RATE_LIMITED",
+            message: "Slow down",
+            docs_url: "https://docs.oilpriceapi.com/guides/rate-limits",
+          },
+        }),
+      } as Response);
+
+      await expect(noRetryClient.getLatestPrices()).rejects.toSatisfy((error: unknown) => {
+        expect(isRateLimitError(error)).toBe(true);
+        const apiError = error as RateLimitError;
+        expect(apiError.code).toBe("RATE_LIMITED");
+        expect(apiError.requestId).toBe("req_123");
+        expect(apiError.retryAfter).toBe(30);
+        expect(apiError.docsUrl).toContain("rate-limits");
+        return true;
+      });
+    });
+
+    it("normalizes legacy quota and entitlement fields", async () => {
+      const noRetryClient = new OilPriceAPI({ apiKey: "test_key_12345", retries: 0 });
+      fetchSpy.mockResolvedValueOnce({
+        ok: false, status: 402, statusText: "Payment Required", headers: new Headers(),
+        text: async () => JSON.stringify({ error_code: "MONTHLY_QUOTA_EXCEEDED", message: "Quota reached", current_plan: "Starter", upgrade_url: "https://oilpriceapi.com/pricing" }),
+      } as Response);
+      await expect(noRetryClient.getLatestPrices()).rejects.toSatisfy((error: unknown) => {
+        expect(isQuotaError(error)).toBe(true);
+        expect((error as OilPriceAPIError).currentPlan).toBe("Starter");
+        expect((error as OilPriceAPIError).remediationUrl).toContain("pricing");
+        return true;
+      });
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false, status: 403, statusText: "Forbidden", headers: new Headers(),
+        text: async () => JSON.stringify({ error: "Plan required", required_plan: "Scale", feature: "bulk_export" }),
+      } as Response);
+      await expect(noRetryClient.getLatestPrices()).rejects.toSatisfy((error: unknown) => {
+        expect(isEntitlementError(error)).toBe(true);
+        expect((error as OilPriceAPIError).requiredPlan).toBe("Scale");
+        expect((error as OilPriceAPIError).requiredFeature).toBe("bulk_export");
+        return true;
+      });
+    });
+
+    it("redacts the configured key from messages and raw diagnostics", async () => {
+      const apiKey = "secret_test_key_12345";
+      const noRetryClient = new OilPriceAPI({ apiKey, retries: 0 });
+      fetchSpy.mockResolvedValue({
+        ok: false, status: 400, statusText: "Bad Request", headers: new Headers(),
+        text: async () => JSON.stringify({ message: `Rejected ${apiKey}`, echoed_key: apiKey }),
+      } as Response);
+      await expect(noRetryClient.getLatestPrices()).rejects.toSatisfy((error: unknown) => {
+        const apiError = error as OilPriceAPIError;
+        expect(apiError.message).not.toContain(apiKey);
+        expect(JSON.stringify(apiError.rawBody)).not.toContain(apiKey);
+        return true;
+      });
     });
   });
 
