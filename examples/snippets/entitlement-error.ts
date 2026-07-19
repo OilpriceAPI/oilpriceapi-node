@@ -1,8 +1,13 @@
+import { pathToFileURL } from "node:url";
+
 import { OilPriceAPI, OilPriceAPIError } from "oilpriceapi";
-import { fixtureBaseUrl, isMain } from "./_shared.js";
 
 export async function run() {
-  const client = new OilPriceAPI({ baseUrl: fixtureBaseUrl(), retries: 0 });
+  const client = new OilPriceAPI({
+    apiKey: process.env.OILPRICEAPI_KEY,
+    baseUrl: process.env.OILPRICEAPI_BASE_URL,
+    retries: 0,
+  });
 
   try {
     await client.getLatestPrices({ commodity: "BRENT_CRUDE_USD" });
@@ -16,6 +21,6 @@ export async function run() {
   throw new Error("Expected the API to reject the account entitlement");
 }
 
-if (isMain(import.meta.url)) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log(JSON.stringify(await run()));
 }
