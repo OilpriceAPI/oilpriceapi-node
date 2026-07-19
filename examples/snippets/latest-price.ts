@@ -8,13 +8,38 @@ export async function run() {
     baseUrl: process.env.OILPRICEAPI_BASE_URL,
     retries: 0,
   });
-  const [price] = await client.getLatestPrices({ commodity: "BRENT_CRUDE_USD" });
+  const [record] = await client.getLatestPrices({ commodity: "BRENT_CRUDE_USD" });
+  const timestampFields = [
+    "as_of",
+    "source_timestamp",
+    "created_at",
+    "updated_at",
+  ] as const;
+  const timestampField = timestampFields.find(
+    (field) => typeof record?.[field] === "string" && record[field].trim(),
+  );
+
+  if (
+    !record ||
+    !Number.isFinite(record.price) ||
+    typeof record.code !== "string" ||
+    typeof record.currency !== "string" ||
+    typeof record.unit !== "string" ||
+    typeof record.source !== "string" ||
+    !timestampField
+  ) {
+    throw new Error("MALFORMED_RESPONSE: source context is incomplete");
+  }
 
   return {
-    commodity: price.code,
-    currency: price.currency,
-    valueType: typeof price.price,
-    timestampType: typeof price.created_at,
+    commodity: record.code,
+    currency: record.currency,
+    unit: record.unit,
+    source: record.source,
+    apiTimestamp: record[timestampField],
+    timestampField,
+    valueType: typeof record.price,
+    freshness: record.data_status ?? null,
   };
 }
 

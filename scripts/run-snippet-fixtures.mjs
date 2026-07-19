@@ -33,9 +33,11 @@ const server = createServer((request, response) => {
     price: 72.5,
     formatted: "$72.50",
     currency: "USD",
+    unit: "barrel",
     created_at: "2026-01-15T12:00:00Z",
     type: "spot_price",
     source: "fixture",
+    data_status: "current",
   };
   response.writeHead(200, { "Content-Type": "application/json" });
   response.end(
@@ -88,7 +90,12 @@ await new Promise((resolvePromise) => server.listen(0, "127.0.0.1", resolvePromi
 try {
   await runSnippet("examples/snippets/latest-price.ts", "success", {
     commodity: "BRENT_CRUDE_USD",
+    currency: "USD",
+    unit: "barrel",
+    source: "fixture",
+    timestampField: "created_at",
     valueType: "number",
+    freshness: "current",
   });
   await runSnippet("examples/snippets/history.ts", "success", {
     commodity: "BRENT_CRUDE_USD",

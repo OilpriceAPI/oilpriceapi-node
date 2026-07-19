@@ -15,8 +15,12 @@
       "expected_response_shape": {
         "commodity": "string",
         "currency": "string",
+        "unit": "string",
+        "source": "string",
+        "apiTimestamp": "string",
+        "timestampField": "string",
         "valueType": "string",
-        "timestampType": "string"
+        "freshness": "string|null"
       }
     },
     {

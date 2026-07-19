@@ -30,6 +30,9 @@ jobs:
       - name: Check for hardcoded API keys
         run: npm run check:secrets
 
+      - name: Validate public storefront claims
+        run: npm run storefront:check
+
       - name: ESLint
         run: npx eslint src/
 
