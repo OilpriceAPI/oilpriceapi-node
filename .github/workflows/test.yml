@@ -11,7 +11,7 @@ jobs:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -45,7 +45,7 @@ jobs:
         node-version: ["20", "22", "24"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v7
@@ -78,7 +78,7 @@ jobs:
     name: Executable snippets (Node 18)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js 18
         uses: actions/setup-node@v7

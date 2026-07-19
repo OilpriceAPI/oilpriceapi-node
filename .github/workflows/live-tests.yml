@@ -19,7 +19,7 @@ jobs:
     # Only run when the secret is available (it is empty on forked-PR contexts).
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
