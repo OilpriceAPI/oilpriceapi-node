@@ -103,14 +103,14 @@ describe("User-Agent Headers", () => {
     expect(uaVersionMatch![1]).toBe(clientVersion);
   });
 
-  it("should send Authorization header with Bearer token", async () => {
+  it("should send Authorization header with canonical Token auth", async () => {
     const client = new OilPriceAPI({ apiKey: "my_secret_key" });
 
     await client.getLatestPrices();
 
     const [, options] = mockFetch.mock.calls[0];
 
-    expect(options.headers["Authorization"]).toBe("Bearer my_secret_key");
+    expect(options.headers["Authorization"]).toBe("Token my_secret_key");
   });
 
   it("should send Content-Type header as application/json", async () => {

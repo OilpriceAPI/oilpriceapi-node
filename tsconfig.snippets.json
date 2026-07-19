@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "rootDir": ".",
+    "paths": {
+      "oilpriceapi": ["./src/index.ts"]
+    }
+  },
+  "include": ["examples/snippets/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
