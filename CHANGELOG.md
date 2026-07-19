@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-19
+
+### Changed
+
+- Replaced the npm storefront with reviewed source-timestamped wording and
+  removed unsupported fixed catalog, traffic, cadence, and entitlement claims.
+- Made the canonical first-request snippet fail closed unless symbol, numeric
+  value, currency, unit, source, and an exact API timestamp field are present.
+- Added the source-context response fields to the public `Price` type and a CI
+  storefront claim guard.
+
 ## [1.0.2] - 2026-07-10
 
 ### Changed

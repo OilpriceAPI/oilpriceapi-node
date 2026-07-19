@@ -70,9 +70,11 @@ describe("versioned snippet manifest", () => {
           price: 72.5,
           formatted: "$72.50",
           currency: "USD",
+          unit: "barrel",
           created_at: "2026-01-15T12:00:00Z",
           type: "spot_price",
-          source: "fixture",
+          source: "market_reporting",
+          data_status: "current",
         },
       }),
     );
@@ -95,7 +97,15 @@ describe("versioned snippet manifest", () => {
       }),
     );
 
-    await expect(runLatest()).resolves.toMatchObject({ commodity: "BRENT_CRUDE_USD", valueType: "number" });
+    await expect(runLatest()).resolves.toMatchObject({
+      commodity: "BRENT_CRUDE_USD",
+      currency: "USD",
+      unit: "barrel",
+      source: "market_reporting",
+      timestampField: "created_at",
+      valueType: "number",
+      freshness: "current",
+    });
     await expect(runHistory()).resolves.toMatchObject({ commodity: "BRENT_CRUDE_USD", count: 1 });
   });
 

@@ -1,7 +1,7 @@
 {
   "name": "oilpriceapi",
-  "version": "1.0.2",
-  "description": "Official Node.js SDK for Oil Price API - Real-time and historical oil & commodity prices",
+  "version": "1.1.0",
+  "description": "Official Node.js SDK for source-timestamped OilPriceAPI energy data",
   "type": "module",
   "main": "./dist/cjs/index.js",
   "types": "./dist/index.d.ts",
@@ -25,6 +25,7 @@
   "scripts": {
     "build": "tsc && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "check:secrets": "node scripts/check-no-hardcoded-api-keys.mjs",
+    "storefront:check": "node scripts/validate-storefront-claims.mjs",
     "snippets:build": "node scripts/generate-snippet-manifest.mjs --output artifacts/snippets/oilpriceapi-node-snippets-v1.json",
     "snippets:fixtures": "node scripts/run-snippet-fixtures.mjs",
     "snippets:check": "tsc --noEmit -p tsconfig.snippets.json && npm run snippets:fixtures && vitest run tests/snippet-manifest.test.ts",
@@ -47,12 +48,11 @@
     "diesel",
     "natural-gas",
     "energy",
-    "trading",
     "alerts",
     "webhook",
     "notifications"
   ],
-  "author": "Oil Price API <karl@oilpriceapi.com>",
+  "author": "OilPriceAPI <support@oilpriceapi.com>",
   "license": "MIT",
   "repository": {
     "type": "git",

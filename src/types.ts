@@ -89,9 +89,29 @@ export interface Price {
   currency: string;
 
   /**
+   * Unit of measurement returned by the API (e.g., "barrel")
+   */
+  unit: string;
+
+  /**
    * ISO 8601 timestamp of when this price was recorded
    */
   created_at: string;
+
+  /** Exact source timestamp when returned by the selected dataset. */
+  source_timestamp?: string;
+
+  /** Source as-of timestamp when returned by the selected dataset. */
+  as_of?: string;
+
+  /** Collection timestamp when returned by the selected dataset. */
+  collected_at?: string;
+
+  /** Update timestamp used by some endpoint families. */
+  updated_at?: string;
+
+  /** Freshness status when returned by the API. */
+  data_status?: string;
 
   /**
    * Type of price (e.g., "spot_price")
