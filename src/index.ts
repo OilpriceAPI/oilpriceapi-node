@@ -249,7 +249,16 @@ export {
   ServerError,
   ValidationError,
   TimeoutError,
+  errorFromResponse,
+  isHTTPError,
+  isAuthenticationError,
+  isQuotaError,
+  isEntitlementError,
+  isNotFoundError,
+  isRateLimitError,
+  isServerError,
 } from "./errors.js";
+export type { OilPriceAPIErrorDetails } from "./errors.js";
 export { DieselResource } from "./resources/diesel.js";
 export { AlertsResource } from "./resources/alerts.js";
 export { CommoditiesResource } from "./resources/commodities.js";

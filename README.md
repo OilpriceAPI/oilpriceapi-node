@@ -117,6 +117,8 @@ import {
   OilPriceAPIError,
   RateLimitError,
   TimeoutError,
+  isEntitlementError,
+  isQuotaError,
 } from "oilpriceapi";
 
 const client = new OilPriceAPI({ apiKey: process.env.OILPRICEAPI_KEY });
@@ -130,11 +132,12 @@ try {
     console.error("Wait for the API-provided reset window.");
   } else if (error instanceof TimeoutError) {
     console.error("Retry once, then check https://status.oilpriceapi.com.");
-  } else if (
-    error instanceof OilPriceAPIError &&
-    (error.statusCode === 402 || error.statusCode === 403)
-  ) {
-    console.error("Review dataset access for this account.");
+  } else if (isQuotaError(error)) {
+    console.error(`Monthly quota reached; ${error.remediationUrl ?? "review the account"}.`);
+  } else if (isEntitlementError(error)) {
+    console.error(`This dataset needs the ${error.requiredPlan ?? "required"} plan.`);
+  } else if (error instanceof OilPriceAPIError) {
+    console.error(error.requestId ? `Request ID: ${error.requestId}` : "Unexpected API error.");
   } else {
     throw error;
   }
@@ -145,6 +148,10 @@ Executable recovery examples cover 401, 403, 429, and timeout responses under
 [`examples/snippets/`](examples/snippets/). Empty or malformed successful
 responses should stop processing rather than inventing a price, unit, currency,
 source, or timestamp.
+
+All HTTP failures expose `statusCode`, `code`, `requestId`, recovery links and
+plan metadata when the API supplies them. `rawBody` and `headers` are retained
+for diagnostics; the configured API key is redacted before either is exposed.
 
 ## Capabilities
 
