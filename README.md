@@ -162,7 +162,9 @@ try {
   } else if (error instanceof TimeoutError) {
     console.error("Retry once, then check https://status.oilpriceapi.com.");
   } else if (isQuotaError(error)) {
-    console.error(`Monthly quota reached; ${error.remediationUrl ?? "review the account"}.`);
+    console.error(
+      `Request quota exhausted; ${error.remediationUrl ?? "follow the API-provided recovery details"}.`,
+    );
   } else if (isEntitlementError(error)) {
     console.error(`This dataset needs the ${error.requiredPlan ?? "required"} plan.`);
   } else if (error instanceof OilPriceAPIError) {
