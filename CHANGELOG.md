@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-08-11
+
+### Fixed
+
+- Resolve npm publication state from typed registry responses so only an exact
+  HTTP 404 permits first publication, while mismatched metadata, malformed
+  responses, server errors, and network failures stop the release.
+- Verify both the exact public version and the `latest` tag against the
+  checksummed tarball before completing the release.
+
 ## [1.2.2] - 2026-08-11
 
 ### Added
