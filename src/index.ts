@@ -40,6 +40,11 @@ export type {
   CreateAlertParams,
   UpdateAlertParams,
   AlertOperator,
+  AlertTrigger,
+  AlertAnalyticsEntry,
+  AlertAnalyticsPagination,
+  AlertAnalyticsHistory,
+  WebhookTestResponse as AlertWebhookTestResponse,
 } from "./resources/alerts.js";
 export type {
   FuturesPrice,

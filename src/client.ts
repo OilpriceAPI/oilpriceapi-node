@@ -43,6 +43,10 @@ import { StreamingResource } from "./resources/streaming.js";
 import { SubscriptionsResource } from "./resources/subscriptions.js";
 import { WellProductionResource } from "./resources/well-production.js";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 /**
  * Raw HTTP response wrapper.
  *
@@ -256,7 +260,7 @@ export class OilPriceAPI {
   /**
    * Log debug messages if debug mode is enabled
    */
-  private log(message: string, data?: any): void {
+  private log(message: string, data?: unknown): void {
     if (this.debug) {
       const timestamp = new Date().toISOString();
       console.log(`[OilPriceAPI ${timestamp}] ${message}`, data || "");
@@ -288,7 +292,7 @@ export class OilPriceAPI {
   /**
    * Determine if error is retryable
    */
-  private isRetryable(error: any): boolean {
+  private isRetryable(error: unknown): boolean {
     // Retry on network errors
     if (error instanceof TypeError && error.message.includes("fetch")) {
       return true;
@@ -321,25 +325,27 @@ export class OilPriceAPI {
    * envelope shapes as well as the generic `{ data }` fallback used by resource
    * mutations, alerts, webhooks, etc.
    */
-  private shapeResponseData<T>(responseData: any): T {
+  private shapeResponseData<T>(responseData: unknown): T {
     // Handle different response structures
     // Latest endpoint: { status, data: { price, ... } }
     // Historical endpoint: { status, data: { prices: [...] } }
-    if (responseData.status === "success" && responseData.data) {
-      if (responseData.data.prices) {
+    if (isRecord(responseData) && responseData.status === "success" && isRecord(responseData.data)) {
+      if (Array.isArray(responseData.data.prices)) {
         // Historical endpoint - return prices array
         this.log(`Returning ${responseData.data.prices.length} prices`);
         return responseData.data.prices as T;
       } else if (responseData.data.price !== undefined) {
         // Latest endpoint - wrap single price in array
         this.log("Returning single price (wrapped in array)");
-        return [responseData.data] as T;
+        return [responseData.data] as unknown as T;
       }
     }
 
     // Fallback - return data as-is (used by resource mutations, alerts, webhooks, etc.)
     this.log("Returning data as-is");
-    return (responseData.data !== undefined ? responseData.data : responseData) as T;
+    return (isRecord(responseData) && responseData.data !== undefined
+      ? responseData.data
+      : responseData) as T;
   }
 
   /**
@@ -465,11 +471,12 @@ export class OilPriceAPI {
           }
 
           // Parse successful response
-          const responseData: any = JSON.parse(responseText);
+          const responseData: unknown = JSON.parse(responseText);
+          const responseObject = isRecord(responseData) ? responseData : undefined;
 
           this.log("Response data received", {
-            status: responseData.status,
-            hasData: !!responseData.data,
+            status: responseObject?.status,
+            hasData: responseObject?.data !== undefined,
           });
 
           return {
@@ -855,9 +862,9 @@ export class OilPriceAPI {
         throw errorFromResponse(response, body);
       }
 
-      const parsed: any = JSON.parse(await response.text());
+      const parsed: unknown = JSON.parse(await response.text());
       // Demo envelope is { status: "success", data: { ... } }.
-      return (parsed.data !== undefined ? parsed.data : parsed) as T;
+      return (isRecord(parsed) && parsed.data !== undefined ? parsed.data : parsed) as T;
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         throw new TimeoutError("Request timeout", this.timeout);
