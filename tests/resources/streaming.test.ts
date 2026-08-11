@@ -425,6 +425,20 @@ describe("StreamingResource", () => {
     });
   });
 
+  it("rejects a keyless client before opening a WebSocket", () => {
+    const saved = process.env.OILPRICEAPI_KEY;
+    delete process.env.OILPRICEAPI_KEY;
+    try {
+      const keylessClient = new OilPriceAPI({ apiKey: "" });
+
+      expect(() => makeStream(keylessClient)).toThrow("API key required");
+      expect(MockWebSocket.instances).toHaveLength(0);
+    } finally {
+      if (saved === undefined) delete process.env.OILPRICEAPI_KEY;
+      else process.env.OILPRICEAPI_KEY = saved;
+    }
+  });
+
   it("is exposed as client.stream", () => {
     expect(client.stream).toBeInstanceOf(StreamingResource);
   });
