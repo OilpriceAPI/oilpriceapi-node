@@ -13,7 +13,7 @@
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import { OilPriceAPI } from "../../src/client.js";
-import { sleep, RATE_LIMIT_DELAY_MS, skipIfRateLimited } from "./helpers.js";
+import { sleep, RATE_LIMIT_DELAY_MS } from "./helpers.js";
 
 describe("LIVE demo endpoints", () => {
   let client: OilPriceAPI;
@@ -22,7 +22,7 @@ describe("LIVE demo endpoints", () => {
     client = new OilPriceAPI({ retries: 1 });
   });
 
-  it("getDemoPrices() parses the real prices envelope", async (ctx) => {
+  it("getDemoPrices() parses the real prices envelope", async () => {
     try {
       const res = await client.getDemoPrices();
 
@@ -39,14 +39,12 @@ describe("LIVE demo endpoints", () => {
 
       expect(res.meta).toBeDefined();
       expect(res.meta.demo_mode).toBe(true);
-    } catch (e) {
-      skipIfRateLimited(e, ctx);
     } finally {
       await sleep(RATE_LIMIT_DELAY_MS);
     }
   });
 
-  it("getDemoCommodities() parses the real commodities envelope", async (ctx) => {
+  it("getDemoCommodities() parses the real commodities envelope", async () => {
     try {
       const res = await client.getDemoCommodities();
 
@@ -61,8 +59,6 @@ describe("LIVE demo endpoints", () => {
       expect(Array.isArray(res.meta.free_commodities)).toBe(true);
       expect(res.meta.free_commodities).toContain("BRENT_CRUDE_USD");
       expect(res.meta.free_commodities).toContain("WTI_USD");
-    } catch (e) {
-      skipIfRateLimited(e, ctx);
     } finally {
       await sleep(RATE_LIMIT_DELAY_MS);
     }

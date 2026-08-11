@@ -48,6 +48,30 @@ describe("OilPriceAPI", () => {
     }
   });
 
+  it("surfaces a keyless demo 429 as a testable failure", async () => {
+    const saved = process.env.OILPRICEAPI_KEY;
+    delete process.env.OILPRICEAPI_KEY;
+    const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "Demo rate limit exceeded" }), {
+        status: 429,
+        headers: { "Retry-After": "60" },
+      }),
+    );
+    try {
+      const client = new OilPriceAPI({ apiKey: "", retries: 0 });
+
+      await expect(client.getDemoPrices()).rejects.toMatchObject({
+        name: "RateLimitError",
+        statusCode: 429,
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.restoreAllMocks();
+      if (saved === undefined) delete process.env.OILPRICEAPI_KEY;
+      else process.env.OILPRICEAPI_KEY = saved;
+    }
+  });
+
   it("should initialize with valid API key", () => {
     const client = new OilPriceAPI({ apiKey: "test_key" });
     expect(client).toBeInstanceOf(OilPriceAPI);
