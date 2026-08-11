@@ -13,23 +13,21 @@
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import { OilPriceAPI } from "../../src/client.js";
-import { sleep, RATE_LIMIT_DELAY_MS, skipIfRateLimited } from "./helpers.js";
+import { sleep, RATE_LIMIT_DELAY_MS } from "./helpers.js";
 
 describe("LIVE demo endpoints", () => {
   let client: OilPriceAPI;
 
   beforeAll(() => {
-    // The demo endpoints ignore auth, but the constructor still requires a key.
-    // Any placeholder works — the demo path does not send/validate it meaningfully.
-    client = new OilPriceAPI({ apiKey: "demo", retries: 1 });
+    client = new OilPriceAPI({ retries: 1 });
   });
 
-  it("getDemoPrices() parses the real prices envelope", async (ctx) => {
+  it("getDemoPrices() parses the real prices envelope", async () => {
     try {
       const res = await client.getDemoPrices();
 
       expect(Array.isArray(res.prices)).toBe(true);
-      // The demo tier exposes a fixed set of free commodities (currently 9).
+      // The demo catalogue can grow, so keep this as a compatibility floor.
       expect(res.prices.length).toBeGreaterThanOrEqual(5);
 
       const brent = res.prices.find((p) => p.code === "BRENT_CRUDE_USD");
@@ -41,14 +39,12 @@ describe("LIVE demo endpoints", () => {
 
       expect(res.meta).toBeDefined();
       expect(res.meta.demo_mode).toBe(true);
-    } catch (e) {
-      skipIfRateLimited(e, ctx);
     } finally {
       await sleep(RATE_LIMIT_DELAY_MS);
     }
   });
 
-  it("getDemoCommodities() parses the real commodities envelope", async (ctx) => {
+  it("getDemoCommodities() parses the real commodities envelope", async () => {
     try {
       const res = await client.getDemoCommodities();
 
@@ -63,8 +59,6 @@ describe("LIVE demo endpoints", () => {
       expect(Array.isArray(res.meta.free_commodities)).toBe(true);
       expect(res.meta.free_commodities).toContain("BRENT_CRUDE_USD");
       expect(res.meta.free_commodities).toContain("WTI_USD");
-    } catch (e) {
-      skipIfRateLimited(e, ctx);
     } finally {
       await sleep(RATE_LIMIT_DELAY_MS);
     }
