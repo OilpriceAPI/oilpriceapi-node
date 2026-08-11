@@ -20,11 +20,13 @@ describe("release readiness", () => {
       scripts: Record<string, string>;
     };
     const workflow = read(".github/workflows/publish.yml");
+    const smokeScript = read("scripts/clean-install-smoke.sh");
 
     expect(packageJson.scripts.lint).toContain("--max-warnings=0");
     expect(packageJson.scripts["smoke:package"]).toBe("./scripts/clean-install-smoke.sh");
     expect(workflow).toContain("Verify release tag matches package version");
     expect(workflow).toContain("npm audit --audit-level=low");
     expect(workflow).toContain("npm run smoke:package");
+    expect(smokeScript).toMatch(/npm run build[\s\S]*npm pack/);
   });
 });

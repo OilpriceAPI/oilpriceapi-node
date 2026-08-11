@@ -9,6 +9,7 @@ version="$(node -p "require('$root/package.json').version")"
 tarball="$scratch/oilpriceapi-$version.tgz"
 
 cd "$root"
+npm run build
 npm pack --pack-destination "$scratch" >/dev/null
 test -f "$tarball"
 
