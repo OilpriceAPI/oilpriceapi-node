@@ -10,7 +10,7 @@ describe("release readiness", () => {
     const changelog = read("CHANGELOG.md");
     const firstRelease = changelog.match(/^## \[([^\]]+)\]/m);
 
-    expect(packageJson.version).toBe("1.2.2");
+    expect(packageJson.version).toBe("1.2.3");
     expect(versionSource).toContain(`SDK_VERSION = "${packageJson.version}"`);
     expect(firstRelease?.[1]).toBe(packageJson.version);
   });
@@ -41,11 +41,16 @@ describe("release readiness", () => {
     expect(workflow).toContain("Verify release tag matches package version and protected main");
     expect(workflow).toContain("actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a");
     expect(workflow).toContain("actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c");
+    expect(workflow).toContain('cp scripts/resolve-npm-publication.mjs "$ARTIFACT_DIR/"');
     expect(publishJob).toContain("id-token: write");
     expect(publishJob).toContain("sha256sum -c artifact.sha256");
     expect(publishJob).not.toMatch(/npm (?:ci|install)/);
     expect(publishJob).not.toContain("npx ");
     expect(publishJob).not.toContain("actions/checkout@");
+    expect(publishJob).toContain("NPM_PUBLICATION_MODE=publication-state");
+    expect(publishJob).toContain("node resolve-npm-publication.mjs");
+    expect(publishJob).not.toMatch(/\bnpm(?:-cli\.js)?\b[^\n]*\bview\b/);
+    expect(publishJob).not.toContain("|| true");
     expect(actions).not.toHaveLength(0);
     for (const action of actions) expect(action).toMatch(/@[0-9a-f]{40}$/);
   });
