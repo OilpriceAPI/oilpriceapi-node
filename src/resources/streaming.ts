@@ -514,7 +514,7 @@ export class StreamingResource {
     options: StreamPricesOptions = {},
     onUpdate?: PriceUpdateHandler,
   ): PriceStreamSubscription {
-    const apiKey = this.client["apiKey"] as string;
+    const apiKey = this.client["requireApiKey"]();
     const sub = new PriceStreamSubscription(this.cableUrl(), apiKey, options, this.wsImpl);
 
     if (onUpdate) {
