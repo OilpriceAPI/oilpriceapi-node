@@ -186,7 +186,10 @@ describe("StreamingResource", () => {
       ws.serverSend({ identifier: "{}", type: "reject_subscription" });
 
       expect(onError).toHaveBeenCalledOnce();
-      expect((onError.mock.calls[0][0] as Error).message).toMatch(/Professional plan/);
+      const message = (onError.mock.calls[0][0] as Error).message;
+      expect(message).toContain("API key");
+      expect(message).toContain("streaming entitlement");
+      expect(message).toContain("https://www.oilpriceapi.com/pricing");
       handle.close();
     });
   });

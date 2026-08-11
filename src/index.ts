@@ -1,7 +1,7 @@
 /**
  * Official Node.js SDK for Oil Price API
  *
- * Get real-time and historical oil & commodity prices in your Node.js applications.
+ * Get source-timestamped current and historical commodity data in Node.js applications.
  *
  * @packageDocumentation
  */

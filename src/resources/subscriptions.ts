@@ -6,8 +6,8 @@
  * Phase 2). Designed for autonomous agents (MCP, schedulers, bots) that want
  * change notifications without holding an open connection.
  *
- * The poll endpoint (`events`) does NOT consume the monthly request quota and
- * has its own generous rate-limit lane, so agents can poll frequently.
+ * The poll endpoint (`events`) returns applicable limit guidance from the API;
+ * callers should use that response metadata to choose a polling interval.
  */
 
 import type { OilPriceAPI } from "../client.js";
@@ -203,7 +203,7 @@ export function intervalToSeconds(interval: SubscriptionInterval | undefined): n
  *
  * const client = new OilPriceAPI({ apiKey: 'your_key' });
  *
- * // Create a watch that evaluates Brent + WTI every 5 minutes
+ * // Create a watch using the API-supported `5m` interval
  * const watch = await client.subscriptions.create({
  *   name: 'Crude desk',
  *   codes: ['BRENT_CRUDE_USD', 'WTI_USD'],
@@ -327,7 +327,7 @@ export class SubscriptionsResource {
    * Poll for events emitted by your watches.
    *
    * Returns events with `seq` greater than the supplied cursor, ordered
-   * ascending. This endpoint does NOT consume the monthly request quota.
+   * ascending. Current limits are determined by the API and account.
    *
    * @param options - Cursor (`since`), optional `watchId`, and `limit`.
    * @returns The next cursor, a `has_more` flag, and the events.
