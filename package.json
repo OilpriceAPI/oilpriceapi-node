@@ -1,6 +1,6 @@
 {
   "name": "oilpriceapi",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Official Node.js SDK for source-timestamped OilPriceAPI energy data",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -51,7 +51,10 @@
     "energy",
     "alerts",
     "webhook",
-    "notifications"
+    "notifications",
+    "well-permits",
+    "drilling-data",
+    "oil-well-production"
   ],
   "author": "OilPriceAPI <support@oilpriceapi.com>",
   "license": "MIT",

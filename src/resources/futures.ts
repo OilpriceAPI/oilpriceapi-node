@@ -264,7 +264,7 @@ export interface FuturesSpreadHistoryPoint {
  * Spread-history data for a contract family.
  */
 export interface FuturesSpreadHistory {
-  /** Contract family slug (e.g., "ice-brent") */
+  /** Contract family slug (e.g., "brent") */
   family: string;
   /** Array of historical spread points */
   history: FuturesSpreadHistoryPoint[];
@@ -279,6 +279,10 @@ export interface FuturesSpreadHistory {
  * `/ohlc`, `/intraday`, `/spreads`, `/curve`, and `/spread-history`.
  */
 export type FuturesContractFamilySlug =
+  | "brent"
+  | "gasoil"
+  | "wti"
+  | "eu-carbon"
   | "ice-brent"
   | "ice-gasoil"
   | "ice-wti"
@@ -300,7 +304,7 @@ export type FuturesContractFamilySlug =
  * import { FUTURES_CONTRACTS } from 'oilpriceapi';
  *
  * const brent = await client.futures.latest(FUTURES_CONTRACTS.BRENT); // "BZ"
- * const gasoil = await client.futures.family('ice-gasoil').latest();
+ * const gasoil = await client.futures.family('gasoil').latest();
  * ```
  */
 export const FUTURES_CONTRACTS = {
@@ -329,20 +333,20 @@ export const FUTURES_CONTRACTS = {
  * path segment used by the typed family helpers.
  */
 export const FUTURES_FAMILY_SLUGS: Record<string, FuturesContractFamilySlug> = {
-  [FUTURES_CONTRACTS.BRENT]: "ice-brent", // BZ
-  [FUTURES_CONTRACTS.WTI]: "ice-wti", // CL
-  [FUTURES_CONTRACTS.GASOIL]: "ice-gasoil", // G
-  QS: "ice-gasoil", // ICE Gasoil also trades under the QS ticker prefix
+  [FUTURES_CONTRACTS.BRENT]: "brent", // BZ
+  [FUTURES_CONTRACTS.WTI]: "wti", // CL
+  [FUTURES_CONTRACTS.GASOIL]: "gasoil", // G
+  QS: "gasoil", // ICE Gasoil also trades under the QS ticker prefix
   [FUTURES_CONTRACTS.NATURAL_GAS]: "natural-gas", // NG
   [FUTURES_CONTRACTS.TTF_GAS]: "ttf-gas", // TTF
   [FUTURES_CONTRACTS.LNG_JKM]: "lng-jkm", // JKM
-  [FUTURES_CONTRACTS.EUA_CARBON]: "eua-carbon", // EUA
+  [FUTURES_CONTRACTS.EUA_CARBON]: "eu-carbon", // EUA
   [FUTURES_CONTRACTS.UK_CARBON]: "uk-carbon", // UKA
 };
 
 /**
  * Resolve a futures contract code (e.g. `"BZ"`, `"QS"`) or an already-valid
- * family slug (e.g. `"ice-brent"`) to its `/v1/futures/{slug}` path segment.
+ * family slug (e.g. `"brent"`) to its `/v1/futures/{slug}` path segment.
  *
  * Matching is case-insensitive for codes. Returns `null` if the input maps to
  * neither a known code nor a known family slug.
@@ -354,7 +358,13 @@ export function resolveFuturesFamilySlug(codeOrSlug: string): FuturesContractFam
   if (byCode) return byCode;
   // Already a valid family slug?
   const lower = trimmed.toLowerCase();
-  const isSlug = Object.values(FUTURES_FAMILY_SLUGS).includes(lower as FuturesContractFamilySlug);
+  const isSlug = new Set<FuturesContractFamilySlug>([
+    ...Object.values(FUTURES_FAMILY_SLUGS),
+    "ice-brent",
+    "ice-wti",
+    "ice-gasoil",
+    "eua-carbon",
+  ]).has(lower as FuturesContractFamilySlug);
   return isSlug ? (lower as FuturesContractFamilySlug) : null;
 }
 
@@ -470,7 +480,7 @@ export class FuturesContractFamily {
  *
  * const client = new OilPriceAPI({ apiKey: 'your_key' });
  *
- * // Get the latest curve by contract code (resolves to GET /v1/futures/ice-wti)
+ * // Get the latest curve by contract code (resolves to GET /v1/futures/wti)
  * const latest = await client.futures.latest('CL');
  * console.log(`${latest.contract}: $${latest.price}`);
  *
@@ -489,15 +499,15 @@ export class FuturesResource {
    * Get the latest curve/quote for a futures contract family.
    *
    * Accepts an ergonomic contract code (e.g. `"BZ"`, `"CL"`, `"QS"`) or a
-   * family slug (e.g. `"ice-brent"`). The code is resolved to its family slug
+   * family slug (e.g. `"brent"`). The code is resolved to its family slug
    * and the request is sent to `GET /v1/futures/{slug}` — the bare slug path,
    * with NO `/latest` suffix (the suffixed path 404s).
    *
    * Supported codes: BZ (Brent), CL (WTI), G/QS (Gasoil), NG (Natural Gas),
-   * TTF, JKM, EUA, UKA. Slugs: ice-brent, ice-wti, ice-gasoil, natural-gas,
-   * ttf-gas, lng-jkm, eua-carbon, uk-carbon.
+   * TTF, JKM, EUA, UKA. Canonical slugs: brent, wti, gasoil, natural-gas,
+   * ttf-gas, lng-jkm, eu-carbon, uk-carbon.
    *
-   * @param contract - Contract code (e.g. "BZ") or family slug (e.g. "ice-brent").
+   * @param contract - Contract code (e.g. "BZ") or family slug (e.g. "brent").
    * @returns Latest futures price/curve data
    *
    * @throws {ValidationError} If the code/slug is empty or unrecognized.
@@ -507,7 +517,7 @@ export class FuturesResource {
    * ```typescript
    * import { FUTURES_CONTRACTS } from 'oilpriceapi';
    * const price = await client.futures.latest(FUTURES_CONTRACTS.BRENT); // "BZ"
-   * const wti = await client.futures.latest('ice-wti');
+   * const wti = await client.futures.latest('wti');
    * ```
    */
   async latest(contract: string): Promise<FuturesPrice> {
@@ -520,8 +530,7 @@ export class FuturesResource {
       throw new ValidationError(
         `Unknown futures contract "${contract}". Use a contract code ` +
           `(BZ, CL, G, QS, NG, TTF, JKM, EUA, UKA) or a family slug ` +
-          `(ice-brent, ice-wti, ice-gasoil, natural-gas, ttf-gas, lng-jkm, ` +
-          `eua-carbon, uk-carbon).`,
+          `(brent, wti, gasoil, natural-gas, ttf-gas, lng-jkm, eu-carbon, uk-carbon).`,
       );
     }
 
@@ -724,12 +733,12 @@ export class FuturesResource {
    * family endpoints (`/latest`, `/historical`, `/ohlc`, `/intraday`,
    * `/spreads`, `/curve`, `/spread-history`) without remembering the URL slug.
    *
-   * @param slug - Contract family slug (e.g., `"ice-brent"`, `"ice-gasoil"`).
+   * @param slug - Contract family slug (e.g., `"brent"`, `"gasoil"`).
    * @returns A {@link FuturesContractFamily} bound to the slug.
    *
    * @example
    * ```typescript
-   * const brent = client.futures.family('ice-brent');
+   * const brent = client.futures.family('brent');
    * const latest = await brent.latest();
    * const curve = await brent.curve();
    * ```
@@ -743,17 +752,17 @@ export class FuturesResource {
 
   /** ICE Brent crude futures family helper (issue #1). */
   brent(): FuturesContractFamily {
-    return this.family("ice-brent");
+    return this.family("brent");
   }
 
   /** ICE WTI crude futures family helper. */
   wti(): FuturesContractFamily {
-    return this.family("ice-wti");
+    return this.family("wti");
   }
 
   /** ICE Gasoil futures family helper (issue #1). */
   gasoil(): FuturesContractFamily {
-    return this.family("ice-gasoil");
+    return this.family("gasoil");
   }
 
   /** Henry Hub natural gas futures family helper. */
@@ -773,7 +782,7 @@ export class FuturesResource {
 
   /** EU carbon allowance (EUA) futures family helper. */
   euaCarbon(): FuturesContractFamily {
-    return this.family("eua-carbon");
+    return this.family("eu-carbon");
   }
 
   /** UK carbon allowance (UKA) futures family helper. */

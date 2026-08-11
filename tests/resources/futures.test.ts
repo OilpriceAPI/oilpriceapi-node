@@ -47,11 +47,11 @@ describe("FuturesResource", () => {
 
       const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockPrice);
 
-      // "CL" resolves to the ice-wti family; latest is the bare slug path
-      // (GET /v1/futures/ice-wti) — there is NO /latest suffix.
+      // "CL" resolves to the venue-neutral WTI family; latest is the bare slug
+      // path (GET /v1/futures/wti) — there is NO /latest suffix.
       const result = await client.futures.latest("CL");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/ice-wti", {});
+      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/wti", {});
       expect(result).toEqual(mockPrice);
       // The real latest price is surfaced at front_month.last_price.
       expect(result.front_month?.last_price).toBe(75.5);

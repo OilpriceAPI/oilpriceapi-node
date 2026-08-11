@@ -29,10 +29,10 @@ describe("Futures contract families (issue #1)", () => {
     });
 
     it("maps codes to family slugs", () => {
-      expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.BRENT]).toBe("ice-brent");
-      expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.GASOIL]).toBe("ice-gasoil");
+      expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.BRENT]).toBe("brent");
+      expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.GASOIL]).toBe("gasoil");
       expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.TTF_GAS]).toBe("ttf-gas");
-      expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.EUA_CARBON]).toBe("eua-carbon");
+      expect(FUTURES_FAMILY_SLUGS[FUTURES_CONTRACTS.EUA_CARBON]).toBe("eu-carbon");
     });
   });
 
@@ -52,13 +52,13 @@ describe("Futures contract families (issue #1)", () => {
 
   describe("named family helpers map to correct slugs", () => {
     it.each([
-      ["brent", "ice-brent"],
-      ["wti", "ice-wti"],
-      ["gasoil", "ice-gasoil"],
+      ["brent", "brent"],
+      ["wti", "wti"],
+      ["gasoil", "gasoil"],
       ["naturalGas", "natural-gas"],
       ["ttfGas", "ttf-gas"],
       ["lngJkm", "lng-jkm"],
-      ["euaCarbon", "eua-carbon"],
+      ["euaCarbon", "eu-carbon"],
       ["ukCarbon", "uk-carbon"],
     ])("futures.%s() -> %s", (method, slug) => {
       const fam = (client.futures as any)[method]();
@@ -75,7 +75,7 @@ describe("Futures contract families (issue #1)", () => {
       await client.futures.gasoil().latest();
 
       // The correct latest endpoint is the bare slug; `/latest` 404s.
-      expect(spy).toHaveBeenCalledWith("/v1/futures/ice-gasoil", {});
+      expect(spy).toHaveBeenCalledWith("/v1/futures/gasoil", {});
     });
 
     it("historical() passes date params", async () => {
@@ -87,7 +87,7 @@ describe("Futures contract families (issue #1)", () => {
       });
 
       // Controller reads from/to, not start_date/end_date.
-      expect(spy).toHaveBeenCalledWith("/v1/futures/ice-brent/historical", {
+      expect(spy).toHaveBeenCalledWith("/v1/futures/brent/historical", {
         from: "2024-01-01",
         to: "2024-01-31",
       });
@@ -107,7 +107,7 @@ describe("Futures contract families (issue #1)", () => {
 
       await client.futures.wti().ohlc({ days: 30, interval: "1d" });
 
-      expect(spy).toHaveBeenCalledWith("/v1/futures/ice-wti/ohlc", {
+      expect(spy).toHaveBeenCalledWith("/v1/futures/wti/ohlc", {
         days: "30",
         interval: "1d",
       });
@@ -138,33 +138,41 @@ describe("Futures contract families (issue #1)", () => {
     it("spreadHistory() hits /spread-history", async () => {
       const spy = vi.spyOn(client as any, "request").mockResolvedValue({});
       await client.futures.euaCarbon().spreadHistory();
-      expect(spy).toHaveBeenCalledWith("/v1/futures/eua-carbon/spread-history", {});
+      expect(spy).toHaveBeenCalledWith("/v1/futures/eu-carbon/spread-history", {});
     });
   });
 
   describe("resolveFuturesFamilySlug()", () => {
     it.each([
-      ["BZ", "ice-brent"],
-      ["CL", "ice-wti"],
-      ["G", "ice-gasoil"],
-      ["QS", "ice-gasoil"], // Gasoil also trades under the QS ticker prefix
+      ["BZ", "brent"],
+      ["CL", "wti"],
+      ["G", "gasoil"],
+      ["QS", "gasoil"], // Gasoil also trades under the QS ticker prefix
       ["NG", "natural-gas"],
       ["TTF", "ttf-gas"],
       ["JKM", "lng-jkm"],
-      ["EUA", "eua-carbon"],
+      ["EUA", "eu-carbon"],
       ["UKA", "uk-carbon"],
     ])("resolves code %s -> %s", (code, slug) => {
       expect(resolveFuturesFamilySlug(code)).toBe(slug);
     });
 
     it("resolves codes case-insensitively", () => {
-      expect(resolveFuturesFamilySlug("bz")).toBe("ice-brent");
-      expect(resolveFuturesFamilySlug("qs")).toBe("ice-gasoil");
+      expect(resolveFuturesFamilySlug("bz")).toBe("brent");
+      expect(resolveFuturesFamilySlug("qs")).toBe("gasoil");
     });
 
-    it("passes through already-valid family slugs", () => {
-      expect(resolveFuturesFamilySlug("ice-brent")).toBe("ice-brent");
-      expect(resolveFuturesFamilySlug("ICE-BRENT")).toBe("ice-brent");
+    it.each([
+      ["ice-brent", "ice-brent"],
+      ["ICE-BRENT", "ice-brent"],
+      ["ice-wti", "ice-wti"],
+      ["ICE-WTI", "ice-wti"],
+      ["ice-gasoil", "ice-gasoil"],
+      ["ICE-GASOIL", "ice-gasoil"],
+      ["eua-carbon", "eua-carbon"],
+      ["EUA-CARBON", "eua-carbon"],
+    ])("passes through legacy family slug %s", (input, expected) => {
+      expect(resolveFuturesFamilySlug(input)).toBe(expected);
     });
 
     it("returns null for unknown codes/slugs", () => {
@@ -175,14 +183,14 @@ describe("Futures contract families (issue #1)", () => {
 
   describe("top-level futures.latest(code) maps code -> /v1/futures/{slug}", () => {
     it.each([
-      ["BZ", "ice-brent"],
-      ["CL", "ice-wti"],
-      ["G", "ice-gasoil"],
-      ["QS", "ice-gasoil"],
+      ["BZ", "brent"],
+      ["CL", "wti"],
+      ["G", "gasoil"],
+      ["QS", "gasoil"],
       ["NG", "natural-gas"],
       ["TTF", "ttf-gas"],
       ["JKM", "lng-jkm"],
-      ["EUA", "eua-carbon"],
+      ["EUA", "eu-carbon"],
       ["UKA", "uk-carbon"],
     ])("latest('%s') -> GET /v1/futures/%s (no /latest suffix)", async (code, slug) => {
       const spy = vi
