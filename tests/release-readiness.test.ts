@@ -10,7 +10,7 @@ describe("release readiness", () => {
     const changelog = read("CHANGELOG.md");
     const firstRelease = changelog.match(/^## \[([^\]]+)\]/m);
 
-    expect(packageJson.version).toBe("1.2.0");
+    expect(packageJson.version).toBe("1.2.1");
     expect(versionSource).toContain(`SDK_VERSION = "${packageJson.version}"`);
     expect(firstRelease?.[1]).toBe(packageJson.version);
   });
@@ -28,6 +28,7 @@ describe("release readiness", () => {
     expect(workflow).toContain("npm audit --audit-level=low");
     expect(workflow).toContain("npm run smoke:package");
     expect(smokeScript).toMatch(/npm run build[\s\S]*npm pack/);
+    expect(smokeScript).toMatch(/npm install[\s\S]*--package-root/);
   });
 
   it("does not persist checkout credentials in repository workflows", () => {

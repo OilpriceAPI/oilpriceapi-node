@@ -191,9 +191,10 @@ export class OilPriceAPI {
   public readonly raw: RawResource;
 
   /**
-   * Real-time price streaming resource (WebSocket / ActionCable).
+   * Price streaming resource (WebSocket / ActionCable).
    *
-   * Streaming requires a Professional plan ($99/mo) or higher.
+   * Streaming availability depends on account entitlement. Review current
+   * access at https://www.oilpriceapi.com/pricing.
    */
   public readonly stream: StreamingResource;
 

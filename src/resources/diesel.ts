@@ -133,8 +133,8 @@ export class DieselResource {
   /**
    * Get average diesel price for a US state
    *
-   * Returns EIA state-level average diesel price. This endpoint is free
-   * and included in all tiers.
+   * Returns the available EIA state-level average diesel price and its source
+   * timestamp. Current access is determined by the API.
    *
    * @param state - Two-letter US state code (e.g., "CA", "TX", "NY")
    * @returns State average diesel price
@@ -170,11 +170,9 @@ export class DieselResource {
    *
    * Returns station-level diesel prices within specified radius using Google Maps data.
    *
-   * **Pricing:** Included in paid tiers:
-   * - Exploration: 100 station queries/month
-   * - Starter: 500 station queries/month
-   * - Professional: 2,000 station queries/month
-   * - Business: 5,000 station queries/month
+   * Station-level access and allowances depend on the account's current
+   * entitlement. Review https://www.oilpriceapi.com/pricing and the API's
+   * response metadata instead of relying on an SDK-bundled allowance.
    *
    * **Caching:** Results are cached for 24 hours to minimize costs.
    *

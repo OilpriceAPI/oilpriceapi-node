@@ -17,6 +17,8 @@ mkdir "$scratch/consumer"
 cd "$scratch/consumer"
 npm init -y >/dev/null
 npm install --ignore-scripts --no-audit --no-fund "$tarball" >/dev/null
+node "$root/scripts/validate-storefront-claims.mjs" \
+  --package-root "$scratch/consumer/node_modules/oilpriceapi"
 
 EXPECTED_VERSION="$version" node --input-type=module <<'NODE'
 import { OilPriceAPI, SDK_VERSION } from "oilpriceapi";

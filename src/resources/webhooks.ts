@@ -1,7 +1,7 @@
 /**
  * Webhooks Resource
  *
- * Manage webhook endpoints for real-time event notifications.
+ * Manage webhook endpoints for event notifications.
  */
 
 import type { OilPriceAPI } from "../client.js";
@@ -135,7 +135,7 @@ export interface WebhookEvent {
 /**
  * Webhooks Resource
  *
- * Manage webhook endpoints for real-time notifications about price changes,
+ * Manage webhook endpoints for notifications about price changes,
  * alerts, and other events.
  *
  * @example

@@ -269,8 +269,8 @@ export class BunkerFuelsResource {
   /**
    * Get all current bunker fuel prices
    *
-   * Returns prices for all tracked ports, keyed by port code. Requires a
-   * Professional plan or above.
+   * Returns available port prices keyed by port code. Access depends on the
+   * account's current entitlement; see https://www.oilpriceapi.com/pricing.
    *
    * @returns All-ports bunker prices
    *

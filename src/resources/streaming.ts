@@ -1,13 +1,14 @@
 /**
  * WebSocket Streaming Resource
  *
- * Real-time price streaming via the OilPriceAPI ActionCable endpoint
+ * Price updates streamed through the OilPriceAPI ActionCable endpoint
  * (`wss://api.oilpriceapi.com/cable`).
  *
- * Streaming is a **Professional plan ($99/mo) or higher** feature. Connections
- * authenticate with your API key and subscribe to the `EnergyPricesChannel`,
- * which pushes an initial `welcome` snapshot followed by live `price_update`
- * and (for drilling-tier accounts) `rig_count_update` messages.
+ * Streaming availability depends on account entitlement; review
+ * https://www.oilpriceapi.com/pricing. Connections authenticate with your API
+ * key and subscribe to the `EnergyPricesChannel`, which pushes an initial
+ * `welcome` snapshot followed by `price_update` and, for eligible accounts,
+ * `rig_count_update` messages.
  *
  * The implementation speaks the raw ActionCable JSON subprotocol over the
  * `ws` package: it performs the `welcome` -> `subscribe` ->
@@ -112,7 +113,7 @@ export interface WelcomeMessage {
 }
 
 /**
- * Rig-count update broadcast (drilling / Professional+ accounts).
+ * Rig-count update broadcast for accounts with drilling access.
  */
 export interface RigCountUpdateMessage {
   type: "rig_count_update";
@@ -319,8 +320,8 @@ export class PriceStreamSubscription extends EventEmitter {
       this.emit(
         "error",
         new Error(
-          "WebSocket subscription rejected. Streaming requires a Professional " +
-            "plan ($99/mo) or higher and a valid API key.",
+          "WebSocket subscription rejected. Confirm the API key and streaming " +
+            "entitlement at https://www.oilpriceapi.com/pricing.",
         ),
       );
       return;
@@ -449,7 +450,7 @@ export class PriceStreamSubscription extends EventEmitter {
 }
 
 /**
- * Streaming resource — entry point for real-time price subscriptions.
+ * Streaming resource: entry point for price-update subscriptions.
  *
  * Accessed via `client.stream`.
  */
@@ -480,7 +481,7 @@ export class StreamingResource {
   }
 
   /**
-   * Open a real-time price stream over the `EnergyPricesChannel`.
+   * Open a price-update stream over the `EnergyPricesChannel`.
    *
    * Returns a {@link PriceStreamSubscription} handle (an `EventEmitter`) you
    * can attach further listeners to and `.close()` when done. The optional
