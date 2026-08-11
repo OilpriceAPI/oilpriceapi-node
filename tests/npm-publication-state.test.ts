@@ -4,7 +4,7 @@ import { resolveNpmPublicationState } from "../scripts/resolve-npm-publication.m
 const expected = {
   expectedName: "oilpriceapi",
   expectedVersion: "1.2.3",
-  expectedIntegrity: "sha512-dGVzdA==",
+  expectedIntegrity: `sha512-${Buffer.alloc(64, 0x5a).toString("base64")}`,
 };
 
 function registryResponse(status: number, payload: unknown) {
@@ -38,6 +38,19 @@ describe("npm publication state", () => {
     await expect(resolveNpmPublicationState({ ...expected, fetchImpl })).resolves.toBe("present");
   });
 
+  it("rejects an SRI-shaped value whose digest is not 512 bits", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(registryResponse(404, { error: "Not found" }));
+
+    await expect(
+      resolveNpmPublicationState({
+        ...expected,
+        expectedIntegrity: "sha512-dGVzdA==",
+        fetchImpl,
+      }),
+    ).rejects.toThrow("512-bit");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("validates the latest selector against the same exact release", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       registryResponse(200, {
@@ -58,8 +71,8 @@ describe("npm publication state", () => {
 
   it.each([
     ["wrong integrity", { name: "oilpriceapi", version: "1.2.3", dist: { integrity: "sha512-wrong" } }],
-    ["wrong name", { name: "other", version: "1.2.3", dist: { integrity: "sha512-dGVzdA==" } }],
-    ["wrong version", { name: "oilpriceapi", version: "9.9.9", dist: { integrity: "sha512-dGVzdA==" } }],
+    ["wrong name", { name: "other", version: "1.2.3", dist: { integrity: expected.expectedIntegrity } }],
+    ["wrong version", { name: "oilpriceapi", version: "9.9.9", dist: { integrity: expected.expectedIntegrity } }],
     ["malformed document", { error: "not package metadata" }],
   ])("rejects a 200 response with %s", async (_label, payload) => {
     const fetchImpl = vi.fn().mockResolvedValue(registryResponse(200, payload));

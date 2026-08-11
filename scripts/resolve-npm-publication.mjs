@@ -16,6 +16,10 @@ function requireIntegrity(value) {
   if (!/^sha512-[A-Za-z0-9+/]+={0,2}$/.test(integrity)) {
     throw new Error("expected npm integrity must be SHA-512 SRI");
   }
+  const digest = Buffer.from(integrity.slice("sha512-".length), "base64");
+  if (digest.length !== 64) {
+    throw new Error("expected npm integrity must contain a 512-bit digest");
+  }
   return integrity;
 }
 
