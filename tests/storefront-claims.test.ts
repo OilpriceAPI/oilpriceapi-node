@@ -51,4 +51,20 @@ describe("public storefront claims", () => {
       expect.stringContaining("dist/resources/future.d.ts"),
     );
   });
+
+  it("rejects a fixed quota window without requiring a numeric allowance", () => {
+    const root = mkdtempSync(join(tmpdir(), "oilpriceapi-package-quota-"));
+    scratch.push(root);
+    mkdirSync(join(root, "dist"), { recursive: true });
+    writeFileSync(
+      join(root, "README.md"),
+      "Monthly quota reached.\nhttps://api.oilpriceapi.com/product-facts.json\n",
+    );
+    writeFileSync(join(root, "package.json"), JSON.stringify({ version: "9.9.9" }));
+    writeFileSync(join(root, "dist", "version.js"), 'export const SDK_VERSION = "9.9.9";\n');
+
+    expect(validatePackage(root)).toContainEqual(
+      expect.stringContaining("fixed quota window"),
+    );
+  });
 });

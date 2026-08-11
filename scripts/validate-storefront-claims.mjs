@@ -19,6 +19,10 @@ const blocked = [
     /\b(?:1,000|100)\s+requests?(?:\/month|\s+per month|\s+\(lifetime\))/i,
   ],
   ["quota promise", /\bdoes\s+not\s+consume.{0,40}\bquota\b|\bunlimited\s+(?:history|webhooks?|requests?|commodit)/i],
+  [
+    "fixed quota window",
+    /\b(?:daily|weekly|monthly|yearly)\s+(?:(?:api|request)\s+)?quota\b|\b(?:(?:api|request)\s+)?quota\b.{0,40}\b(?:daily|weekly|monthly|yearly)\b/i,
+  ],
   ["free-tier claim", /\bfree\s+tier\b|\bfree\s+api\s+key\b/i],
   ["free endpoint claim", /\b(?:endpoint|resource|api)\s+is\s+free\b|\bincluded\s+in\s+all\s+tiers\b/i],
   ["fixed query allowance", /\b\d[\d,]*\s+(?:station\s+)?queries?\s*(?:\/|per\s+)month\b/i],
