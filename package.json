@@ -1,6 +1,6 @@
 {
   "name": "oilpriceapi",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Official Node.js SDK for source-timestamped OilPriceAPI energy data",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -29,7 +29,8 @@
     "snippets:build": "node scripts/generate-snippet-manifest.mjs --output artifacts/snippets/oilpriceapi-node-snippets-v1.json",
     "snippets:fixtures": "node scripts/run-snippet-fixtures.mjs",
     "snippets:check": "tsc --noEmit -p tsconfig.snippets.json && npm run snippets:fixtures && vitest run tests/snippet-manifest.test.ts",
-    "lint": "eslint src/",
+    "lint": "eslint src/ --max-warnings=0",
+    "smoke:package": "./scripts/clean-install-smoke.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:live": "vitest run --config vitest.live.config.ts",

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-11
+
+### Added
+
+- Allow clients without credentials to call the public demo price and
+  commodity methods without sending an `Authorization` header.
+- Export normalized authentication, authorization, validation, rate-limit,
+  quota, server, and timeout error classes with stable recovery metadata.
+
+### Fixed
+
+- Fail authenticated HTTP and streaming calls locally with `MISSING_API_KEY`
+  instead of constructing an invalid request.
+- Validate the dynamic demo catalogue by contract and make production 429s fail
+  the live release gate rather than silently skipping the check.
+- Update runtime, build, lint, type, and GitHub Actions dependencies and resolve
+  all known npm audit findings at release time.
+
 ## [1.1.0] - 2026-07-19
 
 ### Changed

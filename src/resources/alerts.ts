@@ -109,6 +109,38 @@ export interface WebhookTestResponse {
   error?: string;
 }
 
+/** A record returned by the deprecated trigger-history endpoint. */
+export type AlertTrigger = Record<string, unknown>;
+
+/** One triggered analytics alert returned by analytics history. */
+export interface AlertAnalyticsEntry {
+  id: string | number;
+  name: string;
+  commodity_code: string;
+  analytics_type: string;
+  analytics_period: string | null;
+  analytics_config: Record<string, unknown> | null;
+  condition: string;
+  trigger_count: number;
+  last_triggered_at: string;
+  cooldown_minutes: number;
+  enabled: boolean;
+  metadata: Record<string, unknown> | null;
+}
+
+/** Pagination metadata returned with analytics history. */
+export interface AlertAnalyticsPagination {
+  page: number;
+  per_page: number;
+  total: number;
+}
+
+/** Typed response from the analytics-history endpoint. */
+export interface AlertAnalyticsHistory {
+  triggered_alerts: AlertAnalyticsEntry[];
+  pagination: AlertAnalyticsPagination;
+}
+
 /**
  * Price Alerts Resource
  *
@@ -520,8 +552,10 @@ export class AlertsResource {
    * });
    * ```
    */
-  async triggers(): Promise<any[]> {
-    const response = await this.client["request"]<any[] | { triggers: any[] }>(
+  async triggers(): Promise<AlertTrigger[]> {
+    const response = await this.client["request"]<
+      AlertTrigger[] | { triggers: AlertTrigger[] }
+    >(
       "/v1/alerts/triggers",
       {},
     );
@@ -545,7 +579,7 @@ export class AlertsResource {
    * console.log(`Success rate: ${analytics.success_rate}%`);
    * ```
    */
-  async analyticsHistory(): Promise<any> {
-    return this.client["request"]<any>("/v1/alerts/analytics_history", {});
+  async analyticsHistory(): Promise<AlertAnalyticsHistory> {
+    return this.client["request"]<AlertAnalyticsHistory>("/v1/alerts/analytics_history", {});
   }
 }
