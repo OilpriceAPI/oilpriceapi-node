@@ -249,8 +249,22 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
     });
 
     it("search() passes query params", async () => {
-      const s = spy([]);
-      await client.ei.wellPermits.search({
+      const permit = {
+        api_number: "42329000000001",
+        state_code: "TX",
+        county: "Midland",
+        permit_number: "P-1",
+        permit_type: "new_drill",
+        permit_status: "approved",
+        permit_date: "2024-01-15",
+        operator: { name: "Operator", name_normalized: "OPERATOR", number: null },
+        well: { name: "Eagle 1", number: "1", type: "oil" },
+        location: { latitude: null, longitude: null },
+        target: { formation: null, formation_normalized: null, total_depth_proposed: null },
+        provenance: { source: "texas_rrc", fetched_at: "2024-01-16T00:00:00Z" },
+      };
+      const s = spy({ well_permits: [permit], meta: { count: 1 } });
+      const results = await client.ei.wellPermits.search({
         states: "TX,NM",
         county: "Midland",
         start_date: "2024-01-01",
@@ -263,6 +277,7 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
         start_date: "2024-01-01",
         end_date: "2024-12-31",
       });
+      expect(results).toEqual([permit]);
     });
 
     it("get() validates id", async () => {

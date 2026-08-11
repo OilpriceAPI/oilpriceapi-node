@@ -94,6 +94,35 @@ The reviewed standalone form is
 type-checks and executes it against production-shaped fixtures, then publishes
 its exact code and checksum in the release snippet manifest.
 
+## Permit To Production
+
+Well-level production coverage is narrower than permit coverage. Check the live
+coverage response before following a permit into monthly production history:
+
+```typescript
+const summary = await client.wellProduction.summary();
+if (!summary.coverage) {
+  throw new Error("MALFORMED_RESPONSE: well-production coverage is missing");
+}
+const coveredStates = new Set(summary.coverage.well_level_states_with_data ?? []);
+const permits = await client.ei.wellPermits.search({
+  states: "TX",
+  well_name: "Eagle",
+});
+
+for (const permit of permits) {
+  if (!coveredStates.has(permit.state_code) || !/^\d{14}$/.test(permit.api_number ?? "")) {
+    continue;
+  }
+
+  const production = await client.wellProduction.wellDetail(permit.api_number!);
+  console.log(permit.well.name, production.data);
+}
+```
+
+An empty search or history is a valid data state. Do not infer nationwide
+well-level coverage from the presence of permit data or an SDK method.
+
 ## CommonJS
 
 ```javascript

@@ -325,7 +325,7 @@ export class EIWellPermitsResource {
    * @param query - Search query parameters
    * @returns Array of matching well permit records
    */
-  async search(query: WellPermitSearchQuery): Promise<WellPermitRecord[]> {
+  async search(query: WellPermitSearchQuery): Promise<LatestWellPermit[]> {
     const params: Record<string, string> = {};
 
     if (query.states) params.states = query.states;
@@ -341,9 +341,12 @@ export class EIWellPermitsResource {
     if (query.end_date) params.end_date = query.end_date;
 
     const response = await this.client["request"]<
-      WellPermitRecord[] | { data: WellPermitRecord[] }
+      | LatestWellPermit[]
+      | { data: LatestWellPermit[] }
+      | { well_permits: LatestWellPermit[]; meta?: Record<string, unknown> }
     >("/v1/ei/well-permits/search", params);
 
-    return Array.isArray(response) ? response : response.data;
+    if (Array.isArray(response)) return response;
+    return "well_permits" in response ? response.well_permits : response.data;
   }
 }
