@@ -210,11 +210,6 @@ export class OilPriceAPI {
 
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
-    if (!this.apiKey) {
-      throw new OilPriceAPIError(
-        "API key required. Set OILPRICEAPI_KEY env var or pass apiKey in config.",
-      );
-    }
     this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
     this.retries = config.retries !== undefined ? config.retries : 3;
     this.retryDelay = config.retryDelay || 1000;
@@ -245,6 +240,17 @@ export class OilPriceAPI {
     this.stream = new StreamingResource(this);
     this.subscriptions = new SubscriptionsResource(this);
     this.wellProduction = new WellProductionResource(this);
+  }
+
+  private requireApiKey(): string {
+    if (!this.apiKey) {
+      throw new OilPriceAPIError(
+        "API key required. Set OILPRICEAPI_KEY env var or pass apiKey in config.",
+        undefined,
+        "MISSING_API_KEY",
+      );
+    }
+    return this.apiKey;
   }
 
   /**
@@ -362,6 +368,8 @@ export class OilPriceAPI {
     params?: Record<string, string>,
     options?: { method?: string; body?: unknown; headers?: Record<string, string> },
   ): Promise<APIResponse<T>> {
+    const apiKey = this.requireApiKey();
+
     // Build URL with query parameters
     const url = new URL(`${this.baseUrl}${endpoint}`);
     if (params) {
@@ -391,7 +399,7 @@ export class OilPriceAPI {
         try {
           // Build headers with optional telemetry
           const headers: Record<string, string> = {
-            Authorization: `Token ${this.apiKey}`,
+            Authorization: `Token ${apiKey}`,
             "Content-Type": "application/json",
             "User-Agent": buildUserAgent(),
             "X-SDK-Name": SDK_NAME,
@@ -434,7 +442,7 @@ export class OilPriceAPI {
           // Handle error responses
           if (!response.ok) {
             const errorBody = await response.text();
-            const apiError = errorFromResponse(response, errorBody, this.apiKey);
+            const apiError = errorFromResponse(response, errorBody, apiKey);
             this.log(`Error response: ${apiError.message}`);
 
             if (apiError instanceof RateLimitError && attempt < this.retries && apiError.retryAfter) {
@@ -786,7 +794,7 @@ export class OilPriceAPI {
    *
    * Hits `GET /v1/demo/prices` (no API key required) and returns the parsed
    * `{ prices, meta }` envelope. Useful for trying the client without
-   * credentials. Subject to the demo rate limit (~20 requests/hour).
+   * credentials. Current limits are returned by the endpoint.
    *
    * @example
    * ```typescript
@@ -804,7 +812,7 @@ export class OilPriceAPI {
    *
    * Hits `GET /v1/demo/commodities` (no API key required) and returns the parsed
    * `{ commodities, meta }` envelope, where `meta.free_commodities` lists the
-   * codes available on the free demo tier.
+   * codes currently advertised by the demo endpoint.
    *
    * @example
    * ```typescript

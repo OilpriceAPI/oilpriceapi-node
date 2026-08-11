@@ -19,9 +19,7 @@ describe("LIVE demo endpoints", () => {
   let client: OilPriceAPI;
 
   beforeAll(() => {
-    // The demo endpoints ignore auth, but the constructor still requires a key.
-    // Any placeholder works — the demo path does not send/validate it meaningfully.
-    client = new OilPriceAPI({ apiKey: "demo", retries: 1 });
+    client = new OilPriceAPI({ retries: 1 });
   });
 
   it("getDemoPrices() parses the real prices envelope", async (ctx) => {
@@ -29,7 +27,7 @@ describe("LIVE demo endpoints", () => {
       const res = await client.getDemoPrices();
 
       expect(Array.isArray(res.prices)).toBe(true);
-      // The demo tier exposes a fixed set of free commodities (currently 9).
+      // The demo catalogue can grow, so keep this as a compatibility floor.
       expect(res.prices.length).toBeGreaterThanOrEqual(5);
 
       const brent = res.prices.find((p) => p.code === "BRENT_CRUDE_USD");

@@ -9,7 +9,8 @@ export type RetryStrategy = "exponential" | "linear" | "fixed";
 export interface OilPriceAPIConfig {
   /**
    * Your API key from https://www.oilpriceapi.com
-   * If not provided, reads from OILPRICEAPI_KEY environment variable.
+   * If not provided, reads from OILPRICEAPI_KEY. Keyless clients may call the
+   * public demo methods; authenticated methods fail before making a request.
    */
   apiKey?: string;
 
