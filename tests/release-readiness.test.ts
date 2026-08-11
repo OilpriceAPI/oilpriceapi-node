@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string): string => readFileSync(path, "utf8");
@@ -28,5 +28,15 @@ describe("release readiness", () => {
     expect(workflow).toContain("npm audit --audit-level=low");
     expect(workflow).toContain("npm run smoke:package");
     expect(smokeScript).toMatch(/npm run build[\s\S]*npm pack/);
+  });
+
+  it("does not persist checkout credentials in repository workflows", () => {
+    for (const name of readdirSync(".github/workflows").filter((file) => file.endsWith(".yml"))) {
+      const workflow = read(`.github/workflows/${name}`);
+      const checkoutCount = workflow.match(/actions\/checkout@/g)?.length ?? 0;
+      const hardenedCount = workflow.match(/persist-credentials: false/g)?.length ?? 0;
+
+      expect(hardenedCount, name).toBe(checkoutCount);
+    }
   });
 });

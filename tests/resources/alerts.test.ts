@@ -4,6 +4,7 @@ import type {
   PriceAlert,
   CreateAlertParams,
   UpdateAlertParams,
+  AlertAnalyticsHistory,
 } from "../../src/resources/alerts.js";
 
 describe("AlertsResource", () => {
@@ -612,6 +613,37 @@ describe("AlertsResource", () => {
       await expect(client.alerts.test("")).rejects.toThrow(
         "Alert ID must be a non-empty string",
       );
+    });
+  });
+
+  describe("analyticsHistory()", () => {
+    it("returns triggered alerts and pagination from the current API contract", async () => {
+      const mockResponse: AlertAnalyticsHistory = {
+        triggered_alerts: [
+          {
+            id: 42,
+            name: "Brent z-score",
+            commodity_code: "BRENT_CRUDE_USD",
+            analytics_type: "z_score",
+            analytics_period: "30d",
+            analytics_config: { threshold: 2 },
+            condition: "z-score exceeds 2",
+            trigger_count: 3,
+            last_triggered_at: "2026-08-11T10:00:00Z",
+            cooldown_minutes: 60,
+            enabled: true,
+            metadata: null,
+          },
+        ],
+        pagination: { page: 1, per_page: 20, total: 1 },
+      };
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockResponse);
+
+      const result = await client.alerts.analyticsHistory();
+
+      expect(result.pagination.total).toBe(1);
+      expect(result.triggered_alerts[0].analytics_type).toBe("z_score");
+      expect(requestSpy).toHaveBeenCalledWith("/v1/alerts/analytics_history", {});
     });
   });
 });

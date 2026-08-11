@@ -565,8 +565,8 @@ export class AlertsResource {
   /**
    * Get alert analytics history
    *
-   * Returns historical analytics data for alerts including trigger frequency,
-   * success rates, and response times.
+   * Returns triggered analytics alerts and pagination metadata. The total
+   * number of matching alerts is available as `pagination.total`.
    *
    * @returns Analytics history data
    *
@@ -575,8 +575,8 @@ export class AlertsResource {
    * @example
    * ```typescript
    * const analytics = await client.alerts.analyticsHistory();
-   * console.log(`Total triggers: ${analytics.total_triggers}`);
-   * console.log(`Success rate: ${analytics.success_rate}%`);
+   * console.log(`Triggered alerts: ${analytics.pagination.total}`);
+   * console.log(analytics.triggered_alerts[0]?.last_triggered_at);
    * ```
    */
   async analyticsHistory(): Promise<AlertAnalyticsHistory> {
