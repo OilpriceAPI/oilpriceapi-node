@@ -221,7 +221,7 @@ export interface WellPermitSearchQuery {
  * states.forEach(s => console.log(`${s.state}: ${s.permit_count} permits`));
  *
  * // Search permits
- * const results = await client.ei.wellPermits.search({
+ * const results = await client.ei.wellPermits.searchLatest({
  *   states: 'TX,NM',
  *   well_name: 'Eagle'
  * });
@@ -320,12 +320,42 @@ export class EIWellPermitsResource {
   }
 
   /**
-   * Search well permits
+   * Search well permits using the legacy flat record contract.
    *
    * @param query - Search query parameters
    * @returns Array of matching well permit records
    */
-  async search(query: WellPermitSearchQuery): Promise<LatestWellPermit[]> {
+  async search(query: WellPermitSearchQuery): Promise<WellPermitRecord[]> {
+    const params = this.searchParams(query);
+    const response = await this.client["request"]<
+      WellPermitRecord[] | { data: WellPermitRecord[] }
+    >("/v1/ei/well-permits/search", params);
+
+    return Array.isArray(response) ? response : response.data;
+  }
+
+  /**
+   * Search the current rich well-permit dataset.
+   *
+   * This method matches the production response without changing the public
+   * return type of {@link search} in a patch release.
+   *
+   * @param query - Search query parameters
+   * @returns Array of rich well-permit records
+   */
+  async searchLatest(query: WellPermitSearchQuery): Promise<LatestWellPermit[]> {
+    const params = this.searchParams(query);
+    const response = await this.client["request"]<
+      | LatestWellPermit[]
+      | { data: LatestWellPermit[] }
+      | { well_permits: LatestWellPermit[]; meta?: Record<string, unknown> }
+    >("/v1/ei/well-permits/search", params);
+
+    if (Array.isArray(response)) return response;
+    return "well_permits" in response ? response.well_permits : response.data;
+  }
+
+  private searchParams(query: WellPermitSearchQuery): Record<string, string> {
     const params: Record<string, string> = {};
 
     if (query.states) params.states = query.states;
@@ -340,13 +370,6 @@ export class EIWellPermitsResource {
     if (query.start_date) params.start_date = query.start_date;
     if (query.end_date) params.end_date = query.end_date;
 
-    const response = await this.client["request"]<
-      | LatestWellPermit[]
-      | { data: LatestWellPermit[] }
-      | { well_permits: LatestWellPermit[]; meta?: Record<string, unknown> }
-    >("/v1/ei/well-permits/search", params);
-
-    if (Array.isArray(response)) return response;
-    return "well_permits" in response ? response.well_permits : response.data;
+    return params;
   }
 }

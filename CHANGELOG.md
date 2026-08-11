@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Route futures contract codes and named helpers through instrument-generic
   Brent, WTI, Gasoil, and EU-carbon paths while retaining explicit legacy
   slugs as backward-compatible inputs.
-- Unwrap the production `{ well_permits, meta }` search envelope and expose its
-  rich typed permit records so a returned API number can feed well history.
+- Unwrap the production `{ well_permits, meta }` search envelope through the new
+  `searchLatest()` method while preserving the existing `search()` return type.
 
 ## [1.2.1] - 2026-08-11
 

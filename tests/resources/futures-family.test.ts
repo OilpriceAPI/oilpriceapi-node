@@ -162,9 +162,17 @@ describe("Futures contract families (issue #1)", () => {
       expect(resolveFuturesFamilySlug("qs")).toBe("gasoil");
     });
 
-    it("passes through already-valid family slugs", () => {
-      expect(resolveFuturesFamilySlug("ice-brent")).toBe("ice-brent");
-      expect(resolveFuturesFamilySlug("ICE-BRENT")).toBe("ice-brent");
+    it.each([
+      ["ice-brent", "ice-brent"],
+      ["ICE-BRENT", "ice-brent"],
+      ["ice-wti", "ice-wti"],
+      ["ICE-WTI", "ice-wti"],
+      ["ice-gasoil", "ice-gasoil"],
+      ["ICE-GASOIL", "ice-gasoil"],
+      ["eua-carbon", "eua-carbon"],
+      ["EUA-CARBON", "eua-carbon"],
+    ])("passes through legacy family slug %s", (input, expected) => {
+      expect(resolveFuturesFamilySlug(input)).toBe(expected);
     });
 
     it("returns null for unknown codes/slugs", () => {

@@ -105,7 +105,7 @@ if (!summary.coverage) {
   throw new Error("MALFORMED_RESPONSE: well-production coverage is missing");
 }
 const coveredStates = new Set(summary.coverage.well_level_states_with_data ?? []);
-const permits = await client.ei.wellPermits.search({
+const permits = await client.ei.wellPermits.searchLatest({
   states: "TX",
   well_name: "Eagle",
 });

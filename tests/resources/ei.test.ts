@@ -248,7 +248,25 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
       expect(calls).toContain("/v1/ei/well-permits/by-formation");
     });
 
-    it("search() passes query params", async () => {
+    it("search() preserves the legacy response contract", async () => {
+      const permit = {
+        id: "legacy-1",
+        state: "TX",
+        issue_date: "2024-01-15",
+        timestamp: "2024-01-16T00:00:00Z",
+      };
+      const s = spy({ data: [permit] });
+      const results = await client.ei.wellPermits.search({ states: "TX" });
+
+      expect(s).toHaveBeenCalledWith("/v1/ei/well-permits/search", { states: "TX" });
+      expect(results).toEqual([permit]);
+    });
+
+    it.each([
+      ["raw array", (permit: object) => [permit]],
+      ["data envelope", (permit: object) => ({ data: [permit] })],
+      ["production envelope", (permit: object) => ({ well_permits: [permit], meta: { count: 1 } })],
+    ])("searchLatest() unwraps the %s and passes query params", async (_shape, response) => {
       const permit = {
         api_number: "42329000000001",
         state_code: "TX",
@@ -263,8 +281,8 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
         target: { formation: null, formation_normalized: null, total_depth_proposed: null },
         provenance: { source: "texas_rrc", fetched_at: "2024-01-16T00:00:00Z" },
       };
-      const s = spy({ well_permits: [permit], meta: { count: 1 } });
-      const results = await client.ei.wellPermits.search({
+      const s = spy(response(permit));
+      const results = await client.ei.wellPermits.searchLatest({
         states: "TX,NM",
         county: "Midland",
         start_date: "2024-01-01",

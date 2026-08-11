@@ -65,7 +65,7 @@ describe("release readiness", () => {
     const packageJson = JSON.parse(read("package.json")) as { keywords: string[] };
 
     expect(readme).toContain("coverage.well_level_states_with_data");
-    expect(readme).toContain("client.ei.wellPermits.search");
+    expect(readme).toContain("client.ei.wellPermits.searchLatest");
     expect(readme).toContain("client.wellProduction.wellDetail");
     expect(packageJson.keywords).toEqual(
       expect.arrayContaining(["well-permits", "drilling-data", "oil-well-production"]),
