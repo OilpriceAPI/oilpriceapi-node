@@ -413,7 +413,7 @@ export class OilPriceAPI {
             "X-SDK-Version": SDK_VERSION,
           };
 
-          // Add optional telemetry headers (10% bonus for appUrl!)
+          // Add optional usage-attribution headers.
           if (this.appUrl) {
             headers["X-App-URL"] = this.appUrl;
           }
