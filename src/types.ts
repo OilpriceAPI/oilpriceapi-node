@@ -51,15 +51,13 @@ export interface OilPriceAPIConfig {
   debug?: boolean;
 
   /**
-   * Your application's URL (optional, for telemetry)
-   * Helps us understand how the API is being used and may unlock
-   * a 10% bonus to your request limit.
+   * Your application's URL (optional, for usage attribution)
    * @example "https://myapp.com"
    */
   appUrl?: string;
 
   /**
-   * Your application's name (optional, for telemetry)
+   * Your application's name (optional, for usage attribution)
    * @example "MyFuelPriceTracker"
    */
   appName?: string;

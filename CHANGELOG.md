@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-08-12
+
+### Fixed
+
+- Remove the nonexistent telemetry request-bonus claim from authored and
+  generated package surfaces. The recursive storefront guard now rejects
+  equivalent telemetry or app-metadata quota rewards in both source and the
+  exact packed npm artifact.
+
 ## [1.2.4] - 2026-08-11
 
 ### Fixed
