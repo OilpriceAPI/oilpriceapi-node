@@ -85,6 +85,69 @@ describe("public storefront claims", () => {
     );
   });
 
+  it.each(["claim.txt", "claim.md", "claim.map", "NOTICE"])(
+    "rejects a telemetry quota reward in any future readable packed file: %s",
+    (filename) => {
+      const root = mkdtempSync(join(tmpdir(), "oilpriceapi-packed-readable-claim-"));
+      scratch.push(root);
+      mkdirSync(join(root, "dist", "resources", "future"), { recursive: true });
+      writeFileSync(join(root, "README.md"), "https://api.oilpriceapi.com/product-facts.json\n");
+      writeFileSync(join(root, "package.json"), JSON.stringify({ version: "9.9.9" }));
+      writeFileSync(join(root, "dist", "version.js"), 'export const SDK_VERSION = "9.9.9";\n');
+      writeFileSync(
+        join(root, "dist", "resources", "future", filename),
+        "Add optional telemetry headers (10% bonus for appUrl!).\n",
+      );
+
+      expect(validatePackage(root)).toContainEqual(
+        expect.stringContaining(`dist/resources/future/${filename}: telemetry quota reward`),
+      );
+    },
+  );
+
+  it("ignores binary package data without hiding adjacent readable claims", () => {
+    const root = mkdtempSync(join(tmpdir(), "oilpriceapi-packed-binary-data-"));
+    scratch.push(root);
+    mkdirSync(join(root, "dist", "resources", "future"), { recursive: true });
+    writeFileSync(join(root, "README.md"), "https://api.oilpriceapi.com/product-facts.json\n");
+    writeFileSync(join(root, "package.json"), JSON.stringify({ version: "9.9.9" }));
+    writeFileSync(join(root, "dist", "version.js"), 'export const SDK_VERSION = "9.9.9";\n');
+    writeFileSync(
+      join(root, "dist", "resources", "future", "fixture.wasm"),
+      Buffer.from([0x00, 0x61, 0x73, 0x6d, 0xff, 0x00]),
+    );
+    writeFileSync(
+      join(root, "dist", "resources", "future", "claim.txt"),
+      "Add optional telemetry headers (10% bonus for appUrl!).\n",
+    );
+
+    const failures = validatePackage(root);
+    expect(failures).not.toHaveLength(0);
+    expect(failures).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("dist/resources/future/claim.txt: telemetry quota reward"),
+      ]),
+    );
+    expect(failures.join("\n")).not.toContain("fixture.wasm");
+  });
+
+  it("does not mistake a valid Unicode replacement character for binary data", () => {
+    const root = mkdtempSync(join(tmpdir(), "oilpriceapi-packed-unicode-text-"));
+    scratch.push(root);
+    mkdirSync(join(root, "dist", "resources", "future"), { recursive: true });
+    writeFileSync(join(root, "README.md"), "https://api.oilpriceapi.com/product-facts.json\n");
+    writeFileSync(join(root, "package.json"), JSON.stringify({ version: "9.9.9" }));
+    writeFileSync(join(root, "dist", "version.js"), 'export const SDK_VERSION = "9.9.9";\n');
+    writeFileSync(
+      join(root, "dist", "resources", "future", "claim.txt"),
+      "Rendered replacement character: \uFFFD. Telemetry grants extra request credits.\n",
+    );
+
+    expect(validatePackage(root)).toContainEqual(
+      expect.stringContaining("dist/resources/future/claim.txt: telemetry quota reward"),
+    );
+  });
+
   it("does not reject telemetry attribution without a quota reward", () => {
     const root = mkdtempSync(join(tmpdir(), "oilpriceapi-packed-telemetry-attribution-"));
     scratch.push(root);

@@ -1,6 +1,6 @@
 {
   "name": "oilpriceapi",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Official Node.js SDK for source-timestamped OilPriceAPI energy data",
   "type": "module",
   "main": "./dist/cjs/index.js",
