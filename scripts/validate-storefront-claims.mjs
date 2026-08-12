@@ -57,6 +57,7 @@ const telemetryModifierGapWords = new Set([
 ]);
 const maxStrongRewardSpan = 160;
 const maxTelemetryRewardSpan = 320;
+const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 
 function walkFiles(directory, extensions) {
   const files = [];
@@ -65,6 +66,30 @@ function walkFiles(directory, extensions) {
     if (entry.isDirectory()) {
       files.push(...walkFiles(path, extensions));
     } else if (extensions.has(extname(entry.name))) {
+      files.push(path);
+    }
+  }
+  return files;
+}
+
+function isReadableText(path) {
+  const contents = readFileSync(path);
+  if (contents.includes(0)) return false;
+  try {
+    utf8Decoder.decode(contents);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function walkReadableFiles(directory) {
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkReadableFiles(path));
+    } else if (entry.isFile() && isReadableText(path)) {
       files.push(path);
     }
   }
@@ -192,7 +217,7 @@ export function validateStorefront(baseRoot = defaultRoot) {
 
 export function validatePackage(packageRoot) {
   const files = [resolve(packageRoot, "README.md"), resolve(packageRoot, "package.json")];
-  files.push(...walkFiles(resolve(packageRoot, "dist"), new Set([".js", ".ts", ".json"])));
+  files.push(...walkReadableFiles(resolve(packageRoot, "dist")));
   const failures = claimFailures(packageRoot, files);
   requireContractLink(packageRoot, failures);
 

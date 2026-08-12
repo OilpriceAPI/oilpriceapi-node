@@ -10,7 +10,7 @@ describe("release readiness", () => {
     const changelog = read("CHANGELOG.md");
     const firstRelease = changelog.match(/^## \[([^\]]+)\]/m);
 
-    expect(packageJson.version).toBe("1.2.5");
+    expect(packageJson.version).toBe("1.2.6");
     expect(versionSource).toContain(`SDK_VERSION = "${packageJson.version}"`);
     expect(firstRelease?.[1]).toBe(packageJson.version);
   });
