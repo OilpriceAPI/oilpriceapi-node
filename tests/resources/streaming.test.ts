@@ -138,6 +138,21 @@ describe("StreamingResource", () => {
       });
     });
 
+    it("sends the SDK User-Agent on the WebSocket handshake", async () => {
+      const { SDK_VERSION } = await import("../../src/index.js");
+      // Must match MinimalAnalyticsService#detect_sdk_info in oilpriceapi-api.
+      const SERVER_SDK_REGEX = /oilpriceapi-([a-z0-9-]+)\/v?([\d]+\.[\d]+\.?[\d]*)/i;
+
+      makeStream(client);
+      const ws = MockWebSocket.instances[0];
+      const headers = (ws.options as { headers?: Record<string, string> }).headers ?? {};
+
+      const match = SERVER_SDK_REGEX.exec(headers["User-Agent"] ?? "");
+      expect(match).not.toBeNull();
+      expect(match![1]).toBe("node");
+      expect(match![2]).toBe(SDK_VERSION);
+    });
+
     it("derives a ws:// URL for an http baseUrl", () => {
       const localClient = new OilPriceAPI({
         apiKey: "k",

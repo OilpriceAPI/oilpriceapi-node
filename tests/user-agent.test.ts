@@ -158,3 +158,69 @@ describe("SDK Version", () => {
     expect(SDK_VERSION).toBe(packageJson.default.version);
   });
 });
+
+/**
+ * Server-side attribution conformance.
+ *
+ * `MinimalAnalyticsService#detect_sdk_info` in oilpriceapi-api parses
+ * sdk_language/sdk_version out of the User-Agent with exactly this regex.
+ * If a UA stops matching it, the request still succeeds but the SDK becomes
+ * invisible in adoption reporting — a silent failure that no HTTP-level test
+ * would catch. These tests pin the contract from the SDK side.
+ *
+ * Keep in step with app/services/minimal_analytics_service.rb (detect_sdk_info).
+ */
+const SERVER_SDK_REGEX = /oilpriceapi-([a-z0-9-]+)\/v?([\d]+\.[\d]+\.?[\d]*)/i;
+
+describe("server attribution contract", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", mockFetch);
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({ status: "success", data: { price: 75.5, code: "WTI_USD" } }),
+      headers: new Map([["content-type", "application/json"]]),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it("HTTP User-Agent parses to language=node and the real SDK version", async () => {
+    const { SDK_VERSION } = await import("../src/index.js");
+    const client = new OilPriceAPI({ apiKey: "test_key" });
+
+    await client.getLatestPrices();
+
+    const [, options] = mockFetch.mock.calls[0];
+    const match = SERVER_SDK_REGEX.exec(options.headers["User-Agent"]);
+
+    expect(match).not.toBeNull();
+    expect(match![1]).toBe("node");
+    expect(match![2]).toBe(SDK_VERSION);
+  });
+
+  it("demo (unauthenticated) requests are attributed identically", async () => {
+    const { SDK_VERSION } = await import("../src/index.js");
+    const client = new OilPriceAPI({ apiKey: "test_key" });
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ status: "success", data: { commodities: [] } }),
+      headers: new Map([["content-type", "application/json"]]),
+    });
+
+    await client.getDemoCommodities();
+
+    const [, options] = mockFetch.mock.calls[0];
+    const match = SERVER_SDK_REGEX.exec(options.headers["User-Agent"]);
+
+    expect(match).not.toBeNull();
+    expect(match![1]).toBe("node");
+    expect(match![2]).toBe(SDK_VERSION);
+  });
+});
