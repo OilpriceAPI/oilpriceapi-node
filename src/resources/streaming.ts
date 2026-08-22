@@ -32,6 +32,7 @@
 
 import { EventEmitter } from "node:events";
 import WebSocket from "ws";
+import { buildUserAgent, SDK_NAME, SDK_VERSION } from "../version.js";
 import type { OilPriceAPI } from "../client.js";
 
 /**
@@ -261,9 +262,17 @@ export class PriceStreamSubscription extends EventEmitter {
   connect(): void {
     if (this.closed) return;
 
+    // Identify the SDK on the handshake exactly as the HTTP path does. The
+    // upgrade request is an ordinary HTTP request, so without these headers a
+    // streaming client is indistinguishable from a hand-rolled WebSocket and
+    // drops out of SDK attribution entirely. The Go SDK (stream.go) already
+    // sets the User-Agent here; this keeps the SDKs consistent.
     const ws = new this.wsImpl(this.url, {
       headers: {
         Authorization: `Token ${this.apiKey}`,
+        "User-Agent": buildUserAgent(),
+        "X-SDK-Name": SDK_NAME,
+        "X-SDK-Version": SDK_VERSION,
       },
     });
     this.ws = ws;
