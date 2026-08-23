@@ -94,6 +94,30 @@ The reviewed standalone form is
 type-checks and executes it against production-shaped fixtures, then publishes
 its exact code and checksum in the release snippet manifest.
 
+## Several Prices In One Request
+
+`by_code` accepts up to **20 comma-separated commodity codes**, and the whole call
+counts as **one request** — not one per code. Batching is the cheapest way to make
+an allowance go further: twenty codes in one call stretches it twenty times.
+
+```typescript
+const prices = await client.getLatestPrices({
+  commodity: "BRENT_CRUDE_USD,WTI_USD,NATURAL_GAS_USD",
+});
+
+for (const p of prices) {
+  console.log(p.code, p.price, p.currency);
+}
+```
+
+Asking for more than 20 codes returns `400 Too many commodity codes requested
+(max: 20, requested: N)`. An unrecognised code also returns `400`, with a "did you
+mean" suggestion — so validate your code list once rather than on every poll.
+
+For current plan allowances and the polling interval that fits them, see
+[Rate Limiting](https://docs.oilpriceapi.com/guides/rate-limiting#how-often-to-poll).
+
+
 ## Permit To Production
 
 Well-level production coverage is narrower than permit coverage. Check the live
