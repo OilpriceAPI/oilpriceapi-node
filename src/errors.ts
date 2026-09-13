@@ -41,7 +41,12 @@ export class OilPriceAPIError extends Error {
   constructor(message: string, statusCode?: number, code?: string, details: OilPriceAPIErrorDetails = {}) {
     super(message);
     this.name = "OilPriceAPIError";
-    Object.assign(this, { statusCode, code, ...details });
+    // Spreading `details` as-is let an absent field overwrite a real value:
+    // `{ code: undefined }` from a body with no code erased the subclass's
+    // "NOT_FOUND_ERROR" / "HTTP_ERROR", so those errors reached callers with
+    // `code === undefined` (#111).
+    const present = Object.fromEntries(Object.entries(details).filter(([, value]) => value !== undefined));
+    Object.assign(this, { statusCode, code, ...present });
     if (Error.captureStackTrace) Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -90,6 +95,13 @@ export class TimeoutError extends OilPriceAPIError {
 
 type ErrorEnvelope = Record<string, unknown>;
 
+/** Upper-snake machine codes such as `VALIDATION_ERROR` or `WATCH_LIMIT`. */
+const MACHINE_CODE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
+
+function isEnvelope(value: unknown): value is ErrorEnvelope {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
 }
@@ -122,17 +134,36 @@ export function errorFromResponse(response: Response, body: string, apiKey?: str
     // Text and HTML failures retain the HTTP status fallback below.
   }
 
-  const envelope = parsed && typeof parsed.error === "object" && parsed.error !== null
-    ? { ...parsed, ...(parsed.error as ErrorEnvelope) }
-    : parsed || {};
+  const nestedError = parsed && isEnvelope(parsed.error) ? parsed.error : undefined;
+  // JSend fail envelope, `{ status: "fail", data: { error, message?, ... } }`,
+  // sent by every route that uses the API's `render_fail`. The reason lives
+  // under `data`; reading only the top level turned it into "HTTP 404: Not
+  // Found" (#111). The canonical nested `error` object keeps precedence.
+  const failData = parsed && !nestedError && (parsed.status === "fail" || parsed.status === "error") && isEnvelope(parsed.data)
+    ? parsed.data
+    : undefined;
+  const envelope = nestedError
+    ? { ...parsed, ...nestedError }
+    : failData
+      ? { ...parsed, ...failData }
+      : parsed || {};
+  // Inside a fail envelope an upper-snake `error` (`VALIDATION_ERROR`,
+  // `WATCH_LIMIT`) is a machine code, and the sentence is in `message`.
+  const failCode = failData && typeof failData.error === "string" && MACHINE_CODE.test(failData.error)
+    ? failData.error
+    : undefined;
   const safeBody = redact(parsed ?? body, apiKey);
   const fallback = `HTTP ${response.status}: ${response.statusText}`;
-  const message = String(redact(stringValue(envelope.message) || stringValue(envelope.error_description) || stringValue(envelope.error) || fallback, apiKey));
+  const reason = stringValue(envelope.message)
+    || stringValue(envelope.error_description)
+    || (failCode ? undefined : stringValue(envelope.error))
+    || failCode;
+  const message = String(redact(reason || fallback, apiKey));
   const retryAfterHeader = headers.get("retry-after");
   const retryAfter = numberValue(envelope.retry_after) ?? (retryAfterHeader && /^\d+$/.test(retryAfterHeader) ? Number(retryAfterHeader) : undefined);
   const details: OilPriceAPIErrorDetails = {
     statusCode: response.status,
-    code: stringValue(envelope.code) || stringValue(envelope.error_code),
+    code: stringValue(envelope.code) || stringValue(envelope.error_code) || failCode,
     requestId: stringValue(envelope.request_id) || headers.get("x-request-id") || undefined,
     docsUrl: stringValue(envelope.docs_url) || stringValue(envelope.documentation_url),
     currentPlan: stringValue(envelope.current_plan) || stringValue(envelope.plan),
