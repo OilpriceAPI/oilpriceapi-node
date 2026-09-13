@@ -194,7 +194,7 @@ export class EIFracFocusResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<FracFocusRecord>(`/v1/ei/frac-focus/${id}`, {});
+    return this.client["request"]<FracFocusRecord>(`/v1/ei/frac-focus/${encodeURIComponent(id)}`, {});
   }
 
   /**
@@ -296,7 +296,7 @@ export class EIFracFocusResource {
     }
 
     const response = await this.client["request"]<WellChemical[] | { chemicals: WellChemical[] }>(
-      `/v1/ei/frac-focus/${id}/chemicals`,
+      `/v1/ei/frac-focus/${encodeURIComponent(id)}/chemicals`,
       {},
     );
 
@@ -315,7 +315,7 @@ export class EIFracFocusResource {
     }
 
     const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
-      `/v1/ei/frac-focus/for-well/${apiNumber}`,
+      `/v1/ei/frac-focus/for-well/${encodeURIComponent(apiNumber)}`,
       {},
     );
 

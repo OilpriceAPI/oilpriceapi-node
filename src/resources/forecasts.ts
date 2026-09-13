@@ -238,6 +238,6 @@ export class ForecastsResource {
     const params: Record<string, string> = {};
     if (commodity) params.commodity = commodity;
 
-    return this.client["request"]<MonthlyForecast>(`/v1/forecasts/monthly/${period}`, params);
+    return this.client["request"]<MonthlyForecast>(`/v1/forecasts/monthly/${encodeURIComponent(period)}`, params);
   }
 }

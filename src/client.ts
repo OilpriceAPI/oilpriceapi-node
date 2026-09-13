@@ -12,6 +12,7 @@ import type {
   DemoPricesResponse,
   DemoCommoditiesResponse,
 } from "./types.js";
+import { MAX_PER_PAGE, DEFAULT_PER_PAGE } from "./types.js";
 import type { MarketBrief, MarketBriefOptions } from "./resources/market-brief.js";
 import {
   OilPriceAPIError,
@@ -36,7 +37,7 @@ import { EnergyIntelligenceResource } from "./resources/ei/index.js";
 import { WebhooksResource } from "./resources/webhooks.js";
 import { DataSourcesResource } from "./resources/data-sources.js";
 import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
-import { resolveApiUrl } from "./url.js";
+import { resolveApiUrl, assertUsableBaseUrl } from "./url.js";
 import { SpreadsResource } from "./resources/spreads.js";
 import { IndicatorsResource } from "./resources/indicators.js";
 import { RawResource } from "./resources/raw.js";
@@ -281,6 +282,10 @@ export class OilPriceAPI {
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
+    // Fail loudly, once, on a base URL that cannot be used — rather than
+    // silently sending every request to the wrong path for the life of the
+    // client (#89).
+    assertUsableBaseUrl(this.baseUrl);
     this.retries = config.retries !== undefined ? validatedRetries(config.retries) : 3;
     // `||` discarded an explicit 0, so retryDelay: 0 silently became 1000ms.
     this.retryDelay = config.retryDelay !== undefined ? config.retryDelay : 1000;
@@ -593,8 +598,11 @@ export class OilPriceAPI {
 
           const response = await fetch(url.toString(), fetchOptions);
 
-          clearTimeout(timeoutId);
-
+          // The abort timer stays armed until the body has been consumed.
+          // Clearing it here — the moment headers arrived — left nothing to
+          // interrupt `await response.text()`, so a stalled body hung for as
+          // long as the peer held the socket open, whatever `timeout` said
+          // (#81). The `finally` below is the single cleanup point.
           this.log(`Response: ${response.status} ${response.statusText}`);
 
           // Handle error responses
@@ -617,6 +625,10 @@ export class OilPriceAPI {
                 this.calculateRetryDelay(attempt),
               );
               this.log(`Rate limited. Waiting ${waitMs}ms`);
+              // The error body is fully read by this point, so the deadline
+              // for THIS attempt is met; don't let its timer hold the event
+              // loop open across the backoff sleep.
+              clearTimeout(timeoutId);
               await this.sleep(waitMs);
               continue;
             }
@@ -822,7 +834,21 @@ export class OilPriceAPI {
    * ```
    */
   async *paginateHistoricalPrices(options?: HistoricalPricesOptions): AsyncGenerator<Price[]> {
-    const perPage = options?.perPage || 100;
+    // The loop ends when a page comes back shorter than the one requested.
+    // That test is only sound while the server actually honours the requested
+    // size: the API caps a page at MAX_PER_PAGE rows however large `per_page`
+    // is, so asking for more made page one look short and ended iteration
+    // after a single page — 500 rows out of 5,500, with no error and no flag
+    // (#90). The SDK's own docs advertised a maximum of 1000, so the
+    // documented value was the one that truncated.
+    //
+    // Clamping to what the server will serve restores the short-page test
+    // and returns the full history. It changes nothing for a caller already
+    // inside the cap.
+    const requested = options?.perPage ?? DEFAULT_PER_PAGE;
+    const perPage = Number.isFinite(requested)
+      ? Math.min(Math.max(1, Math.floor(requested)), MAX_PER_PAGE)
+      : DEFAULT_PER_PAGE;
     let page = 1;
 
     while (true) {
@@ -896,8 +922,8 @@ export class OilPriceAPI {
    * @example
    * ```typescript
    * const categories = await client.getCommodityCategories();
-   * console.log(categories.oil.name); // "Oil"
-   * console.log(categories.oil.commodities.length); // 11
+   * console.log(categories.categories.oil.name); // "Oil"
+   * console.log(categories.categories.oil.commodities.length); // 11
    * ```
    */
   async getCommodityCategories(): Promise<CategoriesResponse> {

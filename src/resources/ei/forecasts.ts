@@ -158,7 +158,7 @@ export class EIForecastsResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<ForecastRecord>(`/v1/ei/forecasts/${id}`, {});
+    return this.client["request"]<ForecastRecord>(`/v1/ei/forecasts/${encodeURIComponent(id)}`, {});
   }
 
   /**

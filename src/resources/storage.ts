@@ -215,7 +215,7 @@ export class StorageResource {
     // `history`), and the controller reads a `period` token.
     const response = await this.client["request"]<
       HistoricalStorageData[] | { data: HistoricalStorageData[] }
-    >(`/v1/storage/history/${code}`, params);
+    >(`/v1/storage/history/${encodeURIComponent(code)}`, params);
 
     return Array.isArray(response) ? response : response.data;
   }

@@ -133,7 +133,7 @@ export class EIOPECProductionResource {
     }
 
     return this.client["request"]<OPECProductionRecord>(
-      `/v1/ei/opec_productions/${id}`,
+      `/v1/ei/opec_productions/${encodeURIComponent(id)}`,
       {},
     );
   }
