@@ -147,6 +147,18 @@ for (const permit of permits) {
 An empty search or history is a valid data state. Do not infer nationwide
 well-level coverage from the presence of permit data or an SDK method.
 
+## CommonJS
+
+```javascript
+const { OilPriceAPI } = require("oilpriceapi");
+
+const client = new OilPriceAPI({ apiKey: process.env.OILPRICEAPI_KEY });
+const [price] = await client.getLatestPrices({
+  commodity: "BRENT_CRUDE_USD",
+});
+console.log(price.code, price.price, price.currency, price.unit, price.created_at);
+```
+
 ## Carrier Fuel Surcharges
 
 `client.fuelSurcharge` reads published LTL and parcel carrier fuel surcharges.
@@ -168,18 +180,6 @@ An unknown carrier, or a covered carrier with no retrieved rate yet, returns
 `404` with `covered_carriers` on `rawBody.data`; it is never reported as a zero
 surcharge. Parcel history requires `serviceLevel`. See
 [`examples/fuel-surcharge.ts`](examples/fuel-surcharge.ts).
-
-## CommonJS
-
-```javascript
-const { OilPriceAPI } = require("oilpriceapi");
-
-const client = new OilPriceAPI({ apiKey: process.env.OILPRICEAPI_KEY });
-const [price] = await client.getLatestPrices({
-  commodity: "BRENT_CRUDE_USD",
-});
-console.log(price.code, price.price, price.currency, price.unit, price.created_at);
-```
 
 ## Recovery
 
