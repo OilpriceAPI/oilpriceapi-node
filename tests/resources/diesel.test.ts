@@ -150,7 +150,7 @@ describe("DieselResource", () => {
       expect(requestSpy).toHaveBeenCalledWith(
         "/v1/diesel-prices/stations",
         {},
-        { method: "POST", body: { lat: 37.7749, lng: -122.4194, radius: 8047 } },
+        { method: "POST", body: { lat: 37.7749, lng: -122.4194, radius: 8047 }, idempotent: true },
       );
       expect(result.search_area.radius_meters).toBe(8047);
     });
@@ -241,7 +241,7 @@ describe("DieselResource", () => {
       expect(requestSpy).toHaveBeenCalledWith(
         "/v1/diesel-prices/stations",
         {},
-        { method: "POST", body: { lat: 37.7749, lng: -122.4194, radius: 5000 } },
+        { method: "POST", body: { lat: 37.7749, lng: -122.4194, radius: 5000 }, idempotent: true },
       );
     });
   });

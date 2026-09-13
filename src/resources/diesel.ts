@@ -222,6 +222,9 @@ export class DieselResource {
       {
         method: "POST",
         body: { lat, lng, radius },
+        // A radius search: POST only because it carries a body. Repeating it
+        // has no side effect, so it stays retryable (#82).
+        idempotent: true,
       },
     );
   }
