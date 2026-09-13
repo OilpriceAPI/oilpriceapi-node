@@ -1,0 +1,1 @@
+{"status":"success","data":{"subscription":{"id":"c27641db-012d-4a22-8939-e77fe05d7eb4","name":"node-78-renamed","codes":["BRENT_CRUDE_USD"],"interval_seconds":3600,"status":"paused","deliver_webhook":false,"source":"api","tool_name":"oilpriceapi-node-78-verification","last_evaluated_at":null,"next_run_at":"2026-09-13T20:15:05Z","created_at":"2026-09-13T20:15:05Z"}}}

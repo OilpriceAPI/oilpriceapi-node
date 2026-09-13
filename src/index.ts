@@ -221,6 +221,7 @@ export type {
   SubscriptionSource,
   SubscriptionInterval,
   CreateSubscriptionParams,
+  UpdateSubscriptionParams,
   SubscriptionEvent,
   SubscriptionEventsResult,
   SubscriptionEventsOptions,

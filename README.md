@@ -147,6 +147,36 @@ for (const permit of permits) {
 An empty search or history is a valid data state. Do not infer nationwide
 well-level coverage from the presence of permit data or an SDK method.
 
+## Watches
+
+`client.subscriptions` manages watches: server-side evaluations of a set of
+commodity codes on a fixed interval, read back through a cursor poll. A watch is
+not a billing subscription, and pausing or deleting one changes nothing you are
+charged.
+
+```typescript
+const watch = await client.subscriptions.create({
+  name: "Crude desk",
+  codes: ["BRENT_CRUDE_USD", "WTI_USD"],
+  interval: "1h",
+});
+
+await client.subscriptions.pause(watch.id);
+await client.subscriptions.update(watch.id, { codes: ["BRENT_CRUDE_USD"], interval: "15m" });
+await client.subscriptions.resume(watch.id);
+
+const { events, cursor } = await client.subscriptions.events({ since: 0 });
+
+await client.subscriptions.delete(watch.id);
+```
+
+The plan's watch count and minimum interval are enforced by the API. A create
+over either limit fails with HTTP 402 and the upgrade details on `rawBody`; an
+update below the minimum interval, or with an unknown code, fails with HTTP 422
+and the per-field reasons on `rawBody.data.details`. A PATCH that times out is
+not replayed and carries `ambiguousWrite: true`, so check with `get()` before
+resending.
+
 ## CommonJS
 
 ```javascript
