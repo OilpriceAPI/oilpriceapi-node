@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"period is not supported by the latest endpoint; use /v1/rig-counts/historical"}}

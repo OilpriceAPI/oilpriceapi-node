@@ -92,12 +92,25 @@ export type {
   HistoricalStorageOptions,
 } from "./resources/storage.js";
 export type {
+  RigCountCode,
+  RigCountRegionName,
+  RigCountObservation,
   RigCountData,
   HistoricalRigCountData,
+  CurrentRigCounts,
+  RigCountPagination,
+  RigCountPeriodCoverage,
+  RigCountsPage,
+  LatestRigCountOptions,
   HistoricalRigCountOptions,
-  RigCountTrend,
+  RigCountChange,
   RigCountSummary,
+  RigCountTrendPeriod,
+  RigCountTrendOptions,
+  RigCountTrendMetrics,
+  RigCountTrend,
 } from "./resources/rig-counts.js";
+export { RIG_COUNT_MAX_PER_PAGE } from "./resources/rig-counts.js";
 export type {
   BunkerPortInfo,
   BunkerFuelPrice,

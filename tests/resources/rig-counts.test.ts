@@ -1,253 +1,320 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { OilPriceAPI } from "../../src/client.js";
-import type {
-  RigCountData,
-  HistoricalRigCountData,
-  RigCountTrend,
-  RigCountSummary,
-} from "../../src/resources/rig-counts.js";
+/**
+ * #108 — `client.rigCounts` through the REAL client and a REAL `fetch` mock.
+ *
+ * The previous suite spied on the private `request` method and fed it the
+ * declared shape, so the transport-to-method path a customer runs was never
+ * exercised: `historical()` returned `undefined` against production and
+ * `latest().total` was `undefined`, while every test here stayed green.
+ *
+ * Fixtures in tests/fixtures/rig-counts/ are verbatim from live production
+ * (`api.oilpriceapi.com`) on 2026-09-13; historical was requested with
+ * `per_page=2`, trends with `period=1m`. No field was edited.
+ */
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import {
+  OilPriceAPI,
+  OilPriceAPIError,
+  NotFoundError,
+  RateLimitError,
+  TimeoutError,
+  ValidationError,
+  isEntitlementError,
+} from "../../src/index.js";
 
-describe("RigCountsResource", () => {
-  let client: OilPriceAPI;
+const KEY = "fixture_key_not_a_real_credential";
 
-  beforeEach(() => {
-    client = new OilPriceAPI({ apiKey: "test_key_123" });
-    vi.clearAllMocks();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = any;
+const fixture = (name: string): Json =>
+  JSON.parse(readFileSync(`tests/fixtures/rig-counts/${name}.json`, "utf8"));
+
+interface Wire {
+  pathname: string;
+  params: Record<string, string>;
+}
+
+function serve(body: unknown, status = 200, headers: Record<string, string> = {}): Wire[] {
+  const wire: Wire[] = [];
+  vi.spyOn(global, "fetch").mockImplementation((async (input: unknown) => {
+    const url = new URL(String(input));
+    wire.push({ pathname: url.pathname, params: Object.fromEntries(url.searchParams) });
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json", ...headers },
+    });
+  }) as unknown as typeof fetch);
+  return wire;
+}
+
+const client = (timeout?: number) => new OilPriceAPI({ apiKey: KEY, retries: 0, timeout });
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("#108 latest()", () => {
+  it("returns the observation record, with the value under count", async () => {
+    const wire = serve(fixture("latest"));
+    const latest = await client().rigCounts.latest();
+
+    expect(wire[0].pathname).toBe("/v1/rig-counts/latest");
+    expect(wire[0].params).toEqual({});
+    expect(latest.count).toBe(588);
+    expect(latest.code).toBe("US_RIG_COUNT");
+    expect(latest.region).toBe("United States");
+    expect(latest.unit).toBe("rigs");
+    expect(latest.source_date).toBe("2026-08-28");
+    expect(latest.observed_at).toBe("2026-08-28T12:00:00.000Z");
+    expect((latest as unknown as Record<string, unknown>).total).toBeUndefined();
   });
 
-  describe("latest()", () => {
-    it("should fetch latest rig count data", async () => {
-      const mockData: RigCountData = {
-        total: 625,
-        oil: 500,
-        gas: 120,
-        misc: 5,
-        timestamp: "2024-01-15T00:00:00Z",
-        change: 5,
-        year_over_year_change: -30,
-      };
+  it("sends by_code for another region", async () => {
+    const wire = serve(fixture("latest"));
+    await client().rigCounts.latest({ code: "CANADA_RIG_COUNT" });
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.rigCounts.latest();
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/latest", {});
-      expect(result.total).toBe(625);
-      expect(result.oil).toBe(500);
-      expect(result.gas).toBe(120);
-      expect(result.change).toBe(5);
-    });
-
-    it("should return minimal rig count data without optional fields", async () => {
-      const mockData: RigCountData = {
-        total: 600,
-        timestamp: "2024-01-15T00:00:00Z",
-      };
-
-      vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.rigCounts.latest();
-
-      expect(result.total).toBe(600);
-      expect(result.oil).toBeUndefined();
-      expect(result.gas).toBeUndefined();
-    });
+    expect(wire[0].params).toEqual({ by_code: "CANADA_RIG_COUNT" });
   });
 
-  describe("current()", () => {
-    it("should fetch current rig counts", async () => {
-      const mockData: RigCountData = {
-        total: 625,
-        oil: 500,
-        gas: 120,
-        misc: 5,
-        timestamp: "2024-01-15T00:00:00Z",
-        change: 5,
-      };
+  it("raises NotFoundError when the route has no data for the code", async () => {
+    // Verbatim: GET /v1/rig-counts/latest?by_code=BOGUS -> 404, 2026-09-13.
+    serve({ status: "fail", data: { error: "No rig count data found" } }, 404);
+    await expect(client().rigCounts.latest()).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
+describe("#108 current()", () => {
+  it("returns every region's observation plus the summary block", async () => {
+    const wire = serve(fixture("current"));
+    const current = await client().rigCounts.current();
 
-      const result = await client.rigCounts.current();
+    expect(wire[0].pathname).toBe("/v1/rig-counts/current");
+    expect(current.rig_counts.map((r) => r.code)).toEqual([
+      "US_RIG_COUNT",
+      "CANADA_RIG_COUNT",
+      "INTERNATIONAL_RIG_COUNT",
+    ]);
+    expect(current.rig_counts[2].source_date).toBe("2026-06-01");
+    expect(current.summary.total_us_rigs).toBe(588);
+    expect(current.summary.total_canada_rigs).toBe(211);
+    expect(current.summary.total_international_rigs).toBe(1073);
+  });
+});
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/current", {});
-      expect(result.total).toBe(625);
-      expect(result.oil).toBe(500);
-    });
+describe("#108 historical()", () => {
+  it("returns the page envelope, never undefined", async () => {
+    serve(fixture("historical"));
+    const page = await client().rigCounts.historical();
+
+    expect(page).toBeDefined();
+    expect(page.rig_counts).toHaveLength(2);
+    expect(page.rig_counts[1].source_date).toBe("2026-08-21");
+    // The page holds 2 of 25 rows; a bare array would hide the other 23.
+    expect(page.pagination).toEqual({ page: 1, per_page: 2, total: 25, total_pages: 13 });
+    expect(page.period.earliest_available).toBe("2013-01-04");
+    expect(page.period.complete).toBe(true);
   });
 
-  describe("historical()", () => {
-    it("should fetch historical rig counts without date filters", async () => {
-      const mockData: HistoricalRigCountData[] = [
-        { date: "2024-01-08", total: 620, oil: 498, gas: 118 },
-        { date: "2024-01-15", total: 625, oil: 500, gas: 120 },
-      ];
-
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.rigCounts.historical();
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/historical", {});
-      expect(result).toHaveLength(2);
-      expect(result[0].date).toBe("2024-01-08");
-      expect(result[1].total).toBe(625);
+  it("sends the date range as by_period[from]/[to] with paging and code", async () => {
+    const wire = serve(fixture("historical"));
+    await client().rigCounts.historical({
+      startDate: "2026-01-01",
+      endDate: "2026-02-01",
+      page: 2,
+      perPage: 50,
+      code: "CANADA_RIG_COUNT",
     });
 
-    it("should fetch historical rig counts with date filters", async () => {
-      const mockData: HistoricalRigCountData[] = [
-        { date: "2024-01-15", total: 625, oil: 500, gas: 120 },
-      ];
-
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      await client.rigCounts.historical({
-        startDate: "2024-01-01",
-        endDate: "2024-01-31",
-      });
-
-      // Controller reads nested by_period[from]/by_period[to], not start_date/end_date.
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/historical", {
-        "by_period[from]": "2024-01-01",
-        "by_period[to]": "2024-01-31",
-      });
-    });
-
-    it("should pass only by_period[from] if endDate is omitted", async () => {
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue([]);
-
-      await client.rigCounts.historical({ startDate: "2024-01-01" });
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/historical", {
-        "by_period[from]": "2024-01-01",
-      });
-    });
-
-    it("should unwrap data property when response is wrapped", async () => {
-      const mockData: HistoricalRigCountData[] = [{ date: "2024-01-15", total: 625 }];
-
-      vi.spyOn(client as any, "request").mockResolvedValue({ data: mockData });
-
-      const result = await client.rigCounts.historical();
-
-      expect(result).toEqual(mockData);
-    });
-
-    it("should return empty array when no data exists", async () => {
-      vi.spyOn(client as any, "request").mockResolvedValue([]);
-
-      const result = await client.rigCounts.historical();
-
-      expect(result).toEqual([]);
+    expect(wire[0].pathname).toBe("/v1/rig-counts/historical");
+    expect(wire[0].params).toEqual({
+      "by_period[from]": "2026-01-01",
+      "by_period[to]": "2026-02-01",
+      page: "2",
+      per_page: "50",
+      by_code: "CANADA_RIG_COUNT",
     });
   });
 
-  describe("trends()", () => {
-    it("should fetch rig count trends without period", async () => {
-      const mockData: RigCountTrend = {
-        period: "week",
-        average: 622,
-        min: 615,
-        max: 630,
-        trend: "up",
-        change_percent: 0.8,
-      };
+  it("sends a relative period", async () => {
+    const wire = serve(fixture("historical"));
+    await client().rigCounts.historical({ period: "5y" });
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.rigCounts.trends();
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/trends", {});
-      expect(result.average).toBe(622);
-      expect(result.trend).toBe("up");
-    });
-
-    it("should fetch rig count trends with period parameter", async () => {
-      const mockData: RigCountTrend = {
-        period: "month",
-        average: 618,
-        min: 610,
-        max: 630,
-        trend: "flat",
-        change_percent: 0.2,
-      };
-
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.rigCounts.trends("month");
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/trends", {
-        period: "month",
-      });
-      expect(result.period).toBe("month");
-      expect(result.average).toBe(618);
-    });
-
-    it("should pass year period correctly", async () => {
-      const mockData: RigCountTrend = {
-        period: "year",
-        average: 590,
-        min: 540,
-        max: 640,
-        trend: "up",
-        change_percent: 5.4,
-      };
-
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      await client.rigCounts.trends("year");
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/trends", {
-        period: "year",
-      });
-    });
+    expect(wire[0].params).toEqual({ period: "5y" });
   });
 
-  describe("summary()", () => {
-    it("should fetch rig count summary with all fields", async () => {
-      const mockData: RigCountSummary = {
-        current: 625,
-        week_change: 5,
-        month_change: -10,
-        year_change: -30,
-        breakdown: {
-          oil: 500,
-          gas: 120,
-          misc: 5,
+  it("clamps perPage to the 100 rows the route serves", async () => {
+    const wire = serve(fixture("historical"));
+    await client().rigCounts.historical({ perPage: 5000 });
+
+    expect(wire[0].params.per_page).toBe("100");
+  });
+
+  it("rejects period combined with a date range before sending", async () => {
+    const wire = serve(fixture("historical"));
+    await expect(
+      client().rigCounts.historical({ period: "1y", startDate: "2026-01-01" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(wire).toHaveLength(0);
+  });
+
+  it("surfaces the route's 422 for an unsupported period", async () => {
+    serve(
+      {
+        status: "fail",
+        data: {
+          error:
+            "Unsupported period. Use a relative period up to 15 years (for example 16w, 52w, 5y, or 15y).",
         },
-        timestamp: "2024-01-15T00:00:00Z",
-      };
+      },
+      422,
+    );
+    const error = await client()
+      .rigCounts.historical({ period: "banana" })
+      .catch((e) => e);
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
+    expect(error).toBeInstanceOf(OilPriceAPIError);
+    expect(error.statusCode).toBe(422);
+  });
+});
 
-      const result = await client.rigCounts.summary();
+describe("#108 summary()", () => {
+  it("returns totals and changes keyed by region name", async () => {
+    const wire = serve(fixture("summary"));
+    const summary = await client().rigCounts.summary();
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/rig-counts/summary", {});
-      expect(result.current).toBe(625);
-      expect(result.week_change).toBe(5);
-      expect(result.month_change).toBe(-10);
-      expect(result.year_change).toBe(-30);
-      expect(result.breakdown.oil).toBe(500);
-      expect(result.breakdown.gas).toBe(120);
+    expect(wire[0].pathname).toBe("/v1/rig-counts/summary");
+    expect(summary.current_totals["United States"]).toBe(588);
+    expect(summary.weekly_changes.Canada).toEqual({ absolute: -5, percentage: -2.31 });
+    expect(summary.yearly_changes.International).toEqual({ absolute: -2, percentage: -0.19 });
+    expect(summary.source_date).toBe("2026-08-28");
+  });
+});
+
+describe("#108 trends()", () => {
+  it("returns trend_data and the observations it was computed from", async () => {
+    const wire = serve(fixture("trends"));
+    const trend = await client().rigCounts.trends({ period: "1m" });
+
+    expect(wire[0].pathname).toBe("/v1/rig-counts/trends");
+    expect(wire[0].params).toEqual({ period: "1m" });
+    expect(trend.region).toBe("US_RIG_COUNT");
+    expect(trend.period).toBe("1m");
+    expect(trend.rig_counts).toHaveLength(3);
+    if (!("trend_direction" in trend.trend_data)) throw new Error("expected trend metrics");
+    expect(trend.trend_data.trend_direction).toBe("decreasing");
+    expect(trend.trend_data.average_count).toBeCloseTo(589.67, 2);
+    expect(trend.trend_data.total_data_points).toBe(3);
+  });
+
+  it("sends region", async () => {
+    const wire = serve(fixture("trends"));
+    await client().rigCounts.trends({ period: "3m", region: "CANADA_RIG_COUNT" });
+
+    expect(wire[0].params).toEqual({ period: "3m", region: "CANADA_RIG_COUNT" });
+  });
+
+  it("still accepts the period as a bare string", async () => {
+    const wire = serve(fixture("trends"));
+    await client().rigCounts.trends("1m");
+
+    expect(wire[0].params).toEqual({ period: "1m" });
+  });
+
+  it("refuses a period the route would silently replace with six months", async () => {
+    // Measured 2026-09-13: period=week and period=banana both return 200 with
+    // 24 points spanning six months, echoing the requested period back.
+    const wire = serve(fixture("trends"));
+    await expect(client().rigCounts.trends("week" as unknown as "1m")).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    expect(wire).toHaveLength(0);
+  });
+});
+
+describe("#108 malformed 200 raises unexpected_response_shape", () => {
+  const cases: Array<[string, (c: OilPriceAPI) => Promise<unknown>, unknown]> = [
+    ["latest", (c) => c.rigCounts.latest(), { total: 588, timestamp: "2026-08-28" }],
+    ["current", (c) => c.rigCounts.current(), { total: 588 }],
+    ["historical", (c) => c.rigCounts.historical(), { rig_counts: [] }],
+    ["historical (bare array)", (c) => c.rigCounts.historical(), []],
+    ["summary", (c) => c.rigCounts.summary(), { current: 588 }],
+    ["trends", (c) => c.rigCounts.trends(), { average: 588 }],
+  ];
+
+  for (const [name, call, data] of cases) {
+    it(`${name}()`, async () => {
+      serve({ status: "success", data });
+      const error = await call(client()).catch((e) => e);
+
+      expect(error).toBeInstanceOf(OilPriceAPIError);
+      expect(error.code).toBe("unexpected_response_shape");
     });
+  }
+});
 
-    it("should include misc breakdown when present", async () => {
-      const mockData: RigCountSummary = {
-        current: 625,
-        week_change: 5,
-        month_change: 0,
-        year_change: -30,
-        breakdown: {
-          oil: 500,
-          gas: 120,
-          misc: 5,
+describe("#108 transport failures", () => {
+  it("surfaces the entitlement 403 with its message", async () => {
+    // Body shape from RigCountsController#ensure_reservoir_mastery_access.
+    serve(
+      {
+        success: false,
+        error: "Rig count data requires the Scale plan",
+        upgrade_url: "https://www.oilpriceapi.com/pricing",
+        required_tier: "scale",
+      },
+      403,
+    );
+    const error = await client()
+      .rigCounts.summary()
+      .catch((e) => e);
+
+    expect(isEntitlementError(error)).toBe(true);
+    expect(error.message).toBe("Rig count data requires the Scale plan");
+  });
+
+  it("surfaces a 429 as RateLimitError", async () => {
+    serve({ error: { code: "RATE_LIMITED", message: "Too many requests" } }, 429, {
+      "retry-after": "1",
+    });
+    await expect(client().rigCounts.latest()).rejects.toBeInstanceOf(RateLimitError);
+  });
+
+  it("times out when the body stalls after headers", async () => {
+    vi.spyOn(global, "fetch").mockImplementation((async (_input: unknown, init: RequestInit) => {
+      const body = new ReadableStream({
+        start(controller) {
+          init?.signal?.addEventListener("abort", () =>
+            controller.error(Object.assign(new Error("aborted"), { name: "AbortError" })),
+          );
         },
-        timestamp: "2024-01-15T00:00:00Z",
-      };
+      });
+      return new Response(body, { status: 200 });
+    }) as unknown as typeof fetch);
 
-      vi.spyOn(client as any, "request").mockResolvedValue(mockData);
+    await expect(client(100).rigCounts.historical()).rejects.toBeInstanceOf(TimeoutError);
+  });
 
-      const result = await client.rigCounts.summary();
+  it("maps an aborted fetch to TimeoutError", async () => {
+    vi.spyOn(global, "fetch").mockRejectedValue(
+      Object.assign(new Error("This operation was aborted"), { name: "AbortError" }),
+    );
+    await expect(client().rigCounts.current()).rejects.toBeInstanceOf(TimeoutError);
+  });
+});
 
-      expect(result.breakdown.misc).toBe(5);
-    });
+describe("#108 documented examples read fields the API returns", () => {
+  it("src/resources/rig-counts.ts no longer reads fields the wire lacks", () => {
+    const source = readFileSync("src/resources/rig-counts.ts", "utf8");
+    for (const stale of [
+      /latest\.total\b/,
+      /latest\.oil\b/,
+      /current\.total\b/,
+      /summary\.week_change\b/,
+      /summary\.breakdown\b/,
+      /monthlyTrend\.average\b/,
+      /point\.total\b/,
+    ]) {
+      expect(source).not.toMatch(stale);
+    }
   });
 });
