@@ -135,7 +135,7 @@ export class EIOPECProductionResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<OPECProductionRecord>(`/v1/ei/opec_productions/${id}`, {});
+    return this.client["request"]<OPECProductionRecord>(`/v1/ei/opec_productions/${encodeURIComponent(id)}`, {});
   }
 
   /**

@@ -144,7 +144,7 @@ export class EIOilInventoriesResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<OilInventoryRecord>(`/v1/ei/oil_inventories/${id}`, {});
+    return this.client["request"]<OilInventoryRecord>(`/v1/ei/oil_inventories/${encodeURIComponent(id)}`, {});
   }
 
   /**

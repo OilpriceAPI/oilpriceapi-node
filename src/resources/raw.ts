@@ -139,6 +139,6 @@ export class RawResource {
    * @returns Commodity with HTTP status and headers.
    */
   async getCommodity(code: string): Promise<APIResponse<Commodity>> {
-    return this.client["requestRaw"]<Commodity>(`/v1/commodities/${code}`, {});
+    return this.client["requestRaw"]<Commodity>(`/v1/commodities/${encodeURIComponent(code)}`, {});
   }
 }

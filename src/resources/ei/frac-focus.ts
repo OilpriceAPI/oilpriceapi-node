@@ -196,7 +196,7 @@ export class EIFracFocusResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<FracFocusRecord>(`/v1/ei/frac-focus/${id}`, {});
+    return this.client["request"]<FracFocusRecord>(`/v1/ei/frac-focus/${encodeURIComponent(id)}`, {});
   }
 
   /**
@@ -299,7 +299,7 @@ export class EIFracFocusResource {
       throw new ValidationError("Disclosure ID must be a non-empty string");
     }
 
-    const endpoint = `/v1/ei/frac-focus/${id}/chemicals`;
+    const endpoint = `/v1/ei/frac-focus/${encodeURIComponent(id)}/chemicals`;
     const response = await this.client["request"]<unknown>(endpoint, {});
 
     return unwrapCollection<WellChemical>(response, "chemicals", endpoint);
@@ -316,7 +316,7 @@ export class EIFracFocusResource {
       throw new ValidationError("API number must be a non-empty string");
     }
 
-    const endpoint = `/v1/ei/frac-focus/for-well/${apiNumber}`;
+    const endpoint = `/v1/ei/frac-focus/for-well/${encodeURIComponent(apiNumber)}`;
     const response = await this.client["request"]<unknown>(endpoint, {});
 
     return unwrapCollection<FracFocusRecord>(response, "frac_focus_disclosures", endpoint);

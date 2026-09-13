@@ -70,6 +70,57 @@ function originOf(url: URL): string {
 }
 
 /**
+ * The base URL's path prefix, with any trailing slash removed.
+ *
+ * `https://proxy.example/tenant-a` and `https://proxy.example/tenant-a/` both
+ * give `"/tenant-a"`; a base with no prefix gives `""`, which pins nothing
+ * beyond "the path is absolute" and leaves the default configuration
+ * untouched.
+ */
+function basePathOf(url: URL): string {
+  return url.pathname.replace(/\/+$/, "");
+}
+
+/**
+ * Reject a base URL that carries a query string or a fragment.
+ *
+ * Resolution appends the path to the base, so a base ending in `?x=1` put the
+ * path INSIDE the query and sent every request to `/`:
+ *
+ *     "https://api.oilpriceapi.com?x=1" + "/v1/prices"
+ *     -> https://api.oilpriceapi.com/?x=1/v1/prices
+ *
+ * Nothing threw and nothing warned. That is a configuration mistake, and
+ * failing loudly once at construction beats silently rewriting every request
+ * for the life of the client (#89).
+ *
+ * @param baseUrl - The client's configured base URL.
+ * @throws {ValidationError} If `baseUrl` is unparseable, or carries a query
+ *   string or fragment.
+ */
+export function assertUsableBaseUrl(baseUrl: string): void {
+  let base: URL;
+  try {
+    base = new URL(baseUrl);
+  } catch {
+    throw new ValidationError(
+      `Invalid baseUrl ${JSON.stringify(baseUrl)}: the client cannot build a request URL from it.`,
+    );
+  }
+
+  if (base.search || base.hash) {
+    const part = base.search ? "a query string" : "a fragment";
+    throw new ValidationError(
+      `Invalid baseUrl ${JSON.stringify(baseUrl)}: it carries ${part}. ` +
+        "API paths are appended to the base URL, so every request would be " +
+        "folded into it and sent to the wrong path. Configure the scheme, " +
+        "host and any path prefix only — pass per-request parameters through " +
+        "the SDK's options instead.",
+    );
+  }
+}
+
+/**
  * Resolve `path` against `baseUrl`, refusing any origin change.
  *
  * @param baseUrl - The client's configured base URL.
@@ -108,14 +159,8 @@ export function resolveApiUrl(baseUrl: string, path: unknown): URL {
   // authority instead.
   const normalized = path.startsWith("/") ? path : `/${path}`;
 
-  let base: URL;
-  try {
-    base = new URL(baseUrl);
-  } catch {
-    throw new ValidationError(
-      `Invalid baseUrl ${JSON.stringify(baseUrl)}: the client cannot build a request URL from it.`,
-    );
-  }
+  assertUsableBaseUrl(baseUrl);
+  const base = new URL(baseUrl);
 
   let resolved: URL;
   try {
@@ -129,6 +174,18 @@ export function resolveApiUrl(baseUrl: string, path: unknown): URL {
   // so any parser quirk fails closed instead of leaking the key.
   if (originOf(resolved) !== originOf(base)) {
     throw reject(path, "resolves to a different origin than the configured base URL");
+  }
+
+  // The origin check alone left the base PATH unpinned. The WHATWG parser
+  // resolves dot segments after this module's screens have run, and it
+  // decodes `%2e` first, so `/%2e%2e/tenant-b/...` climbed out of a proxy's
+  // per-tenant mount while keeping the origin intact — and the API key rode
+  // along. Compare the parsed, normalized path against the configured prefix,
+  // which catches every encoding of `..` because the comparison happens after
+  // normalization rather than trying to enumerate the spellings (#89).
+  const basePath = basePathOf(base);
+  if (basePath && resolved.pathname !== basePath && !resolved.pathname.startsWith(`${basePath}/`)) {
+    throw reject(path, "resolves outside the configured base URL's path");
   }
 
   return resolved;

@@ -126,7 +126,7 @@ export class EIRigCountsResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<RigCountRecord>(`/v1/ei/rig_counts/${id}`, {});
+    return this.client["request"]<RigCountRecord>(`/v1/ei/rig_counts/${encodeURIComponent(id)}`, {});
   }
 
   /**

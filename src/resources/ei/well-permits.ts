@@ -253,7 +253,7 @@ export class EIWellPermitsResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<WellPermitRecord>(`/v1/ei/well-permits/${id}`, {});
+    return this.client["request"]<WellPermitRecord>(`/v1/ei/well-permits/${encodeURIComponent(id)}`, {});
   }
 
   /**

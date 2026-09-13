@@ -315,7 +315,7 @@ export class BunkerFuelsResource {
       throw new ValidationError("Port code must be a non-empty string");
     }
 
-    return this.client["request"]<PortBunkerPrices>(`/v1/bunker-fuels/ports/${code}`, {});
+    return this.client["request"]<PortBunkerPrices>(`/v1/bunker-fuels/ports/${encodeURIComponent(code)}`, {});
   }
 
   /**
@@ -415,7 +415,7 @@ export class BunkerFuelsResource {
 
     // Port code is a PATH segment: GET /v1/bunker-fuels/historical/:port_code
     return this.client["request"]<HistoricalBunkerData>(
-      `/v1/bunker-fuels/historical/${port}`,
+      `/v1/bunker-fuels/historical/${encodeURIComponent(port)}`,
       params,
     );
   }

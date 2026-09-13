@@ -401,7 +401,7 @@ export class WellProductionResource {
       throw new ValidationError("API number must be 14 digits");
     }
 
-    return this.client["request"]<WellProductionDetail>(`/v1/well-production/wells/${digits}`, {});
+    return this.client["request"]<WellProductionDetail>(`/v1/well-production/wells/${encodeURIComponent(digits)}`, {});
   }
 
   /**
