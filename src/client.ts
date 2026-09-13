@@ -36,7 +36,7 @@ import { EnergyIntelligenceResource } from "./resources/ei/index.js";
 import { WebhooksResource } from "./resources/webhooks.js";
 import { DataSourcesResource } from "./resources/data-sources.js";
 import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
-import { resolveApiUrl } from "./url.js";
+import { resolveApiUrl, assertUsableBaseUrl } from "./url.js";
 import { SpreadsResource } from "./resources/spreads.js";
 import { IndicatorsResource } from "./resources/indicators.js";
 import { RawResource } from "./resources/raw.js";
@@ -281,6 +281,10 @@ export class OilPriceAPI {
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
+    // Fail loudly, once, on a base URL that cannot be used — rather than
+    // silently sending every request to the wrong path for the life of the
+    // client (#89).
+    assertUsableBaseUrl(this.baseUrl);
     this.retries = config.retries !== undefined ? validatedRetries(config.retries) : 3;
     // `||` discarded an explicit 0, so retryDelay: 0 silently became 1000ms.
     this.retryDelay = config.retryDelay !== undefined ? config.retryDelay : 1000;
