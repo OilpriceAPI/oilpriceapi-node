@@ -155,7 +155,7 @@ export class EIDrillingProductivityResource {
     }
 
     return this.client["request"]<DrillingProductivityRecord>(
-      `/v1/ei/drilling_productivities/${id}`,
+      `/v1/ei/drilling_productivities/${encodeURIComponent(id)}`,
       {},
     );
   }

@@ -480,7 +480,7 @@ export class DrillingIntelligenceResource {
     }
 
     return this.client["request"]<BasinDrillingData>(
-      `/v1/drilling-intelligence/basin/${name}`,
+      `/v1/drilling-intelligence/basin/${encodeURIComponent(name)}`,
       {},
     );
   }

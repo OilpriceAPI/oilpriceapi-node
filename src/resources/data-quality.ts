@@ -250,7 +250,7 @@ export class DataQualityResource {
     }
 
     return this.client["request"]<DataQualityReport>(
-      `/v1/data-quality/reports/${code}`,
+      `/v1/data-quality/reports/${encodeURIComponent(code)}`,
       {},
     );
   }

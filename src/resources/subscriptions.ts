@@ -320,7 +320,7 @@ export class SubscriptionsResource {
     if (!id || typeof id !== "string") {
       throw new ValidationError("Subscription ID must be a non-empty string");
     }
-    await this.client["request"](`/v1/subscriptions/${id}`, {}, { method: "DELETE" });
+    await this.client["request"](`/v1/subscriptions/${encodeURIComponent(id)}`, {}, { method: "DELETE" });
   }
 
   /**

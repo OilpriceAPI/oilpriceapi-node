@@ -154,7 +154,7 @@ export class EnergyIntelligenceResource {
     }
 
     return this.client["request"]<WellTimeline>(
-      `/v1/ei/wells/${apiNumber}/timeline`,
+      `/v1/ei/wells/${encodeURIComponent(apiNumber)}/timeline`,
       {},
     );
   }

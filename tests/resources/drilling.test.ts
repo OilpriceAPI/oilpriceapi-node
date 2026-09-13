@@ -417,7 +417,13 @@ describe("DrillingResource", () => {
 
       const result = await client.drilling.basin("Eagle Ford");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/drilling-intelligence/basin/Eagle Ford", {});
+      // The space is percent-encoded by the resource now rather than by
+      // `new URL()` later; the wire is byte-for-byte identical either way
+      // (both produce /v1/drilling-intelligence/basin/Eagle%20Ford). See #92.
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/v1/drilling-intelligence/basin/Eagle%20Ford",
+        {},
+      );
       expect(result.basin).toBe("Eagle Ford");
     });
 
