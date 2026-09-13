@@ -1,0 +1,49 @@
+{
+ "status": "success",
+ "data": {
+  "frac_focus_disclosures": [
+   {
+    "upload_key": "b6dfad36-0915-47f6-b370-e661d5ae4d26",
+    "api_number": "42317428990000",
+    "api_number_formatted": "42-317-42899-00-00",
+    "state_code": "TX",
+    "county": "Martin",
+    "operator": {
+     "name": "XTO Energy/ExxonMobil",
+     "name_normalized": "ExxonMobil"
+    },
+    "well_name": "Jack Mohr Unit 2 0225SH",
+    "location": {
+     "latitude": 32.376334,
+     "longitude": -101.816757
+    },
+    "job": {
+     "start_date": null,
+     "end_date": "2021-12-20",
+     "total_vertical_depth": 8277
+    },
+    "water": {
+     "total_gallons": 21951144,
+     "total_barrels": 522646,
+     "non_water_gallons": 0
+    },
+    "chemicals": {
+     "count": 26
+    },
+    "provenance": {
+     "source": "fracfocus",
+     "fetched_at": "2026-01-11T16:33:25.326Z",
+     "confidence_score": 75,
+     "validation_status": "suspect"
+    }
+   }
+  ],
+  "state": "TX",
+  "meta": {
+   "total_count": 123126,
+   "page": 1,
+   "per_page": 1,
+   "total_pages": 123126
+  }
+ }
+}

@@ -1,0 +1,51 @@
+{
+ "status": "success",
+ "data": {
+  "well_permits": [
+   {
+    "api_number": "42497381670000",
+    "state_code": "TX",
+    "county": null,
+    "permit_number": "0918005",
+    "permit_type": "new_drill",
+    "permit_status": "approved",
+    "permit_date": "2026-09-11",
+    "operator": {
+     "name": "BKV BARNETT, LLC",
+     "name_normalized": "BKV Barnett, LLC",
+     "number": "072504"
+    },
+    "well": {
+     "name": "MASON, ROSE 5 (AW)",
+     "number": "5H",
+     "type": "oil"
+    },
+    "location": {
+     "latitude": null,
+     "longitude": null
+    },
+    "target": {
+     "formation": null,
+     "formation_normalized": null,
+     "total_depth_proposed": 9637
+    },
+    "provenance": {
+     "source": "texas_rrc",
+     "fetched_at": "2026-09-12T23:03:45.687Z"
+    }
+   }
+  ],
+  "state": "TX",
+  "meta": {
+   "total_count": 420354,
+   "page": 1,
+   "per_page": 1,
+   "total_pages": 420354,
+   "state_health": {
+    "state_code": "TX",
+    "source": "texas_rrc",
+    "status": "available"
+   }
+  }
+ }
+}

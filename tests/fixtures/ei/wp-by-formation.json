@@ -1,0 +1,46 @@
+{
+ "status": "success",
+ "data": {
+  "well_permits": [
+   {
+    "api_number": "56021295980000",
+    "state_code": "WY",
+    "county": "Laramie",
+    "permit_number": "2129598",
+    "permit_type": "new_drill",
+    "permit_status": "approved",
+    "permit_date": "2023-12-14",
+    "operator": {
+     "name": "TALLGRASS HIGH PLAINS CARBON STORAGE LLC",
+     "name_normalized": "Tallgrass High Plains Carbon Storage LLC",
+     "number": null
+    },
+    "well": {
+     "name": "Cypress M-2",
+     "number": null,
+     "type": "oil_gas"
+    },
+    "location": {
+     "latitude": "41.08624",
+     "longitude": "-104.17735"
+    },
+    "target": {
+     "formation": "WOLFCAMP",
+     "formation_normalized": "WOLFCAMP",
+     "total_depth_proposed": 9081
+    },
+    "provenance": {
+     "source": "wyoming_wogcc",
+     "fetched_at": "2026-01-11T13:48:36.980Z"
+    }
+   }
+  ],
+  "formation_query": "Wolfcamp",
+  "meta": {
+   "total_count": 57,
+   "page": 1,
+   "per_page": 1,
+   "total_pages": 57
+  }
+ }
+}

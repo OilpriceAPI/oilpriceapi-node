@@ -1,0 +1,46 @@
+{
+ "status": "success",
+ "data": {
+  "well_permits": [
+   {
+    "api_number": "34121247320000",
+    "state_code": "OH",
+    "county": "Noble",
+    "permit_number": "34121247320000",
+    "permit_type": "new_drill",
+    "permit_status": "pending",
+    "permit_date": "2026-09-10",
+    "operator": {
+     "name": "EOG RESOURCES INC.",
+     "name_normalized": "EOG Resources",
+     "number": null
+    },
+    "well": {
+     "name": "Gemsbok NNB 11E",
+     "number": "11E",
+     "type": "oil_gas"
+    },
+    "location": {
+     "latitude": "39.768715",
+     "longitude": "-81.584977"
+    },
+    "target": {
+     "formation": "UTICASHALE",
+     "formation_normalized": "UTICA",
+     "total_depth_proposed": null
+    },
+    "provenance": {
+     "source": "ohio_dnr",
+     "fetched_at": "2026-09-12T05:03:04.649Z"
+    }
+   }
+  ],
+  "operator_query": "EOG",
+  "meta": {
+   "total_count": 30107,
+   "page": 1,
+   "per_page": 1,
+   "total_pages": 30107
+  }
+ }
+}
