@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-13
+
+### Security
+
+- Raw paths can no longer change the authenticated API origin (#87). A bare
+  relative path was the worst form: `v1/prices` produced the host
+  `api.oilpriceapi.comv1` — it looks like an ordinary path and silently became
+  a foreign hostname carrying the API key. Userinfo append (`@fixture.invalid`),
+  host-suffix append (`.fixture.invalid` -> `api.oilpriceapi.com.fixture.invalid`),
+  a bare port (`:8443`) and scheme prefixes all reached hosts that were not ours.
+  14 attack forms and 3 legitimate forms are asserted against the real outbound
+  `fetch`.
+
+### Changed
+
+- **Breaking:** non-idempotent writes are no longer replayed (#88). POST was
+  retried 4x on timeout, 4x on 503 and 4x on a malformed 200; PATCH 4x on 502.
+- **Breaking:** `retries: -1` now throws at construction instead of failing
+  later with "Unknown error occurred".
+
+### Fixed
+
+- Durable quota exhaustion is no longer retried — it was retried 4x, sleeping
+  3 x 3,600,000 ms. Detection reads `X-RateLimit-State` and the counter names,
+  verified against the API's `base_controller.rb`, not guessed from prose.
+- `Retry-After: 86400` no longer sleeps 86,400,000 ms, and a body
+  `retry_after: -30` no longer sleeps -30,000 ms.
+- `retryDelay: 0` is honoured instead of silently becoming 1000 ms.
+
 ## [1.2.6] - 2026-08-12
 
 ### Fixed
