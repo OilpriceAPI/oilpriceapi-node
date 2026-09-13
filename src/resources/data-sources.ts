@@ -248,7 +248,7 @@ export class DataSourcesResource {
     }
 
     const response = await this.client["request"]<DataSource | { data_source: DataSource }>(
-      `/v1/data-sources/${id}`,
+      `/v1/data-sources/${encodeURIComponent(id)}`,
       {},
     );
 
@@ -334,7 +334,7 @@ export class DataSourcesResource {
     }
 
     const response = await this.client["request"]<DataSource | { data_source: DataSource }>(
-      `/v1/data-sources/${id}`,
+      `/v1/data-sources/${encodeURIComponent(id)}`,
       {},
       {
         method: "PATCH",
@@ -364,7 +364,7 @@ export class DataSourcesResource {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    await this.client["request"](`/v1/data-sources/${id}`, {}, { method: "DELETE" });
+    await this.client["request"](`/v1/data-sources/${encodeURIComponent(id)}`, {}, { method: "DELETE" });
   }
 
   /**
@@ -392,7 +392,7 @@ export class DataSourcesResource {
     }
 
     return this.client["request"]<DataSourceTestResponse>(
-      `/v1/data-sources/${id}/test`,
+      `/v1/data-sources/${encodeURIComponent(id)}/test`,
       {},
       { method: "POST" },
     );
@@ -424,7 +424,7 @@ export class DataSourcesResource {
     }
 
     const response = await this.client["request"]<DataSourceLog[] | { logs: DataSourceLog[] }>(
-      `/v1/data-sources/${id}/logs`,
+      `/v1/data-sources/${encodeURIComponent(id)}/logs`,
       {},
     );
 
@@ -453,7 +453,7 @@ export class DataSourcesResource {
       throw new ValidationError("Data source ID must be a non-empty string");
     }
 
-    return this.client["request"]<DataSourceHealth>(`/v1/data-sources/${id}/health`, {});
+    return this.client["request"]<DataSourceHealth>(`/v1/data-sources/${encodeURIComponent(id)}/health`, {});
   }
 
   /**
@@ -487,7 +487,7 @@ export class DataSourcesResource {
     // Route is POST /v1/data-sources/:id/rotate_credentials (underscore) and
     // the controller does params.require(:credentials).
     return this.client["request"]<CredentialRotationResponse>(
-      `/v1/data-sources/${id}/rotate_credentials`,
+      `/v1/data-sources/${encodeURIComponent(id)}/rotate_credentials`,
       {},
       { method: "POST", body: { credentials } },
     );

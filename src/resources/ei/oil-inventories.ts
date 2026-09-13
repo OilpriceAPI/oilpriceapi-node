@@ -142,7 +142,7 @@ export class EIOilInventoriesResource {
     }
 
     return this.client["request"]<OilInventoryRecord>(
-      `/v1/ei/oil_inventories/${id}`,
+      `/v1/ei/oil_inventories/${encodeURIComponent(id)}`,
       {},
     );
   }

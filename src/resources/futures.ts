@@ -396,7 +396,7 @@ export class FuturesContractFamily {
    * there is NO `/latest` suffix (that path 404s).
    */
   async latest(): Promise<FuturesPrice> {
-    return this.client["request"]<FuturesPrice>(`/v1/futures/${this.slug}`, {});
+    return this.client["request"]<FuturesPrice>(`/v1/futures/${encodeURIComponent(this.slug)}`, {});
   }
 
   /**
@@ -413,7 +413,7 @@ export class FuturesContractFamily {
 
     const response = await this.client["request"]<
       HistoricalFuturesPrice[] | { prices: HistoricalFuturesPrice[] }
-    >(`/v1/futures/${this.slug}/historical`, params);
+    >(`/v1/futures/${encodeURIComponent(this.slug)}/historical`, params);
 
     return Array.isArray(response) ? response : response.prices;
   }
@@ -428,14 +428,14 @@ export class FuturesContractFamily {
     if (options?.days !== undefined) params.days = options.days.toString();
     if (options?.contract) params.contract = options.contract;
     if (options?.interval) params.interval = options.interval;
-    return this.client["request"]<FuturesOHLC>(`/v1/futures/${this.slug}/ohlc`, params);
+    return this.client["request"]<FuturesOHLC>(`/v1/futures/${encodeURIComponent(this.slug)}/ohlc`, params);
   }
 
   /**
    * Get intraday price data for this contract family.
    */
   async intraday(): Promise<IntradayFuturesData> {
-    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${this.slug}/intraday`, {});
+    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${encodeURIComponent(this.slug)}/intraday`, {});
   }
 
   /**
@@ -443,7 +443,7 @@ export class FuturesContractFamily {
    */
   async spreads(): Promise<FuturesSpread[]> {
     const response = await this.client["request"]<FuturesSpread[] | { data: FuturesSpread[] }>(
-      `/v1/futures/${this.slug}/spreads`,
+      `/v1/futures/${encodeURIComponent(this.slug)}/spreads`,
       {},
     );
 
@@ -454,7 +454,7 @@ export class FuturesContractFamily {
    * Get the forward curve for this contract family.
    */
   async curve(): Promise<FuturesCurveData> {
-    return this.client["request"]<FuturesCurveData>(`/v1/futures/${this.slug}/curve`, {});
+    return this.client["request"]<FuturesCurveData>(`/v1/futures/${encodeURIComponent(this.slug)}/curve`, {});
   }
 
   /**
@@ -462,7 +462,7 @@ export class FuturesContractFamily {
    */
   async spreadHistory(): Promise<FuturesSpreadHistory> {
     return this.client["request"]<FuturesSpreadHistory>(
-      `/v1/futures/${this.slug}/spread-history`,
+      `/v1/futures/${encodeURIComponent(this.slug)}/spread-history`,
       {},
     );
   }
@@ -534,7 +534,7 @@ export class FuturesResource {
       );
     }
 
-    return this.client["request"]<FuturesPrice>(`/v1/futures/${slug}`, {});
+    return this.client["request"]<FuturesPrice>(`/v1/futures/${encodeURIComponent(slug)}`, {});
   }
 
   /**
@@ -570,7 +570,7 @@ export class FuturesResource {
 
     const response = await this.client["request"]<
       HistoricalFuturesPrice[] | { prices: HistoricalFuturesPrice[] }
-    >(`/v1/futures/${contract}/historical`, params);
+    >(`/v1/futures/${encodeURIComponent(contract)}/historical`, params);
 
     return Array.isArray(response) ? response : response.prices;
   }
@@ -602,7 +602,7 @@ export class FuturesResource {
     const params: Record<string, string> = {};
     if (date) params.date = date;
 
-    return this.client["request"]<FuturesOHLC>(`/v1/futures/${contract}/ohlc`, params);
+    return this.client["request"]<FuturesOHLC>(`/v1/futures/${encodeURIComponent(contract)}/ohlc`, params);
   }
 
   /**
@@ -629,7 +629,7 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${contract}/intraday`, {});
+    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${encodeURIComponent(contract)}/intraday`, {});
   }
 
   /**
@@ -690,7 +690,7 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<FuturesCurveData>(`/v1/futures/${contract}/curve`, {});
+    return this.client["request"]<FuturesCurveData>(`/v1/futures/${encodeURIComponent(contract)}/curve`, {});
   }
 
   /**
@@ -721,7 +721,7 @@ export class FuturesResource {
     if (months !== undefined) params.months = months.toString();
 
     return this.client["request"]<ContinuousFuturesData>(
-      `/v1/futures/${contract}/continuous`,
+      `/v1/futures/${encodeURIComponent(contract)}/continuous`,
       params,
     );
   }

@@ -221,7 +221,7 @@ export class WebhooksResource {
     }
 
     const response = await this.client["request"]<WebhookEndpoint | { webhook: WebhookEndpoint }>(
-      `/v1/webhooks/${id}`,
+      `/v1/webhooks/${encodeURIComponent(id)}`,
       {},
     );
 
@@ -308,7 +308,7 @@ export class WebhooksResource {
     }
 
     const response = await this.client["request"]<WebhookEndpoint | { webhook: WebhookEndpoint }>(
-      `/v1/webhooks/${id}`,
+      `/v1/webhooks/${encodeURIComponent(id)}`,
       {},
       {
         method: "PATCH",
@@ -338,7 +338,7 @@ export class WebhooksResource {
       throw new ValidationError("Webhook ID must be a non-empty string");
     }
 
-    await this.client["request"](`/v1/webhooks/${id}`, {}, { method: "DELETE" });
+    await this.client["request"](`/v1/webhooks/${encodeURIComponent(id)}`, {}, { method: "DELETE" });
   }
 
   /**
@@ -368,7 +368,7 @@ export class WebhooksResource {
     }
 
     return this.client["request"]<WebhookTestResponse>(
-      `/v1/webhooks/${id}/test`,
+      `/v1/webhooks/${encodeURIComponent(id)}/test`,
       {},
       { method: "POST" },
     );
@@ -399,7 +399,7 @@ export class WebhooksResource {
     }
 
     const response = await this.client["request"]<WebhookEvent[] | { events: WebhookEvent[] }>(
-      `/v1/webhooks/${id}/events`,
+      `/v1/webhooks/${encodeURIComponent(id)}/events`,
       {},
     );
 

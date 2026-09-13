@@ -174,7 +174,7 @@ export class IndicatorsResource {
     if (!type || typeof type !== "string") {
       throw new ValidationError("Indicator type must be a non-empty string");
     }
-    return this.client["request"]<T>(`/v1/indicators/${type}`, {});
+    return this.client["request"]<T>(`/v1/indicators/${encodeURIComponent(type)}`, {});
   }
 
   /** Fuel-switching economics indicator. */

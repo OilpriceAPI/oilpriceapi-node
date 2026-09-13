@@ -133,7 +133,7 @@ export class CommoditiesResource {
       throw new ValidationError("Commodity code must be a non-empty string");
     }
 
-    return this.client["request"]<Commodity>(`/v1/commodities/${code}`, {});
+    return this.client["request"]<Commodity>(`/v1/commodities/${encodeURIComponent(code)}`, {});
   }
 
   /**

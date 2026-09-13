@@ -123,7 +123,7 @@ export class EIRigCountsResource {
     }
 
     return this.client["request"]<RigCountRecord>(
-      `/v1/ei/rig_counts/${id}`,
+      `/v1/ei/rig_counts/${encodeURIComponent(id)}`,
       {},
     );
   }

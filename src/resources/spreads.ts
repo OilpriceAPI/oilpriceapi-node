@@ -100,7 +100,7 @@ export class SpreadsResource {
    */
   async get(type: SpreadType): Promise<SpreadValue> {
     this.validateType(type);
-    return this.client["request"]<SpreadValue>(`/v1/spreads/${type}`, {});
+    return this.client["request"]<SpreadValue>(`/v1/spreads/${encodeURIComponent(type)}`, {});
   }
 
   /**
@@ -122,7 +122,7 @@ export class SpreadsResource {
 
     const response = await this.client["request"]<
       HistoricalSpreadValue[] | { data: HistoricalSpreadValue[] }
-    >(`/v1/spreads/${type}/historical`, params);
+    >(`/v1/spreads/${encodeURIComponent(type)}/historical`, params);
 
     return Array.isArray(response) ? response : response.data;
   }
@@ -137,7 +137,7 @@ export class SpreadsResource {
     this.validateType(type);
 
     const response = await this.client["request"]<SpreadValue[] | { data: SpreadValue[] }>(
-      `/v1/spreads/${type}/all`,
+      `/v1/spreads/${encodeURIComponent(type)}/all`,
       {},
     );
 

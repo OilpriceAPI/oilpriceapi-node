@@ -245,7 +245,7 @@ export class AlertsResource {
 
     const response = await this.client["request"]<
       PriceAlert | { alert: PriceAlert }
-    >(`/v1/alerts/${id}`, {});
+    >(`/v1/alerts/${encodeURIComponent(id)}`, {});
     // API returns object directly, but handle both formats for compatibility
     return "alert" in response ? response.alert : response;
   }
@@ -467,7 +467,7 @@ export class AlertsResource {
     const response = await this.client["request"]<
       PriceAlert | { alert: PriceAlert }
     >(
-      `/v1/alerts/${id}`,
+      `/v1/alerts/${encodeURIComponent(id)}`,
       {},
       {
         method: "PATCH",
@@ -499,7 +499,7 @@ export class AlertsResource {
       throw new ValidationError("Alert ID must be a non-empty string");
     }
 
-    await this.client["request"](`/v1/alerts/${id}`, {}, { method: "DELETE" });
+    await this.client["request"](`/v1/alerts/${encodeURIComponent(id)}`, {}, { method: "DELETE" });
   }
 
   /**
@@ -529,7 +529,7 @@ export class AlertsResource {
     }
 
     return this.client["request"]<WebhookTestResponse>(
-      `/v1/alerts/${alertId}/test`,
+      `/v1/alerts/${encodeURIComponent(alertId)}/test`,
       {},
       { method: "POST" },
     );
