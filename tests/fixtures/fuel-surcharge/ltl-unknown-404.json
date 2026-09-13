@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"Unknown carrier 'nope'. Covered carriers: odfl, saia, estes, xpo, abf, tforce, averitt, southeastern-freight.","covered_carriers":["odfl","saia","estes","xpo","abf","tforce","averitt","southeastern-freight"],"hint":"Call GET /v1/fuel-surcharge to list every covered carrier with its latest surcharge."}}

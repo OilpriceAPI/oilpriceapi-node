@@ -44,6 +44,7 @@ import { RawResource } from "./resources/raw.js";
 import { StreamingResource } from "./resources/streaming.js";
 import { SubscriptionsResource } from "./resources/subscriptions.js";
 import { WellProductionResource } from "./resources/well-production.js";
+import { FuelSurchargeResource } from "./resources/fuel-surcharge.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -279,6 +280,12 @@ export class OilPriceAPI {
    */
   public readonly wellProduction: WellProductionResource;
 
+  /**
+   * Carrier fuel surcharges: `ltl` and `parcel` (by service level), each rate
+   * with its effective date and source URL.
+   */
+  public readonly fuelSurcharge: FuelSurchargeResource;
+
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
@@ -316,6 +323,7 @@ export class OilPriceAPI {
     this.stream = new StreamingResource(this);
     this.subscriptions = new SubscriptionsResource(this);
     this.wellProduction = new WellProductionResource(this);
+    this.fuelSurcharge = new FuelSurchargeResource(this);
   }
 
   private requireApiKey(): string {

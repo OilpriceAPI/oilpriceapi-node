@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"Parcel fuel-surcharge history requires a service_level parameter.","carrier":"ups","available_service_levels":["air","ground","international_air_export","international_air_import","international_ground"]}}

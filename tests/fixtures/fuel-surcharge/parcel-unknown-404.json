@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"Unknown carrier 'nope'. Covered carriers: ups, fedex, dhl.","covered_carriers":["ups","fedex","dhl"],"hint":"Call GET /v1/fuel-surcharge to list every covered carrier with its latest surcharge."}}

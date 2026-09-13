@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"No fuel-surcharge data retrieved yet for carrier 'ups'. Call GET /v1/fuel-surcharge to see which carriers currently have data.","covered_carriers":["ups","fedex","dhl"]}}

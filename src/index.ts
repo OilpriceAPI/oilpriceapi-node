@@ -239,6 +239,29 @@ export type {
   SubscriptionEventsOptions,
 } from "./resources/subscriptions.js";
 export { SubscriptionsResource, intervalToSeconds } from "./resources/subscriptions.js";
+export {
+  FuelSurchargeResource,
+  LtlFuelSurchargeResource,
+  ParcelFuelSurchargeResource,
+  FUEL_SURCHARGE_MAX_PER_PAGE,
+} from "./resources/fuel-surcharge.js";
+export type {
+  LtlFuelSurchargeCarrier,
+  ParcelFuelSurchargeCarrier,
+  ParcelServiceLevel,
+  LtlCarrierArg,
+  ParcelCarrierArg,
+  ParcelServiceLevelArg,
+  FuelSurchargeDieselBand,
+  FuelSurchargeRate,
+  ParcelFuelSurchargeRate,
+  ParcelCarrierFuelSurcharges,
+  FuelSurchargePageMeta,
+  FuelSurchargeHistoryPage,
+  FuelSurchargePageOptions,
+  ParcelLatestOptions,
+  ParcelHistoryOptions,
+} from "./resources/fuel-surcharge.js";
 export { WellProductionResource } from "./resources/well-production.js";
 export type {
   WellProductionRecord,

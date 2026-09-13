@@ -159,6 +159,28 @@ const [price] = await client.getLatestPrices({
 console.log(price.code, price.price, price.currency, price.unit, price.created_at);
 ```
 
+## Carrier Fuel Surcharges
+
+`client.fuelSurcharge` reads published LTL and parcel carrier fuel surcharges.
+Each rate keeps the carrier's `effective_date`, the `source` page it was read
+from and `retrieved_at`, so a stale rate is visible rather than looking current.
+
+```typescript
+const odfl = await client.fuelSurcharge.ltl.latest("odfl");
+console.log(odfl.surcharge_percent, odfl.effective_date, odfl.source);
+
+const history = await client.fuelSurcharge.ltl.history("odfl", { perPage: 52 });
+console.log(`${history.history.length} of ${history.meta.total_count} rows`);
+
+const ground = await client.fuelSurcharge.parcel.latest("ups", { serviceLevel: "ground" });
+const upsHistory = await client.fuelSurcharge.parcel.history("ups", { serviceLevel: "ground" });
+```
+
+An unknown carrier, or a covered carrier with no retrieved rate yet, returns
+`404` with `covered_carriers` on `rawBody.data`; it is never reported as a zero
+surcharge. Parcel history requires `serviceLevel`. See
+[`examples/fuel-surcharge.ts`](examples/fuel-surcharge.ts).
+
 ## Recovery
 
 The package exposes typed errors for customer-recoverable boundaries:
