@@ -6,6 +6,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * Forecast record
@@ -140,11 +141,9 @@ export class EIForecastsResource {
    * @returns Array of forecast records
    */
   async list(): Promise<ForecastRecord[]> {
-    const response = await this.client["request"]<
-      ForecastRecord[] | { data: ForecastRecord[] }
-    >("/v1/ei/forecasts", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/forecasts", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ForecastRecord>(response, "forecasts", "/v1/ei/forecasts");
   }
 
   /**
@@ -167,10 +166,7 @@ export class EIForecastsResource {
    * @returns Latest forecast record
    */
   async latest(): Promise<ForecastRecord> {
-    return this.client["request"]<ForecastRecord>(
-      "/v1/ei/forecasts/latest",
-      {},
-    );
+    return this.client["request"]<ForecastRecord>("/v1/ei/forecasts/latest", {});
   }
 
   /**
@@ -179,10 +175,7 @@ export class EIForecastsResource {
    * @returns Forecast summary statistics
    */
   async summary(): Promise<ForecastSummary> {
-    return this.client["request"]<ForecastSummary>(
-      "/v1/ei/forecasts/summary",
-      {},
-    );
+    return this.client["request"]<ForecastSummary>("/v1/ei/forecasts/summary", {});
   }
 
   /**
@@ -191,11 +184,9 @@ export class EIForecastsResource {
    * @returns Array of price forecasts
    */
   async prices(): Promise<PriceForecast[]> {
-    const response = await this.client["request"]<
-      PriceForecast[] | { data: PriceForecast[] }
-    >("/v1/ei/forecasts/prices", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/forecasts/prices", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<PriceForecast>(response, "commodities", "/v1/ei/forecasts/prices");
   }
 
   /**
@@ -204,11 +195,9 @@ export class EIForecastsResource {
    * @returns Array of production forecasts
    */
   async production(): Promise<ProductionForecast[]> {
-    const response = await this.client["request"]<
-      ProductionForecast[] | { data: ProductionForecast[] }
-    >("/v1/ei/forecasts/production", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/forecasts/production", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ProductionForecast>(response, "series", "/v1/ei/forecasts/production");
   }
 
   /**
@@ -217,11 +206,9 @@ export class EIForecastsResource {
    * @returns Array of historical forecasts with accuracy
    */
   async historical(): Promise<HistoricalForecast[]> {
-    const response = await this.client["request"]<
-      HistoricalForecast[] | { data: HistoricalForecast[] }
-    >("/v1/ei/forecasts/historical", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/forecasts/historical", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<HistoricalForecast>(response, "actuals", "/v1/ei/forecasts/historical");
   }
 
   /**
@@ -230,10 +217,8 @@ export class EIForecastsResource {
    * @returns Array of forecast comparisons
    */
   async compare(): Promise<ForecastComparison[]> {
-    const response = await this.client["request"]<
-      ForecastComparison[] | { data: ForecastComparison[] }
-    >("/v1/ei/forecasts/compare", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/forecasts/compare", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ForecastComparison>(response, "comparison", "/v1/ei/forecasts/compare");
   }
 }

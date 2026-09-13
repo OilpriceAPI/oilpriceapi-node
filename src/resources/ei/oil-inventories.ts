@@ -7,6 +7,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * Oil inventory record
@@ -123,11 +124,13 @@ export class EIOilInventoriesResource {
    * @returns Array of inventory records
    */
   async list(): Promise<OilInventoryRecord[]> {
-    const response = await this.client["request"]<
-      OilInventoryRecord[] | { data: OilInventoryRecord[] }
-    >("/v1/ei/oil_inventories", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/oil_inventories", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<OilInventoryRecord>(
+      response,
+      "oil_inventories",
+      "/v1/ei/oil_inventories",
+    );
   }
 
   /**
@@ -141,10 +144,7 @@ export class EIOilInventoriesResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<OilInventoryRecord>(
-      `/v1/ei/oil_inventories/${id}`,
-      {},
-    );
+    return this.client["request"]<OilInventoryRecord>(`/v1/ei/oil_inventories/${id}`, {});
   }
 
   /**
@@ -153,10 +153,7 @@ export class EIOilInventoriesResource {
    * @returns Latest inventory record
    */
   async latest(): Promise<OilInventoryRecord> {
-    return this.client["request"]<OilInventoryRecord>(
-      "/v1/ei/oil_inventories/latest",
-      {},
-    );
+    return this.client["request"]<OilInventoryRecord>("/v1/ei/oil_inventories/latest", {});
   }
 
   /**
@@ -165,10 +162,7 @@ export class EIOilInventoriesResource {
    * @returns Inventory summary across all products
    */
   async summary(): Promise<OilInventorySummary> {
-    return this.client["request"]<OilInventorySummary>(
-      "/v1/ei/oil_inventories/summary",
-      {},
-    );
+    return this.client["request"]<OilInventorySummary>("/v1/ei/oil_inventories/summary", {});
   }
 
   /**
@@ -177,11 +171,13 @@ export class EIOilInventoriesResource {
    * @returns Array of inventories by product
    */
   async byProduct(): Promise<InventoryByProduct[]> {
-    const response = await this.client["request"]<
-      InventoryByProduct[] | { data: InventoryByProduct[] }
-    >("/v1/ei/oil_inventories/by_product", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/oil_inventories/by_product", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<InventoryByProduct>(
+      response,
+      "products",
+      "/v1/ei/oil_inventories/by_product",
+    );
   }
 
   /**
@@ -190,11 +186,13 @@ export class EIOilInventoriesResource {
    * @returns Array of historical inventory levels
    */
   async historical(): Promise<HistoricalInventory[]> {
-    const response = await this.client["request"]<
-      HistoricalInventory[] | { data: HistoricalInventory[] }
-    >("/v1/ei/oil_inventories/historical", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/oil_inventories/historical", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<HistoricalInventory>(
+      response,
+      "records",
+      "/v1/ei/oil_inventories/historical",
+    );
   }
 
   /**
@@ -203,9 +201,6 @@ export class EIOilInventoriesResource {
    * @returns Cushing inventory data
    */
   async cushing(): Promise<CushingInventory> {
-    return this.client["request"]<CushingInventory>(
-      "/v1/ei/oil_inventories/cushing",
-      {},
-    );
+    return this.client["request"]<CushingInventory>("/v1/ei/oil_inventories/cushing", {});
   }
 }

@@ -6,6 +6,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * Rig count record
@@ -32,45 +33,50 @@ export interface RigCountRecord {
 }
 
 /**
- * Rig count by basin
+ * Rig count for one basin, as returned under `data.basins` by
+ * `GET /v1/ei/rig_counts/by_basin`.
  */
 export interface RigCountByBasin {
-  /** Basin name */
-  basin: string;
+  /** Basin slug, e.g. `permian`, `haynesville` */
+  region: string;
+  /** Always `basin` on this endpoint */
+  region_type: string;
   /** Rig count */
-  rig_count: number;
-  /** Change from previous week */
-  change?: number;
-  /** Date */
-  date: string;
+  count: number;
+  /** Change from the previous week */
+  week_over_week?: number;
+  /** `up`, `down` or `flat` */
+  change_direction?: string;
 }
 
 /**
- * Rig count by state
+ * Rig count for one state, as returned under `data.states` by
+ * `GET /v1/ei/rig_counts/by_state`.
  */
 export interface RigCountByState {
-  /** State name */
-  state: string;
+  /** State slug, e.g. `texas`, `new_mexico` */
+  region: string;
+  /** Always `state` on this endpoint */
+  region_type: string;
   /** Rig count */
-  rig_count: number;
-  /** Change from previous week */
-  change?: number;
-  /** Date */
-  date: string;
+  count: number;
+  /** Change from the previous week */
+  week_over_week?: number;
+  /** `up`, `down` or `flat` */
+  change_direction?: string;
 }
 
 /**
- * Historical rig count data point
+ * Historical rig count data point, as returned under `data.records` by
+ * `GET /v1/ei/rig_counts/historical`.
  */
 export interface HistoricalRigCount {
-  /** Date */
+  /** Report date */
   date: string;
-  /** Total rigs */
-  total_rigs: number;
-  /** Oil rigs */
-  oil_rigs?: number;
-  /** Gas rigs */
-  gas_rigs?: number;
+  /** Total rigs on that date */
+  count: number;
+  /** Change from the previous week */
+  week_over_week?: number;
 }
 
 /**
@@ -88,7 +94,7 @@ export interface HistoricalRigCount {
  *
  * // Get by basin
  * const basins = await client.ei.rigCounts.byBasin();
- * basins.forEach(b => console.log(`${b.basin}: ${b.rig_count} rigs`));
+ * basins.forEach(b => console.log(`${b.region}: ${b.count} rigs`));
  * ```
  */
 export class EIRigCountsResource {
@@ -102,11 +108,9 @@ export class EIRigCountsResource {
    * @throws {OilPriceAPIError} If API request fails
    */
   async list(): Promise<RigCountRecord[]> {
-    const response = await this.client["request"]<
-      RigCountRecord[] | { data: RigCountRecord[] }
-    >("/v1/ei/rig_counts", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/rig_counts", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<RigCountRecord>(response, "rig_counts", "/v1/ei/rig_counts");
   }
 
   /**
@@ -122,10 +126,7 @@ export class EIRigCountsResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<RigCountRecord>(
-      `/v1/ei/rig_counts/${id}`,
-      {},
-    );
+    return this.client["request"]<RigCountRecord>(`/v1/ei/rig_counts/${id}`, {});
   }
 
   /**
@@ -134,10 +135,7 @@ export class EIRigCountsResource {
    * @returns Latest rig count data
    */
   async latest(): Promise<RigCountRecord> {
-    return this.client["request"]<RigCountRecord>(
-      "/v1/ei/rig_counts/latest",
-      {},
-    );
+    return this.client["request"]<RigCountRecord>("/v1/ei/rig_counts/latest", {});
   }
 
   /**
@@ -146,11 +144,9 @@ export class EIRigCountsResource {
    * @returns Array of rig counts by basin
    */
   async byBasin(): Promise<RigCountByBasin[]> {
-    const response = await this.client["request"]<
-      RigCountByBasin[] | { data: RigCountByBasin[] }
-    >("/v1/ei/rig_counts/by_basin", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/rig_counts/by_basin", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<RigCountByBasin>(response, "basins", "/v1/ei/rig_counts/by_basin");
   }
 
   /**
@@ -159,11 +155,9 @@ export class EIRigCountsResource {
    * @returns Array of rig counts by state
    */
   async byState(): Promise<RigCountByState[]> {
-    const response = await this.client["request"]<
-      RigCountByState[] | { data: RigCountByState[] }
-    >("/v1/ei/rig_counts/by_state", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/rig_counts/by_state", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<RigCountByState>(response, "states", "/v1/ei/rig_counts/by_state");
   }
 
   /**
@@ -172,10 +166,12 @@ export class EIRigCountsResource {
    * @returns Array of historical rig counts
    */
   async historical(): Promise<HistoricalRigCount[]> {
-    const response = await this.client["request"]<
-      HistoricalRigCount[] | { data: HistoricalRigCount[] }
-    >("/v1/ei/rig_counts/historical", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/rig_counts/historical", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<HistoricalRigCount>(
+      response,
+      "records",
+      "/v1/ei/rig_counts/historical",
+    );
   }
 }

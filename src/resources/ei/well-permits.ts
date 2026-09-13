@@ -6,6 +6,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * Well permit record
@@ -236,11 +237,9 @@ export class EIWellPermitsResource {
    * @returns Array of well permit records
    */
   async list(): Promise<WellPermitRecord[]> {
-    const response = await this.client["request"]<
-      WellPermitRecord[] | { data: WellPermitRecord[] }
-    >("/v1/ei/well-permits", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/well-permits", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<WellPermitRecord>(response, "well_permits", "/v1/ei/well-permits");
   }
 
   /**
@@ -285,12 +284,13 @@ export class EIWellPermitsResource {
    * @returns Array of permits grouped by state
    */
   async byState(): Promise<PermitsByState[]> {
-    const response = await this.client["request"]<PermitsByState[] | { data: PermitsByState[] }>(
-      "/v1/ei/well-permits/by-state",
-      {},
-    );
+    const response = await this.client["request"]<unknown>("/v1/ei/well-permits/by-state", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<PermitsByState>(
+      response,
+      "well_permits",
+      "/v1/ei/well-permits/by-state",
+    );
   }
 
   /**
@@ -299,11 +299,13 @@ export class EIWellPermitsResource {
    * @returns Array of permits grouped by operator
    */
   async byOperator(): Promise<PermitsByOperator[]> {
-    const response = await this.client["request"]<
-      PermitsByOperator[] | { data: PermitsByOperator[] }
-    >("/v1/ei/well-permits/by-operator", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/well-permits/by-operator", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<PermitsByOperator>(
+      response,
+      "well_permits",
+      "/v1/ei/well-permits/by-operator",
+    );
   }
 
   /**
@@ -312,11 +314,13 @@ export class EIWellPermitsResource {
    * @returns Array of permits grouped by formation
    */
   async byFormation(): Promise<PermitsByFormation[]> {
-    const response = await this.client["request"]<
-      PermitsByFormation[] | { data: PermitsByFormation[] }
-    >("/v1/ei/well-permits/by-formation", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/well-permits/by-formation", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<PermitsByFormation>(
+      response,
+      "well_permits",
+      "/v1/ei/well-permits/by-formation",
+    );
   }
 
   /**
@@ -327,11 +331,13 @@ export class EIWellPermitsResource {
    */
   async search(query: WellPermitSearchQuery): Promise<WellPermitRecord[]> {
     const params = this.searchParams(query);
-    const response = await this.client["request"]<
-      WellPermitRecord[] | { data: WellPermitRecord[] }
-    >("/v1/ei/well-permits/search", params);
+    const response = await this.client["request"]<unknown>("/v1/ei/well-permits/search", params);
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<WellPermitRecord>(
+      response,
+      "well_permits",
+      "/v1/ei/well-permits/search",
+    );
   }
 
   /**
@@ -345,14 +351,13 @@ export class EIWellPermitsResource {
    */
   async searchLatest(query: WellPermitSearchQuery): Promise<LatestWellPermit[]> {
     const params = this.searchParams(query);
-    const response = await this.client["request"]<
-      | LatestWellPermit[]
-      | { data: LatestWellPermit[] }
-      | { well_permits: LatestWellPermit[]; meta?: Record<string, unknown> }
-    >("/v1/ei/well-permits/search", params);
+    const response = await this.client["request"]<unknown>("/v1/ei/well-permits/search", params);
 
-    if (Array.isArray(response)) return response;
-    return "well_permits" in response ? response.well_permits : response.data;
+    return unwrapCollection<LatestWellPermit>(
+      response,
+      "well_permits",
+      "/v1/ei/well-permits/search",
+    );
   }
 
   private searchParams(query: WellPermitSearchQuery): Record<string, string> {

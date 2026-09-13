@@ -7,6 +7,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * Drilling productivity record
@@ -136,11 +137,13 @@ export class EIDrillingProductivityResource {
    * @returns Array of productivity records
    */
   async list(): Promise<DrillingProductivityRecord[]> {
-    const response = await this.client["request"]<
-      DrillingProductivityRecord[] | { data: DrillingProductivityRecord[] }
-    >("/v1/ei/drilling_productivities", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/drilling_productivities", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<DrillingProductivityRecord>(
+      response,
+      "drilling_productivities",
+      "/v1/ei/drilling_productivities",
+    );
   }
 
   /**
@@ -190,11 +193,16 @@ export class EIDrillingProductivityResource {
    * @returns Array of DUC well counts by basin
    */
   async ducWells(): Promise<DUCWellInventory[]> {
-    const response = await this.client["request"]<
-      DUCWellInventory[] | { data: DUCWellInventory[] }
-    >("/v1/ei/drilling_productivities/duc_wells", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/drilling_productivities/duc_wells",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<DUCWellInventory>(
+      response,
+      "by_basin",
+      "/v1/ei/drilling_productivities/duc_wells",
+    );
   }
 
   /**
@@ -203,11 +211,16 @@ export class EIDrillingProductivityResource {
    * @returns Array of productivity data by basin
    */
   async byBasin(): Promise<ProductivityByBasin[]> {
-    const response = await this.client["request"]<
-      ProductivityByBasin[] | { data: ProductivityByBasin[] }
-    >("/v1/ei/drilling_productivities/by_basin", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/drilling_productivities/by_basin",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ProductivityByBasin>(
+      response,
+      "months",
+      "/v1/ei/drilling_productivities/by_basin",
+    );
   }
 
   /**
@@ -216,11 +229,16 @@ export class EIDrillingProductivityResource {
    * @returns Array of historical productivity metrics
    */
   async historical(): Promise<HistoricalProductivity[]> {
-    const response = await this.client["request"]<
-      HistoricalProductivity[] | { data: HistoricalProductivity[] }
-    >("/v1/ei/drilling_productivities/historical", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/drilling_productivities/historical",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<HistoricalProductivity>(
+      response,
+      "records",
+      "/v1/ei/drilling_productivities/historical",
+    );
   }
 
   /**
@@ -229,10 +247,15 @@ export class EIDrillingProductivityResource {
    * @returns Array of productivity trends by basin
    */
   async trends(): Promise<ProductivityTrend[]> {
-    const response = await this.client["request"]<
-      ProductivityTrend[] | { data: ProductivityTrend[] }
-    >("/v1/ei/drilling_productivities/trends", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/drilling_productivities/trends",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ProductivityTrend>(
+      response,
+      "trends",
+      "/v1/ei/drilling_productivities/trends",
+    );
   }
 }

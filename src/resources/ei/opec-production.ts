@@ -6,6 +6,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * OPEC production record
@@ -114,11 +115,13 @@ export class EIOPECProductionResource {
    * @returns Array of production records
    */
   async list(): Promise<OPECProductionRecord[]> {
-    const response = await this.client["request"]<
-      OPECProductionRecord[] | { data: OPECProductionRecord[] }
-    >("/v1/ei/opec_productions", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/opec_productions", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<OPECProductionRecord>(
+      response,
+      "opec_productions",
+      "/v1/ei/opec_productions",
+    );
   }
 
   /**
@@ -132,10 +135,7 @@ export class EIOPECProductionResource {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<OPECProductionRecord>(
-      `/v1/ei/opec_productions/${id}`,
-      {},
-    );
+    return this.client["request"]<OPECProductionRecord>(`/v1/ei/opec_productions/${id}`, {});
   }
 
   /**
@@ -144,10 +144,7 @@ export class EIOPECProductionResource {
    * @returns Latest production record
    */
   async latest(): Promise<OPECProductionRecord> {
-    return this.client["request"]<OPECProductionRecord>(
-      "/v1/ei/opec_productions/latest",
-      {},
-    );
+    return this.client["request"]<OPECProductionRecord>("/v1/ei/opec_productions/latest", {});
   }
 
   /**
@@ -156,10 +153,7 @@ export class EIOPECProductionResource {
    * @returns Total OPEC production summary
    */
   async total(): Promise<TotalOPECProduction> {
-    return this.client["request"]<TotalOPECProduction>(
-      "/v1/ei/opec_productions/total",
-      {},
-    );
+    return this.client["request"]<TotalOPECProduction>("/v1/ei/opec_productions/total", {});
   }
 
   /**
@@ -168,11 +162,16 @@ export class EIOPECProductionResource {
    * @returns Array of production by country
    */
   async byCountry(): Promise<ProductionByCountry[]> {
-    const response = await this.client["request"]<
-      ProductionByCountry[] | { data: ProductionByCountry[] }
-    >("/v1/ei/opec_productions/by_country", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/opec_productions/by_country",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ProductionByCountry>(
+      response,
+      "countries",
+      "/v1/ei/opec_productions/by_country",
+    );
   }
 
   /**
@@ -181,11 +180,16 @@ export class EIOPECProductionResource {
    * @returns Array of historical production levels
    */
   async historical(): Promise<HistoricalProduction[]> {
-    const response = await this.client["request"]<
-      HistoricalProduction[] | { data: HistoricalProduction[] }
-    >("/v1/ei/opec_productions/historical", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/opec_productions/historical",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<HistoricalProduction>(
+      response,
+      "records",
+      "/v1/ei/opec_productions/historical",
+    );
   }
 
   /**
@@ -194,10 +198,15 @@ export class EIOPECProductionResource {
    * @returns Array of top producing countries
    */
   async topProducers(): Promise<TopProducer[]> {
-    const response = await this.client["request"]<
-      TopProducer[] | { data: TopProducer[] }
-    >("/v1/ei/opec_productions/top_producers", {});
+    const response = await this.client["request"]<unknown>(
+      "/v1/ei/opec_productions/top_producers",
+      {},
+    );
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<TopProducer>(
+      response,
+      "producers",
+      "/v1/ei/opec_productions/top_producers",
+    );
   }
 }
