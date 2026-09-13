@@ -170,6 +170,19 @@ export interface StreamPricesOptions {
    * emitting a terminal `error`. `Infinity` to retry forever (default: 10).
    */
   maxReconnectAttempts?: number;
+
+  /**
+   * How long to wait for `confirm_subscription` after the socket opens, in ms.
+   *
+   * The ActionCable handshake had no deadline: a socket that connected and
+   * then went silent — a half-open connection, a proxy that upgraded but
+   * never forwarded, a server too busy to confirm — left the stream waiting
+   * forever, delivering nothing and reporting nothing (#84). On expiry the
+   * attempt is abandoned and the normal bounded reconnect takes over.
+   *
+   * @default 10000
+   */
+  setupTimeout?: number;
 }
 
 /** Callback invoked for each delivered `price_update` message. */
@@ -212,6 +225,8 @@ export class PriceStreamSubscription extends EventEmitter {
   private subscribed = false;
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Deadline for the ActionCable handshake on the current socket (#84). */
+  private setupTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * @param url - The `wss://.../cable` endpoint.
@@ -234,6 +249,7 @@ export class PriceStreamSubscription extends EventEmitter {
       reconnectDelay: options.reconnectDelay ?? 1000,
       maxReconnectDelay: options.maxReconnectDelay ?? 30000,
       maxReconnectAttempts: options.maxReconnectAttempts ?? 10,
+      setupTimeout: options.setupTimeout ?? 10000,
       commodities: options.commodities,
     };
 
@@ -312,6 +328,7 @@ export class PriceStreamSubscription extends EventEmitter {
     });
 
     ws.on("close", (code: number, reason: Buffer) => {
+      this.clearSetupTimer();
       this.ws = null;
       this.subscribed = false;
       this.emit("disconnected", { code, reason: reason?.toString() ?? "" });
@@ -319,6 +336,71 @@ export class PriceStreamSubscription extends EventEmitter {
         this.scheduleReconnect();
       }
     });
+
+    // Bound the handshake. A socket can open and then say nothing at all —
+    // a half-open connection, a proxy that upgraded without forwarding, a
+    // server too busy to confirm — and the stream used to wait forever,
+    // delivering nothing and reporting nothing (#84). A fresh deadline is
+    // armed for every attempt, so a silent peer burns the reconnect budget
+    // and produces a terminal outcome instead of hanging on attempt one.
+    this.clearSetupTimer();
+    this.setupTimer = setTimeout(() => {
+      this.setupTimer = null;
+      if (this.closed || this.subscribed) return;
+      this.emit(
+        "error",
+        new Error(
+          `WebSocket subscription was not confirmed within ${this.options.setupTimeout}ms; ` +
+            "abandoning this attempt.",
+        ),
+      );
+      const pending = this.ws;
+      this.ws = null;
+      this.subscribed = false;
+      if (pending) this.releaseSocket(pending);
+      if (!this.closed) this.scheduleReconnect();
+    }, this.options.setupTimeout);
+  }
+
+  private clearSetupTimer(): void {
+    if (this.setupTimer) {
+      clearTimeout(this.setupTimer);
+      this.setupTimer = null;
+    }
+  }
+
+  /**
+   * Detach this subscription's handlers from a socket and close it.
+   *
+   * A single no-op `error` absorber stays behind: `ws` is itself an
+   * EventEmitter, so leaving it bare would move the unhandled-'error' throw
+   * onto the socket rather than removing it (#91).
+   */
+  private releaseSocket(ws: WebSocket): void {
+    try {
+      ws.removeAllListeners();
+      ws.on("error", () => {});
+    } catch {
+      // ignore — a substitute implementation need not be an EventEmitter
+    }
+    try {
+      ws.close();
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * End the stream for good: report once, close the socket, arm nothing.
+   *
+   * A permanent server verdict — a rejected subscription, or a disconnect
+   * carrying `reconnect: false` — is not a transient failure, and retrying it
+   * just repeats the rejection on a backoff schedule (#84).
+   */
+  private terminate(error: Error): void {
+    if (this.closed) return;
+    this.emit("error", error);
+    this.close();
   }
 
   private handleRaw(raw: WebSocket.RawData): void {
@@ -341,14 +423,17 @@ export class PriceStreamSubscription extends EventEmitter {
       return;
     }
     if (transportType === "confirm_subscription") {
+      this.clearSetupTimer();
       this.subscribed = true;
       this.reconnectAttempts = 0;
       this.emit("connected");
       return;
     }
     if (transportType === "reject_subscription") {
-      this.emit(
-        "error",
+      // Terminal. The socket used to be left open and unmanaged, and when the
+      // server closed it the generic close handler scheduled a reconnect —
+      // repeating a permanent rejection on a backoff schedule (#84).
+      this.terminate(
         new Error(
           "WebSocket subscription rejected. Confirm the API key and streaming " +
             "entitlement at https://www.oilpriceapi.com/pricing.",
@@ -357,7 +442,22 @@ export class PriceStreamSubscription extends EventEmitter {
       return;
     }
     if (transportType === "disconnect") {
-      // Server-initiated disconnect (e.g. auth failure). Let `close` drive reconnect.
+      // ActionCable sends { type: "disconnect", reason, reconnect } and then
+      // closes the transport. `reconnect: false` is the server saying don't
+      // come back — an auth failure, a revoked entitlement — and it was
+      // ignored, so the close handler retried it anyway (#84).
+      if (frame["reconnect"] === false) {
+        const reason = typeof frame["reason"] === "string" ? frame["reason"] : "unspecified";
+        this.terminate(
+          new Error(
+            `WebSocket disconnected by the server (${reason}) with reconnect disabled; ` +
+              "not retrying.",
+          ),
+        );
+        return;
+      }
+      // Otherwise a transient server-initiated disconnect: let `close` drive
+      // the normal bounded reconnect.
       return;
     }
 
@@ -467,6 +567,7 @@ export class PriceStreamSubscription extends EventEmitter {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.clearSetupTimer();
 
     if (this.ws) {
       const ws = this.ws;
@@ -483,22 +584,7 @@ export class PriceStreamSubscription extends EventEmitter {
       // documented SIGINT case — and the forwarding handler installed in
       // connect() turned that into an 'error' on this emitter after the
       // consumer's listener had already been removed (#91).
-      try {
-        ws.removeAllListeners();
-        // Leave ONE no-op absorber behind. `ws` is itself an EventEmitter, so
-        // detaching everything would just move the unhandled-'error' throw
-        // from this object onto the socket — same exit code 1, different
-        // stack. The socket is being discarded; nothing it says from here on
-        // concerns the consumer.
-        ws.on("error", () => {});
-      } catch {
-        // ignore — a substitute implementation need not be an EventEmitter
-      }
-      try {
-        ws.close();
-      } catch {
-        // ignore
-      }
+      this.releaseSocket(ws);
       this.ws = null;
     }
 
