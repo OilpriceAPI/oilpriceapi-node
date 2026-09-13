@@ -32,7 +32,8 @@ async function exploreCommodities() {
 
   // Example 2: Get commodities by category
   console.log('\n2. Exploring commodity categories...');
-  const categories = await client.getCommodityCategories();
+  const response = await client.getCommodityCategories();
+  const categories = response.categories;
   const categoryNames = Object.keys(categories);
   console.log(`Found ${categoryNames.length} categories:\n`);
 

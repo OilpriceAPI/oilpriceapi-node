@@ -123,6 +123,39 @@ export interface Price {
   source: string;
 
   /**
+   * Source-freshness block returned with every price.
+   *
+   * This is the data the product is differentiated on, and the published type
+   * used to omit it entirely — callers had to `as any` their way to it (#94).
+   * Captured from live production 2026-09-13.
+   *
+   * `reason` appears only when the status explains itself; the others are
+   * present on every payload observed.
+   */
+  freshness?: {
+    status: string;
+    reason?: string;
+    age_seconds: number;
+    expected_max_age_seconds: number;
+    circuit_breaker_open: boolean;
+  };
+
+  /** Whether the API considers this price stale. */
+  stale?: boolean;
+
+  /** Long-form staleness flag used by some endpoint families. */
+  is_stale?: boolean;
+
+  /** Why the price is stale, when the API explains it. */
+  stale_reason?: string;
+
+  /** Whether this price was synthesised rather than observed. */
+  synthetic?: boolean;
+
+  /** Age of the price in days. */
+  age_days?: number;
+
+  /**
    * Price changes over different time periods (24h, 7d, 30d, 90d)
    */
   changes?: {
@@ -130,6 +163,12 @@ export interface Price {
       amount: number;
       percent: number;
       previous_price: number;
+      /** Timestamp of the price this change was measured against. */
+      previous_timestamp?: string;
+      /** When the comparison was made. */
+      measured_at?: string;
+      /** Actual hours between the two points — rarely exactly 24. */
+      span_hours?: number;
     };
     "7d"?: {
       amount: number;
@@ -255,8 +294,14 @@ export interface Commodity {
 
   /**
    * Commodity category (e.g., "oil", "gas", "renewable")
+   *
+   * Optional because this type describes two payloads with different required
+   * sets: `/v1/commodities` includes it, while the commodities nested inside
+   * `/v1/commodities/categories` carry only code, name, currency,
+   * description, unit, unit_description, status and has_data. Declaring it
+   * required typed it `string` while it was `undefined` at runtime (#94).
    */
-  category: string;
+  category?: string;
 
   /**
    * Detailed description
@@ -290,6 +335,21 @@ export interface Commodity {
    * Threshold for significant price change alerts
    */
   price_change_threshold?: number;
+
+  /** Lifecycle status of the commodity (e.g. "active"). */
+  status?: string;
+
+  /** Whether the API currently holds price data for this commodity. */
+  has_data?: boolean;
+
+  /** Upstream data source identifier. */
+  data_source?: string;
+
+  /** How often the commodity is refreshed. */
+  update_frequency?: string;
+
+  /** Named upstream sources contributing to this commodity. */
+  sources?: unknown;
 }
 
 /**
@@ -353,10 +413,17 @@ export interface CommodityCategory {
 
 /**
  * Response from /v1/commodities/categories endpoint
- * Returns object with category keys mapped to CommodityCategory objects
+ * Production returns `{ status, data: { categories: {...} } }` and the
+ * transport unwraps exactly one level, so the caller receives
+ * `{ categories: {...} }`.
+ *
+ * This was previously an index signature over the response itself, which
+ * claimed every string key yielded a CommodityCategory. That is what hid the
+ * missing unwrap from the compiler: `cats.oil.commodities.length` compiled
+ * and threw at runtime, and so did `cats.this_does_not_exist.name` (#94).
  */
 export interface CategoriesResponse {
-  [categoryKey: string]: CommodityCategory;
+  categories: Record<string, CommodityCategory>;
 }
 
 /**
