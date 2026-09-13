@@ -5,29 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-
-- **Breaking:** `client.rigCounts` types now describe the payloads `/v1/rig-counts`
-  actually returns (#108). `latest()` returns `RigCountObservation` — the value is
-  `count`, not `total`; there is no `oil`/`gas` split on these routes (use
-  `client.ei.rigCounts`). `current()` returns `CurrentRigCounts`, `summary()` and
-  `trends()` keep their type names with the real fields.
-- **Breaking:** `rigCounts.historical()` returns the page envelope
-  `RigCountsPage` (`rig_counts`, `pagination`, `period`) instead of an array.
-- **Breaking:** `rigCounts.trends()` rejects a period the route does not honour
-  (`week`, `month`, ...) with `ValidationError`. The route answered those with
-  six months of data labelled with the requested period (api#8474).
-
-### Fixed
-
-- `rigCounts.historical()` returned `undefined` against production (#108).
-- `rigCounts.latest()`, `historical()` and `trends()` accept `code` / `region`,
-  and `historical()` accepts `period`, `page` and `perPage` (clamped to 100).
-- Every `rigCounts` method raises `unexpected_response_shape` instead of
-  returning a value whose declared fields are absent.
-
 ## [1.3.0] - 2026-09-13
 
 ### Security
