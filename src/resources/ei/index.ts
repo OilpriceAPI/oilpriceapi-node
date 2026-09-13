@@ -61,7 +61,7 @@ export interface WellTimeline {
  *
  * // Rig counts
  * const rigCounts = await client.ei.rigCounts.latest();
- * console.log(`Total rigs: ${rigCounts.total_rigs}`);
+ * console.log(`Total rigs: ${rigCounts.us_total.total_rigs}`);
  *
  * // Oil inventories
  * const inventories = await client.ei.oilInventories.latest();
@@ -163,6 +163,12 @@ export class EnergyIntelligenceResource {
 // Re-export all types from sub-resources
 export type {
   RigCountRecord,
+  RigCountReport,
+  RigCountReportSummary,
+  RigCountTotals,
+  RigCountRegionChange,
+  RigCountTopState,
+  RigCountDrillingType,
   RigCountByBasin,
   RigCountByState,
   HistoricalRigCount,
