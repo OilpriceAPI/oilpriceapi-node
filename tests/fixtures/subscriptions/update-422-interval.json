@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"VALIDATION_ERROR","message":"Interval seconds is below your plan minimum of 60 seconds","details":{"interval_seconds":["is below your plan minimum of 60 seconds"]}}}

@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"VALIDATION_ERROR","message":"Codes contains invalid commodity codes: NOPE_NOT_A_CODE","details":{"codes":["contains invalid commodity codes: NOPE_NOT_A_CODE"]}}}
