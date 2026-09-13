@@ -253,6 +253,27 @@ export class PriceStreamSubscription extends EventEmitter {
     } else {
       this.commodityFilter = null;
     }
+
+    // Node THROWS when 'error' is emitted on an EventEmitter with no listener,
+    // and that throw ends the host process with exit code 1. A transient
+    // ECONNRESET — the very thing a reconnecting stream exists to survive —
+    // therefore killed any consumer who used the documented one-liner, which
+    // wires only `price_update` (#91).
+    //
+    // This floor listener keeps the count non-zero so the throw cannot happen.
+    // It REPORTS rather than swallows: an error nobody is listening for is
+    // still a fact the operator needs, and silence here would trade a crash
+    // for an invisible dead stream. `emitWarning` goes to stderr like Node's
+    // own unhandled-rejection notice and cannot itself throw.
+    this.on("error", (err: unknown) => {
+      if (this.listenerCount("error") > 1) return; // a real consumer has it
+      const message = err instanceof Error ? err.message : String(err);
+      process.emitWarning(
+        `OilPriceAPI price stream error with no 'error' listener attached: ${message}. ` +
+          `Attach sub.on("error", ...) to handle it.`,
+        "OilPriceAPIStreamWarning",
+      );
+    });
   }
 
   /**
@@ -403,11 +424,23 @@ export class PriceStreamSubscription extends EventEmitter {
       this.options.reconnectDelay * Math.pow(2, attempt),
       this.options.maxReconnectDelay,
     );
-    this.emit("reconnecting", { attempt: attempt + 1, delay });
+    // Assign the timer BEFORE emitting. A listener that calls close() from
+    // inside this event used to run clearTimeout against a null field, and
+    // scheduleReconnect then armed the timer anyway — the reconnect itself
+    // was suppressed (connect() returns early on this.closed) but the timer
+    // held the event loop open for the full delay, up to 30s at defaults, so
+    // a CLI or cron job refused to exit after close() returned (#91).
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
     }, delay);
+    this.emit("reconnecting", { attempt: attempt + 1, delay });
+    // close() during the emit above already cleared the timer; if it ran
+    // before the field was readable it would leak, so re-check here.
+    if (this.closed && this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
   }
 
   private send(payload: Record<string, unknown>): void {
@@ -444,6 +477,23 @@ export class PriceStreamSubscription extends EventEmitter {
       } catch {
         // ignore — we're closing anyway
       }
+      // Detach OUR handlers from the socket before closing it. The real `ws`
+      // package emits 'error' when you close mid-handshake ("WebSocket was
+      // closed before the connection was established") — exactly the
+      // documented SIGINT case — and the forwarding handler installed in
+      // connect() turned that into an 'error' on this emitter after the
+      // consumer's listener had already been removed (#91).
+      try {
+        ws.removeAllListeners();
+        // Leave ONE no-op absorber behind. `ws` is itself an EventEmitter, so
+        // detaching everything would just move the unhandled-'error' throw
+        // from this object onto the socket — same exit code 1, different
+        // stack. The socket is being discarded; nothing it says from here on
+        // concerns the consumer.
+        ws.on("error", () => {});
+      } catch {
+        // ignore — a substitute implementation need not be an EventEmitter
+      }
       try {
         ws.close();
       } catch {
@@ -454,7 +504,11 @@ export class PriceStreamSubscription extends EventEmitter {
 
     this.subscribed = false;
     this.emit("close");
-    this.removeAllListeners();
+    // Deliberately NOT removeAllListeners(). It disarmed the consumer's own
+    // 'error' handler one line before a mid-handshake error arrived, which is
+    // how a correctly-written consumer still died. The socket's handlers are
+    // detached above, which is what actually needed releasing; this emitter
+    // is garbage as soon as the caller drops it.
   }
 }
 
