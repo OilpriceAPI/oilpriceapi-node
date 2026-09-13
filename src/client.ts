@@ -36,6 +36,7 @@ import { EnergyIntelligenceResource } from "./resources/ei/index.js";
 import { WebhooksResource } from "./resources/webhooks.js";
 import { DataSourcesResource } from "./resources/data-sources.js";
 import { SDK_VERSION, SDK_NAME, buildUserAgent } from "./version.js";
+import { resolveApiUrl } from "./url.js";
 import { SpreadsResource } from "./resources/spreads.js";
 import { IndicatorsResource } from "./resources/indicators.js";
 import { RawResource } from "./resources/raw.js";
@@ -377,8 +378,10 @@ export class OilPriceAPI {
   ): Promise<APIResponse<T>> {
     const apiKey = this.requireApiKey();
 
-    // Build URL with query parameters
-    const url = new URL(`${this.baseUrl}${endpoint}`);
+    // Build URL with query parameters. resolveApiUrl refuses any path that
+    // would change the origin, so the API key below can only ever be sent to
+    // the configured host (#80).
+    const url = resolveApiUrl(this.baseUrl, endpoint);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -840,7 +843,10 @@ export class OilPriceAPI {
    * key — it returns the raw `data` envelope from `{ status, data }`.
    */
   private async requestDemo<T>(endpoint: string): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    // Same origin guard as the authenticated path (#80). The demo endpoints
+    // send no credential, but an SDK that can be pointed at an arbitrary host
+    // is still an SSRF primitive for whatever process embeds it.
+    const url = resolveApiUrl(this.baseUrl, endpoint).toString();
     this.log(`Demo request: ${url}`);
 
     const controller = new AbortController();

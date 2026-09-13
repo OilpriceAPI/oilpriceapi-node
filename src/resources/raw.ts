@@ -43,10 +43,18 @@ export class RawResource {
    *
    * Use this for endpoints without a dedicated raw helper.
    *
+   * The path must be relative to the client's configured base URL. A path that
+   * would resolve to a different origin — a scheme-relative `//host/...`, an
+   * absolute URL, or anything that extends the authority — is rejected with a
+   * {@link ValidationError} before the request is built, because the API key
+   * would otherwise be sent to that host (#80). To talk to another host,
+   * construct a client with that `baseUrl`.
+   *
    * @typeParam T - Expected parsed response type.
    * @param endpoint - API path beginning with `/` (e.g. `/v1/prices/latest`).
    * @param params - Optional query parameters.
    * @returns The parsed data along with the HTTP status code and headers.
+   * @throws {ValidationError} If `endpoint` would change the request origin.
    *
    * @example
    * ```typescript
