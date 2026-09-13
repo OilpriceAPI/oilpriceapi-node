@@ -11,6 +11,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export { OilPriceAPI } from "./client.js";
 export type { APIResponse } from "./client.js";
 export { SDK_VERSION, SDK_NAME } from "./version.js";
+export { MAX_PER_PAGE, DEFAULT_PER_PAGE } from "./types.js";
 export type {
   OilPriceAPIConfig,
   RetryStrategy,

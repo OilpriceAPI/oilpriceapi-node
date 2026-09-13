@@ -12,6 +12,7 @@ import type {
   DemoPricesResponse,
   DemoCommoditiesResponse,
 } from "./types.js";
+import { MAX_PER_PAGE, DEFAULT_PER_PAGE } from "./types.js";
 import type { MarketBrief, MarketBriefOptions } from "./resources/market-brief.js";
 import {
   OilPriceAPIError,
@@ -822,7 +823,21 @@ export class OilPriceAPI {
    * ```
    */
   async *paginateHistoricalPrices(options?: HistoricalPricesOptions): AsyncGenerator<Price[]> {
-    const perPage = options?.perPage || 100;
+    // The loop ends when a page comes back shorter than the one requested.
+    // That test is only sound while the server actually honours the requested
+    // size: the API caps a page at MAX_PER_PAGE rows however large `per_page`
+    // is, so asking for more made page one look short and ended iteration
+    // after a single page — 500 rows out of 5,500, with no error and no flag
+    // (#90). The SDK's own docs advertised a maximum of 1000, so the
+    // documented value was the one that truncated.
+    //
+    // Clamping to what the server will serve restores the short-page test
+    // and returns the full history. It changes nothing for a caller already
+    // inside the cap.
+    const requested = options?.perPage ?? DEFAULT_PER_PAGE;
+    const perPage = Number.isFinite(requested)
+      ? Math.min(Math.max(1, Math.floor(requested)), MAX_PER_PAGE)
+      : DEFAULT_PER_PAGE;
     let page = 1;
 
     while (true) {
