@@ -12,7 +12,7 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/index.d.ts",
+        "types": "./dist/cjs/index.d.cts",
         "default": "./dist/cjs/index.js"
       }
     }
@@ -23,7 +23,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "prebuild": "node scripts/clean-dist.mjs",
+    "build": "tsc && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json && node scripts/emit-cjs-declarations.mjs",
     "check:secrets": "node scripts/check-no-hardcoded-api-keys.mjs",
     "storefront:check": "node scripts/validate-storefront-claims.mjs",
     "snippets:build": "node scripts/generate-snippet-manifest.mjs --output artifacts/snippets/oilpriceapi-node-snippets-v1.json",
@@ -70,8 +71,6 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.0.16",
     "ajv": "^8.20.0",
     "eslint": "^10.7.0",
@@ -82,6 +81,8 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
+    "@types/node": "^26.1.1",
+    "@types/ws": "^8.18.1",
     "ws": "^8.21.0"
   }
 }
