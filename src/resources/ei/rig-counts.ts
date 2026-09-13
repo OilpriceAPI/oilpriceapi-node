@@ -9,28 +9,89 @@ import { ValidationError } from "../../errors.js";
 import { unwrapCollection } from "./envelope.js";
 
 /**
- * Rig count record
+ * One row of `GET /v1/ei/rig_counts`: a published weekly report's summary.
+ *
+ * Carries no rig totals — fetch the full report with `get(id)` for those.
+ * Verified against live production 2026-09-13 (#104).
  */
-export interface RigCountRecord {
-  /** Record ID */
+export interface RigCountReportSummary {
+  /** Report ID, accepted by `get(id)` */
   id: string;
-  /** Total rig count */
-  total_rigs: number;
-  /** Oil rigs */
-  oil_rigs?: number;
-  /** Gas rigs */
-  gas_rigs?: number;
-  /** Miscellaneous rigs */
-  misc_rigs?: number;
-  /** Report date */
-  date: string;
-  /** Week number */
-  week?: number;
-  /** ISO timestamp */
-  timestamp: string;
-  /** Additional metadata */
-  metadata?: Record<string, unknown>;
+  /** Report date (YYYY-MM-DD) */
+  report_date: string;
+  /** Publication status, e.g. `published` */
+  status: string;
+  /** Human-readable headline, e.g. `US Rig Count: 588 (0 WoW)` */
+  summary: string;
 }
+
+/** US rig totals inside a {@link RigCountReport}. */
+export interface RigCountTotals {
+  total_rigs: number;
+  oil_rigs: number;
+  gas_rigs: number;
+  misc_rigs: number;
+  /** Change in total rigs from the previous week */
+  week_over_week: number;
+}
+
+/** Rig count and weekly change for one region inside a {@link RigCountReport}. */
+export interface RigCountRegionChange {
+  count: number;
+  /** Change from the previous week */
+  wow: number;
+}
+
+/** A state entry in {@link RigCountReport.top_states}. */
+export interface RigCountTopState {
+  /** State slug, e.g. `texas`, `new_mexico` */
+  state: string;
+  count: number;
+  /** Change from the previous week */
+  wow: number;
+}
+
+/** Rigs by drilling trajectory inside a {@link RigCountReport}. */
+export interface RigCountDrillingType {
+  vertical: number;
+  horizontal: number;
+  directional: number;
+}
+
+/**
+ * A full weekly Baker Hughes report, as returned by
+ * `GET /v1/ei/rig_counts/latest` and `GET /v1/ei/rig_counts/:id`.
+ *
+ * The totals are nested under `us_total`; there is no top-level `total_rigs`.
+ * Verified against live production 2026-09-13 (#104).
+ */
+export interface RigCountReport {
+  /** Report ID */
+  id: string;
+  /** Report date (YYYY-MM-DD) */
+  report_date: string;
+  /** Upstream source, e.g. `baker_hughes` */
+  source: string;
+  /** ISO timestamp the report was last updated */
+  last_updated: string;
+  /** US totals */
+  us_total: RigCountTotals;
+  /** Rig counts keyed by basin slug, e.g. `permian`, `haynesville` */
+  basins: Record<string, RigCountRegionChange>;
+  /** Highest-count states */
+  top_states: RigCountTopState[];
+  /** Rigs by drilling trajectory */
+  drilling_type: RigCountDrillingType;
+}
+
+/**
+ * @deprecated Described fields (`total_rigs`, `date`, `timestamp`, `week`)
+ * that no EI rig-count endpoint returns, and was used for two different
+ * payloads (#104). Now an alias of {@link RigCountReport}, the shape
+ * `latest()` and `get(id)` actually return; `list()` returns
+ * {@link RigCountReportSummary}.
+ */
+export type RigCountRecord = RigCountReport;
 
 /**
  * Rig count for one basin, as returned under `data.basins` by
@@ -88,9 +149,9 @@ export interface HistoricalRigCount {
  * ```typescript
  * const client = new OilPriceAPI({ apiKey: 'your_key' });
  *
- * // Get latest rig count
+ * // Get the latest weekly report — totals are nested under us_total
  * const latest = await client.ei.rigCounts.latest();
- * console.log(`Total rigs: ${latest.total_rigs}`);
+ * console.log(`Total rigs: ${latest.us_total.total_rigs} (${latest.report_date})`);
  *
  * // Get by basin
  * const basins = await client.ei.rigCounts.byBasin();
@@ -101,41 +162,44 @@ export class EIRigCountsResource {
   constructor(private client: OilPriceAPI) {}
 
   /**
-   * List all rig count records
+   * List published weekly reports
    *
-   * @returns Array of rig count records
+   * Each row is a summary without rig totals; pass its `id` to {@link get}
+   * for the full report.
+   *
+   * @returns Array of report summaries
    *
    * @throws {OilPriceAPIError} If API request fails
    */
-  async list(): Promise<RigCountRecord[]> {
+  async list(): Promise<RigCountReportSummary[]> {
     const response = await this.client["request"]<unknown>("/v1/ei/rig_counts", {});
 
-    return unwrapCollection<RigCountRecord>(response, "rig_counts", "/v1/ei/rig_counts");
+    return unwrapCollection<RigCountReportSummary>(response, "rig_counts", "/v1/ei/rig_counts");
   }
 
   /**
-   * Get a specific rig count record
+   * Get a specific weekly report
    *
-   * @param id - Record ID
-   * @returns Rig count record
+   * @param id - Report ID, as returned by {@link list}
+   * @returns The full report — the same shape as {@link latest}
    *
    * @throws {NotFoundError} If record not found
    */
-  async get(id: string): Promise<RigCountRecord> {
+  async get(id: string): Promise<RigCountReport> {
     if (!id || typeof id !== "string") {
       throw new ValidationError("Record ID must be a non-empty string");
     }
 
-    return this.client["request"]<RigCountRecord>(`/v1/ei/rig_counts/${encodeURIComponent(id)}`, {});
+    return this.client["request"]<RigCountReport>(`/v1/ei/rig_counts/${encodeURIComponent(id)}`, {});
   }
 
   /**
-   * Get latest rig count
+   * Get the latest weekly report
    *
-   * @returns Latest rig count data
+   * @returns The full report; US totals are under `us_total`
    */
-  async latest(): Promise<RigCountRecord> {
-    return this.client["request"]<RigCountRecord>("/v1/ei/rig_counts/latest", {});
+  async latest(): Promise<RigCountReport> {
+    return this.client["request"]<RigCountReport>("/v1/ei/rig_counts/latest", {});
   }
 
   /**
