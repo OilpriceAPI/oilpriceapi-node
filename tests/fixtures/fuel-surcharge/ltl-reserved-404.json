@@ -1,0 +1,1 @@
+{"status":"fail","data":{"error":"Carrier 'fedex-freight' is not yet covered — we have not ingested its fuel-surcharge schedule. Covered carriers: odfl, saia, estes, xpo, abf, tforce, averitt, southeastern-freight.","covered_carriers":["odfl","saia","estes","xpo","abf","tforce","averitt","southeastern-freight"]}}
