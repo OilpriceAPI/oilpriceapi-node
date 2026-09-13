@@ -49,6 +49,70 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * Methods where repeating a request has the same effect as doing it once
+ * (RFC 9110 idempotency). POST and PATCH are not on this list: a create the
+ * server committed just before the response was lost becomes two creates on
+ * replay — two subscriptions, two webhooks (#82).
+ */
+const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE", "PUT", "DELETE"]);
+
+/**
+ * Counter windows whose allowance does not come back within a retry budget.
+ *
+ * The API sends `X-RateLimit-State: exhausted` with `X-RateLimit-Window` set to
+ * the entitlement's usage window on a durable 429, and with
+ * `hourly_circuit_breaker` on the recoverable safety limit. State alone cannot
+ * tell those apart — the circuit breaker reports `exhausted` too — so both
+ * headers are required before a 429 is treated as final.
+ */
+const PERSISTENT_QUOTA_WINDOWS = new Set(["daily_counter", "monthly_counter", "trial_counter"]);
+
+/**
+ * Ceiling on any single wait, whether we computed it or the server sent it.
+ * The keyless demo endpoint has been observed returning `Retry-After: 31612`,
+ * which unbounded parks the calling process for 8.8 hours.
+ */
+const MAX_RETRY_WAIT_MS = 60_000;
+
+function validatedRetries(retries: number): number {
+  if (!Number.isInteger(retries) || retries < 0) {
+    throw new ValidationError(
+      `retries must be a non-negative integer (got ${JSON.stringify(retries)}). ` +
+        "Use retries: 0 to send each request exactly once.",
+    );
+  }
+  return retries;
+}
+
+/** Clamp a wait to [0, MAX_RETRY_WAIT_MS], falling back when unusable. */
+function boundedWaitMs(milliseconds: unknown, fallback: number): number {
+  const value = typeof milliseconds === "number" && Number.isFinite(milliseconds)
+    ? milliseconds
+    : fallback;
+  return Math.max(0, Math.min(value, MAX_RETRY_WAIT_MS));
+}
+
+/**
+ * Has the caller run out of allowance, as opposed to merely bursting?
+ *
+ * Returns false when the headers are absent or unrecognised: an unknown state
+ * must behave exactly as it did before this change, so a missing header can
+ * never turn a retryable burst into a hard failure.
+ */
+function isDurableQuotaExhaustion(error: RateLimitError): boolean {
+  const headers = error.headers;
+  if (!headers) return false;
+  const lookup: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    lookup[key.toLowerCase()] = String(value);
+  }
+  return (
+    lookup["x-ratelimit-state"]?.trim().toLowerCase() === "exhausted" &&
+    PERSISTENT_QUOTA_WINDOWS.has(lookup["x-ratelimit-window"]?.trim().toLowerCase())
+  );
+}
+
+/**
  * Raw HTTP response wrapper.
  *
  * Returned by {@link OilPriceAPI.raw} accessors to expose the underlying
@@ -217,8 +281,9 @@ export class OilPriceAPI {
   constructor(config: OilPriceAPIConfig = {}) {
     this.apiKey = config.apiKey || process.env.OILPRICEAPI_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.oilpriceapi.com";
-    this.retries = config.retries !== undefined ? config.retries : 3;
-    this.retryDelay = config.retryDelay || 1000;
+    this.retries = config.retries !== undefined ? validatedRetries(config.retries) : 3;
+    // `||` discarded an explicit 0, so retryDelay: 0 silently became 1000ms.
+    this.retryDelay = config.retryDelay !== undefined ? config.retryDelay : 1000;
     this.retryStrategy = config.retryStrategy || "exponential";
     this.timeout = config.timeout || 90000; // 90 seconds for slow historical queries
     this.debug = config.debug || false;
@@ -292,30 +357,55 @@ export class OilPriceAPI {
   }
 
   /**
-   * Determine if error is retryable
+   * May this request be sent again after an ambiguous outcome?
+   *
+   * @param method - HTTP method of the request.
+   * @param idempotent - Caller's explicit assertion, which wins over the
+   *   method. Pass true for a request whose method is POST but whose effect is
+   *   a read (a search), or for a write the caller knows is deduplicated.
    */
-  private isRetryable(error: unknown): boolean {
+  private isReplaySafe(method: string, idempotent?: boolean): boolean {
+    if (idempotent !== undefined) return idempotent;
+    return IDEMPOTENT_METHODS.has(method.toUpperCase());
+  }
+
+  /**
+   * Determine if error is retryable.
+   *
+   * A timeout or transport error is an AMBIGUOUS outcome, not a failure: the
+   * server may have committed the write before the response was lost. A 5xx is
+   * equally ambiguous, because a gateway can return 502 after the origin
+   * committed. Neither is replayed for a non-idempotent method (#82).
+   *
+   * A 429 is the exception in the other direction — an outright refusal, so
+   * the write definitively did not happen and replay is safe for any method —
+   * unless it reports a durable counter window, which no retry can clear.
+   */
+  private isRetryable(error: unknown, method: string, idempotent?: boolean): boolean {
+    // A 429 refused the request, so replaying is safe whatever the method.
+    if (error instanceof RateLimitError) {
+      return !isDurableQuotaExhaustion(error);
+    }
+
+    const replaySafe = this.isReplaySafe(method, idempotent);
+
     // Retry on network errors
     if (error instanceof TypeError && error.message.includes("fetch")) {
-      return true;
+      return replaySafe;
     }
 
     // Retry on timeout errors
     if (error instanceof TimeoutError) {
-      return true;
+      return replaySafe;
     }
 
     // Retry on 5xx server errors
     if (error instanceof ServerError) {
-      return true;
+      return replaySafe;
     }
 
-    // Retry on rate limit errors (with delay)
-    if (error instanceof RateLimitError) {
-      return true;
-    }
-
-    // Don't retry on client errors (4xx except 429)
+    // Don't retry on client errors (4xx except 429), or on a deterministic
+    // failure like an unparseable success body.
     return false;
   }
 
@@ -358,10 +448,56 @@ export class OilPriceAPI {
   private async request<T>(
     endpoint: string,
     params?: Record<string, string>,
-    options?: { method?: string; body?: unknown; headers?: Record<string, string> },
+    options?: {
+      method?: string;
+      body?: unknown;
+      headers?: Record<string, string>;
+      idempotent?: boolean;
+    },
   ): Promise<T> {
     const { data } = await this.requestRaw<T>(endpoint, params, options);
     return data;
+  }
+
+  /**
+   * Shape the error a failed request ends with.
+   *
+   * When a non-idempotent write was NOT replayed after an ambiguous outcome,
+   * the caller needs to know the request may still have been applied — the SDK
+   * cannot tell, and silently surfacing a plain transport error invites a blind
+   * resend (#82). Such errors carry `ambiguousWrite: true`.
+   */
+  private finalError(error: unknown, method: string, idempotent?: boolean): unknown {
+    const ambiguous =
+      !this.isReplaySafe(method, idempotent) &&
+      (error instanceof TimeoutError ||
+        error instanceof ServerError ||
+        (error instanceof TypeError && error.message.includes("fetch")));
+
+    if (error instanceof OilPriceAPIError) {
+      if (ambiguous) {
+        error.ambiguousWrite = true;
+        error.message =
+          `${error.message} — this ${method} was not retried because it may have been ` +
+          "applied by the server. Check whether it took effect before resending.";
+      }
+      return error;
+    }
+
+    if (error instanceof Error) {
+      const wrapped = new OilPriceAPIError(
+        ambiguous
+          ? `Request failed: ${error.message} — this ${method} was not retried because it ` +
+            "may have been applied by the server. Check whether it took effect before resending."
+          : `Request failed after ${this.retries + 1} attempts: ${error.message}`,
+        undefined,
+        "NETWORK_ERROR",
+      );
+      if (ambiguous) wrapped.ambiguousWrite = true;
+      return wrapped;
+    }
+
+    return error;
   }
 
   /**
@@ -374,9 +510,21 @@ export class OilPriceAPI {
   private async requestRaw<T>(
     endpoint: string,
     params?: Record<string, string>,
-    options?: { method?: string; body?: unknown; headers?: Record<string, string> },
+    options?: {
+      method?: string;
+      body?: unknown;
+      headers?: Record<string, string>;
+      /**
+       * Assert that repeating this request is safe. Without it, a
+       * non-idempotent method (POST, PATCH) is sent exactly once and never
+       * replayed after an ambiguous outcome (#82).
+       */
+      idempotent?: boolean;
+    },
   ): Promise<APIResponse<T>> {
     const apiKey = this.requireApiKey();
+    const method = (options?.method || "GET").toUpperCase();
+    const idempotent = options?.idempotent;
 
     // Build URL with query parameters. resolveApiUrl refuses any path that
     // would change the origin, so the API key below can only ever be sent to
@@ -434,7 +582,7 @@ export class OilPriceAPI {
           }
 
           const fetchOptions: RequestInit = {
-            method: options?.method || "GET",
+            method,
             headers,
             signal: controller.signal,
           };
@@ -455,9 +603,21 @@ export class OilPriceAPI {
             const apiError = errorFromResponse(response, errorBody, apiKey);
             this.log(`Error response: ${apiError.message}`);
 
-            if (apiError instanceof RateLimitError && attempt < this.retries && apiError.retryAfter) {
-              this.log(`Rate limited. Waiting ${apiError.retryAfter}s`);
-              await this.sleep(apiError.retryAfter * 1000);
+            if (
+              apiError instanceof RateLimitError &&
+              attempt < this.retries &&
+              apiError.retryAfter !== undefined &&
+              !isDurableQuotaExhaustion(apiError)
+            ) {
+              // Bound the server's signal in both directions: a negative
+              // retry_after produced a negative sleep, and a large one parked
+              // the process for hours (#82).
+              const waitMs = boundedWaitMs(
+                apiError.retryAfter * 1000,
+                this.calculateRetryDelay(attempt),
+              );
+              this.log(`Rate limited. Waiting ${waitMs}ms`);
+              await this.sleep(waitMs);
               continue;
             }
             throw apiError;
@@ -474,8 +634,19 @@ export class OilPriceAPI {
             };
           }
 
-          // Parse successful response
-          const responseData: unknown = JSON.parse(responseText);
+          // Parse successful response. A body that is not JSON is a
+          // deterministic failure — replaying it cannot help, and for a write
+          // the replay would duplicate it (#82).
+          let responseData: unknown;
+          try {
+            responseData = JSON.parse(responseText);
+          } catch {
+            throw new OilPriceAPIError(
+              `Invalid JSON in ${response.status} response from ${url.pathname}`,
+              response.status,
+              "INVALID_RESPONSE",
+            );
+          }
           const responseObject = isRecord(responseData) ? responseData : undefined;
 
           this.log("Response data received", {
@@ -494,39 +665,32 @@ export class OilPriceAPI {
             throw new TimeoutError("Request timeout", this.timeout);
           }
           throw error;
+        } finally {
+          // A failed attempt used to leave its abort timer armed. Now that a
+          // write throws on the first ambiguous failure instead of retrying,
+          // that timer would keep the event loop alive for the full timeout
+          // after the caller already saw the error (#82).
+          clearTimeout(timeoutId);
         }
       } catch (error) {
         lastError = error as Error;
-        this.log(`Request failed: ${lastError.message}`, {
-          attempt,
-          retryable: this.isRetryable(lastError),
-        });
+        const retryable = this.isRetryable(error, method, idempotent);
+        this.log(`Request failed: ${lastError.message}`, { attempt, retryable });
 
-        // Re-throw our custom errors if not retryable
-        if (error instanceof OilPriceAPIError && !this.isRetryable(error)) {
-          throw error;
+        // Not retryable: throw now, whatever the error's type. The old check
+        // only applied to OilPriceAPIError, so a SyntaxError from an
+        // unparseable success body fell through and was replayed (#82).
+        if (!retryable) {
+          throw this.finalError(error, method, idempotent);
         }
 
         // If this was our last attempt, throw the error
         if (attempt === this.retries) {
-          if (error instanceof OilPriceAPIError) {
-            throw error;
-          }
-
-          // Wrap fetch errors (network issues, etc.)
-          if (error instanceof Error) {
-            throw new OilPriceAPIError(
-              `Request failed after ${this.retries + 1} attempts: ${error.message}`,
-              undefined,
-              "NETWORK_ERROR",
-            );
-          }
-
-          throw error;
+          throw this.finalError(error, method, idempotent);
         }
 
         // Calculate delay and retry
-        const delay = this.calculateRetryDelay(attempt);
+        const delay = boundedWaitMs(this.calculateRetryDelay(attempt), this.retryDelay);
         this.log(`Waiting ${delay}ms before retry...`);
         await this.sleep(delay);
       }

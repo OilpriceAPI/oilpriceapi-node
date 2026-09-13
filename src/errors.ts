@@ -11,6 +11,12 @@ export interface OilPriceAPIErrorDetails {
   retryAfter?: number;
   headers?: Record<string, string>;
   rawBody?: unknown;
+  /**
+   * True when a non-idempotent write (POST, PATCH) failed with an ambiguous
+   * outcome — a timeout, transport error or 5xx — and was deliberately not
+   * replayed. The server may still have applied it; check before resending.
+   */
+  ambiguousWrite?: boolean;
 }
 
 /** Base class for every failure surfaced by the SDK. */
@@ -26,6 +32,11 @@ export class OilPriceAPIError extends Error {
   retryAfter?: number;
   headers?: Record<string, string>;
   rawBody?: unknown;
+  /**
+   * True when a non-idempotent write was not replayed after an ambiguous
+   * outcome. The request may still have been applied server-side (#82).
+   */
+  ambiguousWrite?: boolean;
 
   constructor(message: string, statusCode?: number, code?: string, details: OilPriceAPIErrorDetails = {}) {
     super(message);
