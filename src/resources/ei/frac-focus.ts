@@ -7,6 +7,7 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
+import { unwrapCollection } from "./envelope.js";
 
 /**
  * FracFocus disclosure record
@@ -175,12 +176,13 @@ export class EIFracFocusResource {
    * @returns Array of disclosure records
    */
   async list(): Promise<FracFocusRecord[]> {
-    const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
-      "/v1/ei/frac-focus",
-      {},
-    );
+    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<FracFocusRecord>(
+      response,
+      "frac_focus_disclosures",
+      "/v1/ei/frac-focus",
+    );
   }
 
   /**
@@ -221,11 +223,13 @@ export class EIFracFocusResource {
    * @returns Array of disclosures grouped by state
    */
   async byState(): Promise<DisclosuresByState[]> {
-    const response = await this.client["request"]<
-      DisclosuresByState[] | { data: DisclosuresByState[] }
-    >("/v1/ei/frac-focus/by-state", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/by-state", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<DisclosuresByState>(
+      response,
+      "frac_focus_disclosures",
+      "/v1/ei/frac-focus/by-state",
+    );
   }
 
   /**
@@ -234,11 +238,13 @@ export class EIFracFocusResource {
    * @returns Array of disclosures grouped by operator
    */
   async byOperator(): Promise<DisclosuresByOperator[]> {
-    const response = await this.client["request"]<
-      DisclosuresByOperator[] | { data: DisclosuresByOperator[] }
-    >("/v1/ei/frac-focus/by-operator", {});
+    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/by-operator", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<DisclosuresByOperator>(
+      response,
+      "frac_focus_disclosures",
+      "/v1/ei/frac-focus/by-operator",
+    );
   }
 
   /**
@@ -247,12 +253,9 @@ export class EIFracFocusResource {
    * @returns Array of chemicals used in fracturing
    */
   async byChemical(): Promise<ChemicalUsage[]> {
-    const response = await this.client["request"]<ChemicalUsage[] | { data: ChemicalUsage[] }>(
-      "/v1/ei/frac-focus/by-chemical",
-      {},
-    );
+    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/by-chemical", {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<ChemicalUsage>(response, "chemicals", "/v1/ei/frac-focus/by-chemical");
   }
 
   /**
@@ -276,12 +279,13 @@ export class EIFracFocusResource {
     if (query.start_date) params.start_date = query.start_date;
     if (query.end_date) params.end_date = query.end_date;
 
-    const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
-      "/v1/ei/frac-focus/search",
-      params,
-    );
+    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/search", params);
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<FracFocusRecord>(
+      response,
+      "frac_focus_disclosures",
+      "/v1/ei/frac-focus/search",
+    );
   }
 
   /**
@@ -295,12 +299,10 @@ export class EIFracFocusResource {
       throw new ValidationError("Disclosure ID must be a non-empty string");
     }
 
-    const response = await this.client["request"]<WellChemical[] | { chemicals: WellChemical[] }>(
-      `/v1/ei/frac-focus/${encodeURIComponent(id)}/chemicals`,
-      {},
-    );
+    const endpoint = `/v1/ei/frac-focus/${encodeURIComponent(id)}/chemicals`;
+    const response = await this.client["request"]<unknown>(endpoint, {});
 
-    return Array.isArray(response) ? response : response.chemicals;
+    return unwrapCollection<WellChemical>(response, "chemicals", endpoint);
   }
 
   /**
@@ -314,11 +316,9 @@ export class EIFracFocusResource {
       throw new ValidationError("API number must be a non-empty string");
     }
 
-    const response = await this.client["request"]<FracFocusRecord[] | { data: FracFocusRecord[] }>(
-      `/v1/ei/frac-focus/for-well/${encodeURIComponent(apiNumber)}`,
-      {},
-    );
+    const endpoint = `/v1/ei/frac-focus/for-well/${encodeURIComponent(apiNumber)}`;
+    const response = await this.client["request"]<unknown>(endpoint, {});
 
-    return Array.isArray(response) ? response : response.data;
+    return unwrapCollection<FracFocusRecord>(response, "frac_focus_disclosures", endpoint);
   }
 }
