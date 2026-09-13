@@ -53,9 +53,18 @@ export interface CommodityCategory {
 
 /**
  * Response from /v1/commodities/categories endpoint
+ *
+ * Production returns `{ status, data: { categories: {...} } }` and the
+ * transport unwraps exactly one level, so the caller receives
+ * `{ categories: {...} }`.
+ *
+ * This was previously an index signature over the response itself, which
+ * claimed every string key yielded a CommodityCategory. That is what hid the
+ * missing unwrap from the compiler: `cats.oil.commodities.length` compiled
+ * and threw at runtime, and so did `cats.this_does_not_exist.name` (#94).
  */
 export interface CategoriesResponse {
-  [categoryKey: string]: CommodityCategory;
+  categories: Record<string, CommodityCategory>;
 }
 
 /**
@@ -79,7 +88,7 @@ export interface CategoriesResponse {
  *
  * // Get categories
  * const categories = await client.commodities.categories();
- * console.log(`Oil category has ${categories.oil.commodities.length} commodities`);
+ * console.log(`${Object.keys(categories.categories).length} categories`);
  * ```
  */
 export class CommoditiesResource {
@@ -152,8 +161,9 @@ export class CommoditiesResource {
    * const categories = await client.commodities.categories();
    *
    * // Access by category key
-   * console.log(`Oil: ${categories.oil.name}`);
-   * console.log(`Commodities: ${categories.oil.commodities.length}`);
+   * const oil = categories.categories.oil;
+   * console.log(`Oil: ${oil.name}`);
+   * console.log(`Commodities: ${oil.commodities.length}`);
    *
    * // Iterate all categories
    * Object.entries(categories).forEach(([key, category]) => {

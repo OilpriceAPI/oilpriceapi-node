@@ -922,8 +922,8 @@ export class OilPriceAPI {
    * @example
    * ```typescript
    * const categories = await client.getCommodityCategories();
-   * console.log(categories.oil.name); // "Oil"
-   * console.log(categories.oil.commodities.length); // 11
+   * console.log(categories.categories.oil.name); // "Oil"
+   * console.log(categories.categories.oil.commodities.length); // 11
    * ```
    */
   async getCommodityCategories(): Promise<CategoriesResponse> {
