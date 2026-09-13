@@ -1,0 +1,49 @@
+{
+ "status": "success",
+ "data": {
+  "frac_focus_disclosures": [
+   {
+    "upload_key": "80ee8946-9a07-479e-9d52-3029d25604db",
+    "api_number": "30025519460000",
+    "api_number_formatted": "30-025-51946-00-00",
+    "state_code": "NM",
+    "county": "Lea",
+    "operator": {
+     "name": "EOG Resources, Inc.",
+     "name_normalized": "EOG Resources"
+    },
+    "well_name": "RATTLESNAKE 28 FED COM #762H",
+    "location": {
+     "latitude": 32.018666,
+     "longitude": -103.575846
+    },
+    "job": {
+     "start_date": "2026-08-18",
+     "end_date": "2026-08-24",
+     "total_vertical_depth": 13269
+    },
+    "water": {
+     "total_gallons": 15821484,
+     "total_barrels": 376702,
+     "non_water_gallons": 0
+    },
+    "chemicals": {
+     "count": 10
+    },
+    "provenance": {
+     "source": "fracfocus",
+     "fetched_at": "2026-08-29T06:53:57.236Z",
+     "confidence_score": 100,
+     "validation_status": "valid"
+    }
+   }
+  ],
+  "operator_query": "EOG",
+  "meta": {
+   "total_count": 10854,
+   "page": 1,
+   "per_page": 1,
+   "total_pages": 10854
+  }
+ }
+}

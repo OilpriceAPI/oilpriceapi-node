@@ -1,0 +1,51 @@
+{
+ "status": "success",
+ "data": {
+  "frac_focus_disclosures": [
+   {
+    "upload_key": "ec7d19aa-2004-4e39-bd88-e660230cf74e",
+    "api_number": "33053090090000",
+    "api_number_formatted": "33-053-09009-00-00",
+    "state_code": "ND",
+    "county": "McKenzie",
+    "operator": {
+     "name": "Newfield Exploration",
+     "name_normalized": "Ovintiv"
+    },
+    "well_name": "Schneiderman 150-99-29-32-3H",
+    "location": {
+     "latitude": 47.791634,
+     "longitude": -103.386538
+    },
+    "job": {
+     "start_date": null,
+     "end_date": "2019-08-22",
+     "total_vertical_depth": 11163
+    },
+    "water": {
+     "total_gallons": 5885942,
+     "total_barrels": 140141,
+     "non_water_gallons": 0
+    },
+    "chemicals": {
+     "count": 26
+    },
+    "provenance": {
+     "source": "fracfocus",
+     "fetched_at": "2026-01-11T16:24:12.529Z",
+     "confidence_score": 75,
+     "validation_status": "suspect"
+    }
+   }
+  ],
+  "chemical_query": {
+   "cas": "7732-18-5"
+  },
+  "meta": {
+   "total_count": 200152,
+   "page": 1,
+   "per_page": 1,
+   "total_pages": 200152
+  }
+ }
+}

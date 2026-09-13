@@ -235,9 +235,12 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
 
       spy([]);
       await client.ei.wellPermits.list();
-      await client.ei.wellPermits.byState();
-      await client.ei.wellPermits.byOperator();
-      await client.ei.wellPermits.byFormation();
+
+      // by-* take a required filter and return a page envelope (#105).
+      spy({ well_permits: [], meta: { total_count: 0, page: 1, per_page: 100, total_pages: 0 } });
+      await client.ei.wellPermits.byState("TX");
+      await client.ei.wellPermits.byOperator("EOG");
+      await client.ei.wellPermits.byFormation("Wolfcamp");
 
       const calls = (client as any).request.mock.calls.map((c: any[]) => c[0]);
       expect(calls).toContain("/v1/ei/well-permits/latest");
@@ -318,9 +321,15 @@ describe("EnergyIntelligenceResource (ei.*)", () => {
 
       spy([]);
       await client.ei.fracFocus.list();
-      await client.ei.fracFocus.byState();
-      await client.ei.fracFocus.byOperator();
-      await client.ei.fracFocus.byChemical();
+
+      // by-* take a required filter and return a page envelope (#105).
+      spy({
+        frac_focus_disclosures: [],
+        meta: { total_count: 0, page: 1, per_page: 100, total_pages: 0 },
+      });
+      await client.ei.fracFocus.byState("TX");
+      await client.ei.fracFocus.byOperator("EOG");
+      await client.ei.fracFocus.byChemical({ cas: "7732-18-5" });
 
       const calls = (client as any).request.mock.calls.map((c: any[]) => c[0]);
       expect(calls).toContain("/v1/ei/frac-focus/latest");

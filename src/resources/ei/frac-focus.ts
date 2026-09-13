@@ -7,7 +7,14 @@
 
 import type { OilPriceAPI } from "../../client.js";
 import { ValidationError } from "../../errors.js";
-import { unwrapCollection } from "./envelope.js";
+import {
+  unwrapCollection,
+  unwrapPage,
+  pageParams,
+  requireFilter,
+  type EIPageOptions,
+  type EIPageMeta,
+} from "./envelope.js";
 
 /**
  * FracFocus disclosure record
@@ -55,6 +62,10 @@ export interface FracFocusSummary {
 
 /**
  * Disclosures by state
+ *
+ * @deprecated No endpoint returns this aggregate. `byState` / `byOperator` /
+ * `byChemical` return a page of individual disclosure records — see
+ * {@link FracFocusPage} (#105).
  */
 export interface DisclosuresByState {
   /** State name */
@@ -67,6 +78,10 @@ export interface DisclosuresByState {
 
 /**
  * Disclosures by operator
+ *
+ * @deprecated No endpoint returns this aggregate. `byState` / `byOperator` /
+ * `byChemical` return a page of individual disclosure records — see
+ * {@link FracFocusPage} (#105).
  */
 export interface DisclosuresByOperator {
   /** Operator name */
@@ -81,6 +96,10 @@ export interface DisclosuresByOperator {
 
 /**
  * Chemical usage data
+ *
+ * @deprecated No endpoint returns this aggregate. `byState` / `byOperator` /
+ * `byChemical` return a page of individual disclosure records — see
+ * {@link FracFocusPage} (#105).
  */
 export interface ChemicalUsage {
   /** Chemical name */
@@ -107,6 +126,81 @@ export interface WellChemical {
   concentration_percent?: number;
   /** Mass used (lbs) */
   mass_lbs?: number;
+}
+
+/**
+ * An individual FracFocus disclosure, as returned by the paginated by-* routes.
+ *
+ * Verified against live production 2026-09-13 (#105).
+ */
+export interface FracFocusDisclosure {
+  /** FracFocus upload key */
+  upload_key: string;
+  /** 14-digit API well number */
+  api_number: string;
+  /** API number with separators, e.g. `42-317-42899-00-00` */
+  api_number_formatted: string | null;
+  /** Two-letter state code */
+  state_code: string;
+  county: string | null;
+  operator: { name: string | null; name_normalized: string | null };
+  well_name: string | null;
+  location: { latitude: number | null; longitude: number | null };
+  job: {
+    start_date: string | null;
+    end_date: string | null;
+    total_vertical_depth: number | null;
+  };
+  water: {
+    total_gallons: number | null;
+    total_barrels: number | null;
+    non_water_gallons: number | null;
+  };
+  /** Chemical summary; fetch the list with `chemicals(id)` */
+  chemicals: { count: number };
+  provenance: {
+    source: string | null;
+    fetched_at: string | null;
+    confidence_score?: number | null;
+    validation_status?: string | null;
+  };
+}
+
+/** A page of disclosure records from a paginated by-* route (#105). */
+export interface FracFocusPage {
+  /** Disclosure records on this page */
+  frac_focus_disclosures: FracFocusDisclosure[];
+  /** Pagination; `total_count` covers all pages */
+  meta: EIPageMeta;
+}
+
+/** Response of `byState()`. */
+export interface FracFocusByStatePage extends FracFocusPage {
+  /** The state filter the server applied, upper-cased */
+  state: string;
+}
+
+/** Response of `byOperator()`. */
+export interface FracFocusByOperatorPage extends FracFocusPage {
+  /** The operator filter the server applied */
+  operator_query: string;
+}
+
+/**
+ * Filter for `byChemical()`. At least one of `cas` or `name` is required;
+ * these are the parameter names the route reads.
+ */
+export interface FracFocusChemicalQuery {
+  /** CAS registry number, e.g. `7732-18-5` */
+  cas?: string;
+  /** Chemical name (partial match), e.g. `Water` */
+  name?: string;
+}
+
+/** Response of `byChemical()`. */
+export interface FracFocusByChemicalPage extends FracFocusPage {
+  /** The chemical filter the server applied */
+  chemical_query: FracFocusChemicalQuery;
 }
 
 /**
@@ -152,9 +246,9 @@ export interface FracFocusSearchQuery {
  * const latest = await client.ei.fracFocus.latest();
  * console.log(`Well: ${latest.well_name} (API: ${latest.api_number})`);
  *
- * // Get disclosures by state
- * const states = await client.ei.fracFocus.byState();
- * states.forEach(s => console.log(`${s.state}: ${s.disclosure_count} disclosures`));
+ * // Get disclosures for one state — a page of records plus the overall total
+ * const tx = await client.ei.fracFocus.byState('TX', { perPage: 50 });
+ * console.log(`${tx.meta.total_count} TX disclosures; page 1 of ${tx.meta.total_pages}`);
  *
  * // Get chemicals for a specific well
  * const chemicals = await client.ei.fracFocus.chemicals('42-123-12345');
@@ -218,44 +312,75 @@ export class EIFracFocusResource {
   }
 
   /**
-   * Get disclosures by state
+   * Get disclosure records for one state
    *
-   * @returns Array of disclosures grouped by state
+   * @param state - Two-letter state code, e.g. `TX`
+   * @param options - Paging; `per_page` defaults to 100, the route's maximum
+   * @returns One page of disclosures; `meta.total_count` covers all pages
+   *
+   * @throws {ValidationError} If `state` is missing or empty
    */
-  async byState(): Promise<DisclosuresByState[]> {
-    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/by-state", {});
+  async byState(state: string, options?: EIPageOptions): Promise<FracFocusByStatePage> {
+    const value = requireFilter(state, "State");
+    const endpoint = "/v1/ei/frac-focus/by-state";
+    const response = await this.client["request"]<unknown>(endpoint, {
+      state: value,
+      ...pageParams(options),
+    });
 
-    return unwrapCollection<DisclosuresByState>(
-      response,
-      "frac_focus_disclosures",
-      "/v1/ei/frac-focus/by-state",
-    );
+    return unwrapPage<FracFocusByStatePage>(response, "frac_focus_disclosures", endpoint);
   }
 
   /**
-   * Get disclosures by operator
+   * Get disclosure records for an operator (partial name match)
    *
-   * @returns Array of disclosures grouped by operator
+   * @param operator - Operator name, e.g. `EOG`
+   * @param options - Paging; `per_page` defaults to 100, the route's maximum
+   * @returns One page of disclosures; `meta.total_count` covers all pages
+   *
+   * @throws {ValidationError} If `operator` is missing or empty
    */
-  async byOperator(): Promise<DisclosuresByOperator[]> {
-    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/by-operator", {});
+  async byOperator(operator: string, options?: EIPageOptions): Promise<FracFocusByOperatorPage> {
+    const value = requireFilter(operator, "Operator name");
+    const endpoint = "/v1/ei/frac-focus/by-operator";
+    const response = await this.client["request"]<unknown>(endpoint, {
+      operator: value,
+      ...pageParams(options),
+    });
 
-    return unwrapCollection<DisclosuresByOperator>(
-      response,
-      "frac_focus_disclosures",
-      "/v1/ei/frac-focus/by-operator",
-    );
+    return unwrapPage<FracFocusByOperatorPage>(response, "frac_focus_disclosures", endpoint);
   }
 
   /**
-   * Get chemical usage statistics
+   * Get disclosure records that used a chemical
    *
-   * @returns Array of chemicals used in fracturing
+   * @param query - `cas` (CAS number) and/or `name` (partial chemical name);
+   *   at least one is required
+   * @param options - Paging; `per_page` defaults to 100, the route's maximum
+   * @returns One page of disclosures; `meta.total_count` covers all pages
+   *
+   * @throws {ValidationError} If neither `cas` nor `name` is a non-empty string
    */
-  async byChemical(): Promise<ChemicalUsage[]> {
-    const response = await this.client["request"]<unknown>("/v1/ei/frac-focus/by-chemical", {});
+  async byChemical(
+    query: FracFocusChemicalQuery,
+    options?: EIPageOptions,
+  ): Promise<FracFocusByChemicalPage> {
+    const params: Record<string, string> = {};
+    const cas = query?.cas;
+    const name = query?.name;
+    if (typeof cas === "string" && cas.trim() !== "") params.cas = cas.trim();
+    if (typeof name === "string" && name.trim() !== "") params.name = name.trim();
+    if (!params.cas && !params.name) {
+      throw new ValidationError("A CAS number or chemical name must be a non-empty string");
+    }
 
-    return unwrapCollection<ChemicalUsage>(response, "chemicals", "/v1/ei/frac-focus/by-chemical");
+    const endpoint = "/v1/ei/frac-focus/by-chemical";
+    const response = await this.client["request"]<unknown>(endpoint, {
+      ...params,
+      ...pageParams(options),
+    });
+
+    return unwrapPage<FracFocusByChemicalPage>(response, "frac_focus_disclosures", endpoint);
   }
 
   /**

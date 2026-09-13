@@ -161,6 +161,7 @@ export class EnergyIntelligenceResource {
 }
 
 // Re-export all types from sub-resources
+export type { EIPageOptions, EIPageMeta } from "./envelope.js";
 export type {
   RigCountRecord,
   RigCountByBasin,
@@ -206,6 +207,10 @@ export type {
   WellPermitSearchQuery,
   LatestWellPermit,
   WellPermitLatestResponse,
+  WellPermitsPage,
+  WellPermitsByStatePage,
+  WellPermitsByOperatorPage,
+  WellPermitsByFormationPage,
 } from "./well-permits.js";
 export type {
   FracFocusRecord,
@@ -215,6 +220,12 @@ export type {
   ChemicalUsage,
   WellChemical,
   FracFocusSearchQuery,
+  FracFocusDisclosure,
+  FracFocusPage,
+  FracFocusByStatePage,
+  FracFocusByOperatorPage,
+  FracFocusChemicalQuery,
+  FracFocusByChemicalPage,
 } from "./frac-focus.js";
 
 export {

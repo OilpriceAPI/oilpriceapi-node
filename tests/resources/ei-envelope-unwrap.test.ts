@@ -254,22 +254,25 @@ describe("#83 sibling EI named-collection methods", () => {
         status: "success",
         data: { well_permits: [{ id: "1" }], state: "TX", meta: { total_count: 1 } },
       },
-      call: (c) => c.ei.wellPermits.byState(),
+      call: (c) => c.ei.wellPermits.byState("TX").then((p) => p.well_permits),
       length: 1,
     },
     {
       name: "wellPermits.byOperator()",
-      body: { status: "success", data: { well_permits: [{ id: "1" }], operator_query: "Chevron" } },
-      call: (c) => c.ei.wellPermits.byOperator(),
+      body: {
+        status: "success",
+        data: { well_permits: [{ id: "1" }], operator_query: "Chevron", meta: { total_count: 1 } },
+      },
+      call: (c) => c.ei.wellPermits.byOperator("Chevron").then((p) => p.well_permits),
       length: 1,
     },
     {
       name: "wellPermits.byFormation()",
       body: {
         status: "success",
-        data: { well_permits: [{ id: "1" }], formation_query: "wolfcamp" },
+        data: { well_permits: [{ id: "1" }], formation_query: "wolfcamp", meta: { total_count: 1 } },
       },
-      call: (c) => c.ei.wellPermits.byFormation(),
+      call: (c) => c.ei.wellPermits.byFormation("wolfcamp").then((p) => p.well_permits),
       length: 1,
     },
     {
@@ -289,17 +292,24 @@ describe("#83 sibling EI named-collection methods", () => {
     },
     {
       name: "fracFocus.byState()",
-      body: { status: "success", data: { frac_focus_disclosures: [{ id: "1" }], state: "TX" } },
-      call: (c) => c.ei.fracFocus.byState(),
+      body: {
+        status: "success",
+        data: { frac_focus_disclosures: [{ id: "1" }], state: "TX", meta: { total_count: 1 } },
+      },
+      call: (c) => c.ei.fracFocus.byState("TX").then((p) => p.frac_focus_disclosures),
       length: 1,
     },
     {
       name: "fracFocus.byOperator()",
       body: {
         status: "success",
-        data: { frac_focus_disclosures: [{ id: "1" }], operator_query: "Chevron" },
+        data: {
+          frac_focus_disclosures: [{ id: "1" }],
+          operator_query: "Chevron",
+          meta: { total_count: 1 },
+        },
       },
-      call: (c) => c.ei.fracFocus.byOperator(),
+      call: (c) => c.ei.fracFocus.byOperator("Chevron").then((p) => p.frac_focus_disclosures),
       length: 1,
     },
   ];
