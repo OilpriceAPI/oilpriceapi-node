@@ -593,8 +593,11 @@ export class OilPriceAPI {
 
           const response = await fetch(url.toString(), fetchOptions);
 
-          clearTimeout(timeoutId);
-
+          // The abort timer stays armed until the body has been consumed.
+          // Clearing it here — the moment headers arrived — left nothing to
+          // interrupt `await response.text()`, so a stalled body hung for as
+          // long as the peer held the socket open, whatever `timeout` said
+          // (#81). The `finally` below is the single cleanup point.
           this.log(`Response: ${response.status} ${response.statusText}`);
 
           // Handle error responses
@@ -617,6 +620,10 @@ export class OilPriceAPI {
                 this.calculateRetryDelay(attempt),
               );
               this.log(`Rate limited. Waiting ${waitMs}ms`);
+              // The error body is fully read by this point, so the deadline
+              // for THIS attempt is met; don't let its timer hold the event
+              // loop open across the backoff sleep.
+              clearTimeout(timeoutId);
               await this.sleep(waitMs);
               continue;
             }
