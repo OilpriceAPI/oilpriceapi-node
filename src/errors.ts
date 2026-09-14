@@ -95,8 +95,15 @@ export class TimeoutError extends OilPriceAPIError {
 
 type ErrorEnvelope = Record<string, unknown>;
 
-/** Upper-snake machine codes such as `VALIDATION_ERROR` or `WATCH_LIMIT`. */
-const MACHINE_CODE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
+/**
+ * Snake-case machine codes, in either case: upper-snake such as
+ * `VALIDATION_ERROR` or `WATCH_LIMIT`, and lower-snake such as `invalid_code`,
+ * `no_price_data` or `invalid_request` (#117). A token starts with a letter,
+ * joins ASCII alphanumerics with single underscores, and has at least one
+ * underscore. Mixed case, a sentence, or a bare word (`forbidden`) is not a
+ * code: no fail envelope on the API sends one as a code.
+ */
+const MACHINE_CODE = /^(?:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)$/;
 
 function isEnvelope(value: unknown): value is ErrorEnvelope {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -147,9 +154,14 @@ export function errorFromResponse(response: Response, body: string, apiKey?: str
     : failData
       ? { ...parsed, ...failData }
       : parsed || {};
-  // Inside a fail envelope an upper-snake `error` (`VALIDATION_ERROR`,
-  // `WATCH_LIMIT`) is a machine code, and the sentence is in `message`.
-  const failCode = failData && typeof failData.error === "string" && MACHINE_CODE.test(failData.error)
+  // Inside a fail envelope a snake-case `error` (`VALIDATION_ERROR`,
+  // `invalid_code`) is a machine code, and the sentence is in `message`. `code`
+  // is not redacted, so a value carrying the configured key is never a code; it
+  // stays the (redacted) message instead.
+  const failCode = failData
+    && typeof failData.error === "string"
+    && MACHINE_CODE.test(failData.error)
+    && !(apiKey && failData.error.includes(apiKey))
     ? failData.error
     : undefined;
   const safeBody = redact(parsed ?? body, apiKey);
