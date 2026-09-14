@@ -1,0 +1,1 @@
+{"error":{"code":"MISSING_PARAMETER","message":"Required parameter 'commodity'. Valid: ICE_BRENT, ICE_WTI, ICE_GASOIL, NYMEX_NG, ICE_TTF","status":400,"request_id":"1a8705b8-aef3-4b06-8ae2-df386493b4f0","docs":"https://docs.oilpriceapi.com#MISSING_PARAMETER"}}

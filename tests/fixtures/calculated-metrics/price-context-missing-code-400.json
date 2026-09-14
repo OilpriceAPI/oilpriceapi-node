@@ -1,0 +1,1 @@
+{"error":{"code":"MISSING_PARAMETER","message":"Required parameter 'code' missing. Example: ?code=BRENT_CRUDE_USD. See https://www.oilpriceapi.com/docs for valid codes.","status":400,"request_id":"2abf2d94-02f8-4404-88a4-b0bc46e0198a","docs":"https://docs.oilpriceapi.com#MISSING_PARAMETER"}}

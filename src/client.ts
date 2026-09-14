@@ -466,6 +466,8 @@ export class OilPriceAPI {
       body?: unknown;
       headers?: Record<string, string>;
       idempotent?: boolean;
+      /** Return the parsed body untouched. See {@link requestRaw}. */
+      unshaped?: boolean;
     },
   ): Promise<T> {
     const { data } = await this.requestRaw<T>(endpoint, params, options);
@@ -533,6 +535,15 @@ export class OilPriceAPI {
        * replayed after an ambiguous outcome (#82).
        */
       idempotent?: boolean;
+      /**
+       * Return the parsed JSON body as-is, skipping {@link shapeResponseData}.
+       *
+       * That shaping wraps any `data` object with a top-level `price` in a
+       * one-element array (the `/v1/prices/latest` convention), which turned
+       * `/v1/indicators/price-context` and `/annotations` into arrays (#112).
+       * Resources that validate their own envelope opt out with this flag.
+       */
+      unshaped?: boolean;
     },
   ): Promise<APIResponse<T>> {
     const apiKey = this.requireApiKey();
@@ -675,7 +686,7 @@ export class OilPriceAPI {
           });
 
           return {
-            data: this.shapeResponseData<T>(responseData),
+            data: options?.unshaped ? (responseData as T) : this.shapeResponseData<T>(responseData),
             status: response.status,
             headers: response.headers,
           };

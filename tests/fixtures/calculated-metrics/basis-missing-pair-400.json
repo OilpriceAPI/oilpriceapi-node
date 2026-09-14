@@ -1,0 +1,1 @@
+{"error":{"code":"MISSING_PARAMETER","message":"Required parameter 'pair' missing. Valid: WAHA_HH, BRENT_WTI, BRENT_DUBAI, TTF_HH, BRENT_OMAN","status":400,"request_id":"f44f39ef-c277-4078-a207-6c39d6ffd58e","docs":"https://docs.oilpriceapi.com#MISSING_PARAMETER"}}
