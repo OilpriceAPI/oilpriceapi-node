@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-09-14
+
+A major release: several resources were typed and called in ways production never supported. The changes below are breaking at compile time or runtime, and in nearly every case the old call could not work correctly against the live API.
+
+### Breaking changes
+
+**Spreads (`client.spreads`)** (#112)
+- Removed `get(type)`, `historical(type, options)` and `all(type)`. They could not send the parameters the routes require; use the named methods.
+- `basis(pair)` and `curveStructure(commodity)` now require their argument.
+- `crack({ type, crude })`, `margin({ index })` and `physicalPremium({ commodity })` take an options object and return `CrackSpread`, `RefineryMargin` and `PhysicalPremium` with the field names the API sends (`spread_type`, `margin_usd_bbl`, `premium_pct`).
+- `SpreadValue`, `HistoricalSpreadValue`, `HistoricalSpreadOptions` and `SpreadType` are deprecated.
+
+**Indicators (`client.indicators`)** (#112)
+- Removed `get(type)`, `congressionalTrades()` and `CongressionalTradeIndicator`. The route has never returned data.
+- `priceContext(code, { relatedSpreads })` and `annotations(code)` now require `code`. `annotations` returns a `MarketAnnotations` object instead of an array.
+- `cftcPositioning({ commodity })` returns one `CftcPositioning` object; the list is `cftcPositioningAll()`.
+- `fuelSwitching()` and `storageAnalytics()` return `FuelSwitching` and `StorageAnalytics`.
+- Deprecated aliases: `FuelSwitchingIndicator`, `PriceContextIndicator`, `StorageAnalyticsIndicator`, `AnnotationIndicator` (now a single annotation) and `CFTCPositioningIndicator`. `IndicatorType` no longer includes `"congressional-trades"`.
+
+**Rig counts (`client.rigCounts`)** (#108)
+- `latest()` returns `RigCountObservation`, with the value in `count`. `total`, `oil`, `gas`, `misc`, `timestamp` and `change` are gone because no route sends them; use `client.ei.rigCounts` for the oil/gas split. `RigCountData` is a deprecated alias.
+- `current()` returns `CurrentRigCounts`.
+- `historical()` returns the page envelope `RigCountsPage`. It previously returned `undefined`.
+- `trends()` rejects periods the route does not honour (`week`, `month`, `quarter`, `year`) with `ValidationError`.
+
+**Energy Intelligence (`client.ei`)** (#104, #105)
+- Rig-count reports: `list()` returns `RigCountReportSummary[]`; `latest()` and `get(id)` return `RigCountReport` with totals under `us_total`. `RigCountRecord` is a deprecated alias.
+- The six `by*` methods on `wellPermits` and `fracFocus` now require their filter, throw `ValidationError` before sending when it is missing, and return the records together with pagination `meta` instead of a bare array.
+
+**Subscriptions** (#78)
+- `subscriptions.list()` throws `unexpected_response_shape` instead of resolving `[]` when the response has no `subscriptions` array, so `[]` now only ever means the API sent an empty list. `create()` likewise throws on a body it cannot map.
+
+**Published types** (#94)
+- Types describe the payloads production returns. `CategoriesResponse` changed shape, so code reading `categories.oil` no longer compiles (it could not work at runtime). `Commodity.category` is optional.
+
+**Errors** (#111, #117)
+- For `{ status: "fail", data: { ... } }` responses, `error.message` now carries the API's reason, and a snake-case `data.error` (`VALIDATION_ERROR`, `invalid_code`, `no_price_data`) becomes `error.code`. Code that branched on `"HTTP_ERROR"` for these responses should branch on the specific code. `error.code` is no longer `undefined` when the body carries none.
+
+**Base URL** (#89)
+- A `baseUrl` containing a query string or fragment now throws at construction, and the base path is pinned.
+
+**Unmappable responses**
+- Across rig counts, spreads, indicators, Energy Intelligence and subscriptions, a 200 whose body cannot be mapped raises `OilPriceAPIError` with `code: "unexpected_response_shape"` instead of returning an object with missing fields.
+
+### Added
+- Spreads: `crackHistorical`, `crackAll`, `gasoilCrack`, `basisHistorical`, `basisAll`, `curveStructureAll`, `marginHistorical`, `marginAll`, `physicalPremiumHistorical` and `physicalPremiumAll` (#112).
+- Indicators: `fuelSwitchingHistorical`, `storageAnalyticsAll`, `annotationsBatch` (up to `ANNOTATIONS_BATCH_MAX_CODES`, 20 codes), `cftcPositioningHistorical` and `cftcPositioningAll` (#112).
+- Subscriptions: `get`, `update`, `pause` and `resume` (#78).
+- Fuel surcharge: typed LTL and parcel clients (#79).
+- Rig counts: `latest({ code })`, `historical({ period, page, perPage, code })` and `trends({ period, region })` (#108).
+
+### Fixed
+- The request timeout stays armed until the response body has been read (#81).
+- Pagination no longer stops at the server's 500-row page cap (#90).
+- Caller-supplied ids are encoded into a single path segment (#92).
+- The streaming client no longer terminates its host process on a socket error, ends a permanently rejected stream, and bounds setup (#91, #84).
+- CommonJS consumers get `.d.cts` declarations, and `@types/ws` and `@types/node` are runtime dependencies (#93).
+- Energy Intelligence methods no longer return `undefined` after double unwrapping (#83).
+
 ## [1.3.0] - 2026-09-13
 
 ### Security
