@@ -114,7 +114,7 @@ jobs:
   publish:
     name: Publish verified package to npm
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: verify
     permissions:
       contents: read
@@ -167,7 +167,10 @@ jobs:
             exit 1
           fi
 
-          for attempt in $(seq 1 12); do
+          # npm can take several minutes to serve a new version (#127: ~5 min
+          # for 2.1.0). Poll for up to 10 minutes before failing.
+          deadline=$((SECONDS + 600))
+          while [ "$SECONDS" -lt "$deadline" ]; do
             if NPM_PUBLICATION_MODE=require-present \
               NPM_PUBLICATION_EXPECTED_NAME="$NAME" \
               NPM_PUBLICATION_EXPECTED_VERSION="$VERSION" \
@@ -184,7 +187,7 @@ jobs:
               echo "Verified npm $NAME@$VERSION integrity and latest tag."
               exit 0
             fi
-            sleep 5
+            sleep 10
           done
 
           echo "::error::npm public readback did not converge to the verified release"
