@@ -6,7 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
-import { ValidationError } from "../errors.js";
+import { OilPriceAPIError, ValidationError } from "../errors.js";
 
 /**
  * A single futures contract month within a {@link FuturesPrice} response.
@@ -247,6 +247,44 @@ export interface ContinuousFuturesData {
   /** Array of continuous prices */
   prices: ContinuousContractPrice[];
 }
+
+/**
+ * Auto-rolled continuous front-month futures price, from
+ * `GET /v1/futures/continuous/{family}`.
+ */
+export interface ContinuousFrontMonth {
+  /** Commodity code, e.g. `"BRENT_FUTURES_CONTINUOUS"` */
+  commodity: string;
+  source: string;
+  description: string;
+  price: number;
+  currency: string;
+  /** ISO 8601 timestamp of the settlement */
+  updated_at: string;
+  ohlc: {
+    open: number | null;
+    high: number | null;
+    low: number | null;
+    close: number | null;
+    volume: number | null;
+  };
+  changes: {
+    change_24h: number | null;
+    change_percent_24h: number | null;
+  };
+  metadata: {
+    data_source: string;
+    ticker: string;
+    is_continuous: boolean;
+    roll_method: string;
+    history_available_from: string;
+    total_historical_records: number;
+    unit: string;
+  };
+}
+
+/** Families served by `GET /v1/futures/continuous/{family}`. */
+export type ContinuousFuturesFamily = "brent" | "wti";
 
 /**
  * Spread-history data point for a contract family.
@@ -633,37 +671,24 @@ export class FuturesResource {
   }
 
   /**
-   * Get spread between two futures contracts
+   * Spread between two arbitrary futures contracts.
    *
-   * Calculates the price difference between two contracts (contract1 - contract2).
+   * @deprecated The API has no `/v1/futures/spreads` route; every call returned
+   * HTTP 404 (#125). Calendar spreads for a contract family are served by
+   * `client.futures.family(slug).spreads()` (e.g. `client.futures.brent().spreads()`,
+   * `GET /v1/futures/{slug}/spreads`). Removed in the next major.
    *
-   * @param contract1 - First contract symbol
-   * @param contract2 - Second contract symbol
-   * @returns Spread data
-   *
-   * @throws {NotFoundError} If either contract not found
-   * @throws {OilPriceAPIError} If API request fails
-   *
-   * @example
-   * ```typescript
-   * // Calculate spread between front month and second month
-   * const spread = await client.futures.spreads('CL.1', 'CL.2');
-   * console.log(`CL.1 - CL.2 spread: $${spread.spread}`);
-   * ```
+   * @throws {OilPriceAPIError} Always, with code `ENDPOINT_NOT_AVAILABLE`.
    */
-  async spreads(contract1: string, contract2: string): Promise<FuturesSpread> {
-    if (!contract1 || typeof contract1 !== "string") {
-      throw new ValidationError("First contract symbol must be a non-empty string");
-    }
-    if (!contract2 || typeof contract2 !== "string") {
-      throw new ValidationError("Second contract symbol must be a non-empty string");
-    }
-
-    return this.client["request"]<FuturesSpread>("/v1/futures/spreads", {
-      contract1,
-      contract2,
-    });
+  async spreads(_contract1: string, _contract2: string): Promise<FuturesSpread> {
+    throw new OilPriceAPIError(
+      "client.futures.spreads(contract1, contract2) is not supported: the API has no arbitrary two-contract spread endpoint. " +
+        "Use client.futures.family(slug).spreads(), e.g. client.futures.brent().spreads().",
+      undefined,
+      "ENDPOINT_NOT_AVAILABLE",
+    );
   }
+
 
   /**
    * Get futures curve for a contract
@@ -694,37 +719,48 @@ export class FuturesResource {
   }
 
   /**
-   * Get continuous futures contract data
+   * Continuous futures series by contract symbol.
    *
-   * Returns a continuous time series by rolling contracts before expiration.
+   * @deprecated The API has no `/v1/futures/{contract}/continuous` route; every
+   * call returned HTTP 404. Use {@link continuousFrontMonth} (`"brent"` or
+   * `"wti"`). Removed in the next major.
    *
-   * @param contract - Base contract symbol (e.g., "CL", "BZ")
-   * @param months - Number of months for continuous contract (default: 1 for front month)
-   * @returns Continuous contract data
+   * @throws {OilPriceAPIError} Always, with code `ENDPOINT_NOT_AVAILABLE`.
+   */
+  async continuous(_contract: string, _months?: number): Promise<ContinuousFuturesData> {
+    throw new OilPriceAPIError(
+      "client.futures.continuous(contract, months) is not supported: the API has no per-contract continuous endpoint. " +
+        "Use client.futures.continuousFrontMonth('brent') or continuousFrontMonth('wti').",
+      undefined,
+      "ENDPOINT_NOT_AVAILABLE",
+    );
+  }
+
+  /**
+   * Auto-rolled continuous front-month price for a futures family.
    *
-   * @throws {NotFoundError} If contract not found
+   * @param family - `"brent"` or `"wti"`
+   * @returns The latest continuous front-month settlement with OHLC
+   *
+   * @throws {ValidationError} If the family is not supported
    * @throws {OilPriceAPIError} If API request fails
    *
    * @example
    * ```typescript
-   * // Get continuous front month contract
-   * const continuous = await client.futures.continuous('CL', 1);
-   * console.log(`${continuous.prices.length} data points`);
+   * const brent = await client.futures.continuousFrontMonth('brent');
+   * console.log(`${brent.metadata.ticker}: $${brent.price}`);
    * ```
    */
-  async continuous(contract: string, months?: number): Promise<ContinuousFuturesData> {
-    if (!contract || typeof contract !== "string") {
-      throw new ValidationError("Contract symbol must be a non-empty string");
+  async continuousFrontMonth(family: ContinuousFuturesFamily): Promise<ContinuousFrontMonth> {
+    if (family !== "brent" && family !== "wti") {
+      throw new ValidationError('Continuous futures family must be "brent" or "wti"');
     }
-
-    const params: Record<string, string> = {};
-    if (months !== undefined) params.months = months.toString();
-
-    return this.client["request"]<ContinuousFuturesData>(
-      `/v1/futures/${encodeURIComponent(contract)}/continuous`,
-      params,
+    return this.client["request"]<ContinuousFrontMonth>(
+      `/v1/futures/continuous/${encodeURIComponent(family)}`,
+      {},
     );
   }
+
 
   /**
    * Get a typed helper for a specific contract family (issue #1).

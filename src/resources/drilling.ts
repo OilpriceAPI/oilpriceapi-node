@@ -6,7 +6,7 @@
  */
 
 import type { OilPriceAPI } from "../client.js";
-import { ValidationError } from "../errors.js";
+import { OilPriceAPIError } from "../errors.js";
 
 /**
  * Drilling intelligence data point
@@ -205,15 +205,8 @@ export interface BasinDrillingData {
  * const latest = await client.drilling.latest();
  * console.log(`Active rigs: ${latest.total_rigs}`);
  *
- * // Get drilling trends
- * const trends = await client.drilling.trends();
- * trends.forEach(trend => {
- *   console.log(`${trend.date}: ${trend.metric} = ${trend.value}`);
- * });
- *
- * // Get basin-specific data
- * const permian = await client.drilling.basin('Permian');
- * console.log(`Permian rigs: ${permian.active_rigs}`);
+ * // Basin-level completions (by_basin keyed by basin code)
+ * const completions = await client.drilling.completions();
  * ```
  */
 export class DrillingIntelligenceResource {
@@ -298,29 +291,22 @@ export class DrillingIntelligenceResource {
   }
 
   /**
-   * Get drilling activity trends
+   * Drilling activity trends.
    *
-   * Returns time series data showing trends in drilling metrics.
+   * @deprecated The API has no `/v1/drilling-intelligence/trends` route; every
+   * call returned HTTP 404 (#125). Use {@link summary} for the current
+   * aggregate, or {@link completions} / {@link wellsDrilled} /
+   * {@link ducWells} for basin-level series. Removed in the next major.
    *
-   * @returns Array of drilling trend data points
-   *
-   * @throws {OilPriceAPIError} If API request fails
-   * @throws {AuthenticationError} If API key is invalid
-   *
-   * @example
-   * ```typescript
-   * const trends = await client.drilling.trends();
-   * trends.forEach(point => {
-   *   console.log(`${point.date}: ${point.metric} = ${point.value} (${point.trend})`);
-   * });
-   * ```
+   * @throws {OilPriceAPIError} Always, with code `ENDPOINT_NOT_AVAILABLE`.
    */
   async trends(): Promise<DrillingTrend[]> {
-    const response = await this.client["request"]<
-      DrillingTrend[] | { trends: DrillingTrend[] }
-    >("/v1/drilling-intelligence/trends", {});
-
-    return Array.isArray(response) ? response : response.trends;
+    throw new OilPriceAPIError(
+      "client.drilling.trends() is not supported: the API has no drilling trends endpoint. " +
+        "Use client.drilling.summary(), or completions() / wellsDrilled() / ducWells() for basin-level data.",
+      undefined,
+      "ENDPOINT_NOT_AVAILABLE",
+    );
   }
 
   /**
@@ -454,34 +440,22 @@ export class DrillingIntelligenceResource {
   }
 
   /**
-   * Get basin-specific drilling intelligence
+   * Basin-specific drilling intelligence.
    *
-   * Returns comprehensive drilling data for a specific basin.
+   * @deprecated The API has no `/v1/drilling-intelligence/basin/{name}` route;
+   * every call returned HTTP 404 (#125). Basin-level values are returned in the
+   * `by_basin` maps of {@link completions}, {@link wellsDrilled},
+   * {@link ducWells} and {@link fracSpreads}. Removed in the next major.
    *
-   * @param name - Basin name (e.g., "Permian", "Eagle Ford", "Bakken")
-   * @returns Basin drilling intelligence data
-   *
-   * @throws {NotFoundError} If basin not found
-   * @throws {OilPriceAPIError} If API request fails
-   * @throws {AuthenticationError} If API key is invalid
-   *
-   * @example
-   * ```typescript
-   * const permian = await client.drilling.basin('Permian');
-   * console.log(`Permian Basin as of ${permian.as_of_date}:`);
-   * console.log(`  Active rigs: ${permian.active_rigs}`);
-   * console.log(`  Frac spreads: ${permian.frac_spreads}`);
-   * console.log(`  DUC wells: ${permian.duc_wells}`);
-   * ```
+   * @throws {OilPriceAPIError} Always, with code `ENDPOINT_NOT_AVAILABLE`.
    */
-  async basin(name: string): Promise<BasinDrillingData> {
-    if (!name || typeof name !== "string") {
-      throw new ValidationError("Basin name must be a non-empty string");
-    }
-
-    return this.client["request"]<BasinDrillingData>(
-      `/v1/drilling-intelligence/basin/${encodeURIComponent(name)}`,
-      {},
+  async basin(_name: string): Promise<BasinDrillingData> {
+    throw new OilPriceAPIError(
+      "client.drilling.basin() is not supported: the API has no per-basin endpoint. " +
+        "Read the by_basin maps from completions(), wellsDrilled(), ducWells() or fracSpreads().",
+      undefined,
+      "ENDPOINT_NOT_AVAILABLE",
     );
   }
+
 }
