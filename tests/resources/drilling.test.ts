@@ -141,50 +141,16 @@ describe("DrillingResource", () => {
   });
 
   describe("trends()", () => {
-    it("should fetch drilling trends as array", async () => {
-      const mockData: DrillingTrend[] = [
-        {
-          date: "2024-01-01",
-          metric: "rig_count",
-          value: 618,
-          trend: "up",
-        },
-        {
-          date: "2024-01-08",
-          metric: "rig_count",
-          value: 620,
-          moving_average: 619,
-          trend: "up",
-        },
-        {
-          date: "2024-01-15",
-          metric: "rig_count",
-          value: 625,
-          moving_average: 621,
-          trend: "up",
-        },
-      ];
+    // No /v1/drilling-intelligence/trends route exists; it 404'd live (#125).
+    it("rejects with ENDPOINT_NOT_AVAILABLE and never calls the API", async () => {
+      const requestSpy = vi.spyOn(client as any, "request");
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.drilling.trends();
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/drilling-intelligence/trends", {});
-      expect(result).toHaveLength(3);
-      expect(result[0].metric).toBe("rig_count");
-      expect(result[2].value).toBe(625);
-    });
-
-    it("should unwrap trends property when response is wrapped", async () => {
-      const mockData: DrillingTrend[] = [{ date: "2024-01-15", metric: "rig_count", value: 625 }];
-
-      vi.spyOn(client as any, "request").mockResolvedValue({
-        trends: mockData,
+      await expect(client.drilling.trends()).rejects.toMatchObject({
+        name: "OilPriceAPIError",
+        code: "ENDPOINT_NOT_AVAILABLE",
       });
-
-      const result = await client.drilling.trends();
-
-      expect(result).toEqual(mockData);
+      await expect(client.drilling.trends()).rejects.toThrow(/drilling\.summary\(\)/);
+      expect(requestSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -383,63 +349,16 @@ describe("DrillingResource", () => {
   });
 
   describe("basin()", () => {
-    it("should fetch basin-specific drilling data", async () => {
-      const mockData: BasinDrillingData = {
-        basin: "Permian",
-        active_rigs: 310,
-        frac_spreads: 120,
-        permits: 450,
-        duc_wells: 1450,
-        completions: 320,
-        wells_drilled: 280,
-        as_of_date: "2024-01-15",
-      };
+    // No /v1/drilling-intelligence/basin/{name} route exists; it 404'd live (#125).
+    it("rejects with ENDPOINT_NOT_AVAILABLE and never calls the API", async () => {
+      const requestSpy = vi.spyOn(client as any, "request");
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.drilling.basin("Permian");
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/drilling-intelligence/basin/Permian", {});
-      expect(result.basin).toBe("Permian");
-      expect(result.active_rigs).toBe(310);
-      expect(result.frac_spreads).toBe(120);
-      expect(result.as_of_date).toBe("2024-01-15");
-    });
-
-    it("should fetch basin data for Eagle Ford", async () => {
-      const mockData: BasinDrillingData = {
-        basin: "Eagle Ford",
-        active_rigs: 65,
-        as_of_date: "2024-01-15",
-      };
-
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.drilling.basin("Eagle Ford");
-
-      // The space is percent-encoded by the resource now rather than by
-      // `new URL()` later; the wire is byte-for-byte identical either way
-      // (both produce /v1/drilling-intelligence/basin/Eagle%20Ford). See #92.
-      expect(requestSpy).toHaveBeenCalledWith(
-        "/v1/drilling-intelligence/basin/Eagle%20Ford",
-        {},
-      );
-      expect(result.basin).toBe("Eagle Ford");
-    });
-
-    it("should throw error for empty basin name", async () => {
-      await expect(client.drilling.basin("")).rejects.toThrow(
-        "Basin name must be a non-empty string",
-      );
-    });
-
-    it("should throw error for non-string basin name", async () => {
-      await expect(client.drilling.basin(null as any)).rejects.toThrow(
-        "Basin name must be a non-empty string",
-      );
-      await expect(client.drilling.basin(42 as any)).rejects.toThrow(
-        "Basin name must be a non-empty string",
-      );
+      await expect(client.drilling.basin("Permian")).rejects.toMatchObject({
+        name: "OilPriceAPIError",
+        code: "ENDPOINT_NOT_AVAILABLE",
+      });
+      await expect(client.drilling.basin("Permian")).rejects.toThrow(/by_basin/);
+      expect(requestSpy).not.toHaveBeenCalled();
     });
   });
 });

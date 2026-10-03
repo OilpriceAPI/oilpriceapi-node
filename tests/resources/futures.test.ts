@@ -203,36 +203,18 @@ describe("FuturesResource", () => {
   });
 
   describe("spreads()", () => {
-    it("should calculate spread between two contracts", async () => {
-      const mockSpread: FuturesSpread = {
-        contract1: "CL.1",
-        contract2: "CL.2",
-        spread: 0.5,
-        spread_percent: 0.66,
-        timestamp: "2024-01-15T10:00:00Z",
-      };
+    // No /v1/futures/spreads route exists; it 404'd live (#125).
+    it("rejects with ENDPOINT_NOT_AVAILABLE and never calls the API", async () => {
+      const requestSpy = vi.spyOn(client as any, "request");
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockSpread);
-
-      const result = await client.futures.spreads("CL.1", "CL.2");
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/spreads", {
-        contract1: "CL.1",
-        contract2: "CL.2",
+      await expect(client.futures.spreads("CL.1", "CL.2")).rejects.toMatchObject({
+        name: "OilPriceAPIError",
+        code: "ENDPOINT_NOT_AVAILABLE",
       });
-      expect(result).toEqual(mockSpread);
-    });
-
-    it("should throw error for empty first contract", async () => {
-      await expect(client.futures.spreads("", "CL.2")).rejects.toThrow(
-        "First contract symbol must be a non-empty string",
+      await expect(client.futures.spreads("CL.1", "CL.2")).rejects.toThrow(
+        /futures\.brent\(\)\.spreads\(\)/,
       );
-    });
-
-    it("should throw error for empty second contract", async () => {
-      await expect(client.futures.spreads("CL.1", "")).rejects.toThrow(
-        "Second contract symbol must be a non-empty string",
-      );
+      expect(requestSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -296,44 +278,42 @@ describe("FuturesResource", () => {
   });
 
   describe("continuous()", () => {
-    it("should fetch continuous contract without months parameter", async () => {
-      const mockData: ContinuousFuturesData = {
-        contract: "CL",
-        months: 1,
-        prices: [
-          { date: "2024-01-01", price: 75.0, active_contract: "CL.1" },
-          { date: "2024-01-02", price: 75.25, active_contract: "CL.1" },
-        ],
-      };
+    // No /v1/futures/{contract}/continuous route exists; it 404'd live (#125).
+    it("rejects with ENDPOINT_NOT_AVAILABLE and never calls the API", async () => {
+      const requestSpy = vi.spyOn(client as any, "request");
 
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      const result = await client.futures.continuous("CL");
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/CL/continuous", {});
-      expect(result).toEqual(mockData);
-    });
-
-    it("should fetch continuous contract with months parameter", async () => {
-      const mockData: ContinuousFuturesData = {
-        contract: "CL",
-        months: 2,
-        prices: [],
-      };
-
-      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mockData);
-
-      await client.futures.continuous("CL", 2);
-
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/CL/continuous", {
-        months: "2",
+      await expect(client.futures.continuous("CL", 2)).rejects.toMatchObject({
+        name: "OilPriceAPIError",
+        code: "ENDPOINT_NOT_AVAILABLE",
       });
-    });
-
-    it("should throw error for empty contract", async () => {
-      await expect(client.futures.continuous("")).rejects.toThrow(
-        "Contract symbol must be a non-empty string",
-      );
+      await expect(client.futures.continuous("CL")).rejects.toThrow(/continuousFrontMonth/);
+      expect(requestSpy).not.toHaveBeenCalled();
     });
   });
+
+  describe("continuousFrontMonth()", () => {
+    it("requests the continuous family route", async () => {
+      const mock = {
+        commodity: "BRENT_FUTURES_CONTINUOUS",
+        price: 102.56,
+        metadata: { ticker: "BZ=F", is_continuous: true },
+      };
+      const requestSpy = vi.spyOn(client as any, "request").mockResolvedValue(mock);
+
+      const result = await client.futures.continuousFrontMonth("brent");
+
+      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/continuous/brent", {});
+      expect(result).toEqual(mock);
+    });
+
+    it("rejects an unsupported family without calling the API", async () => {
+      const requestSpy = vi.spyOn(client as any, "request");
+
+      await expect(client.futures.continuousFrontMonth("CL" as any)).rejects.toThrow(
+        'Continuous futures family must be "brent" or "wti"',
+      );
+      expect(requestSpy).not.toHaveBeenCalled();
+    });
+  });
+
 });

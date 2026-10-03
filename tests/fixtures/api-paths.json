@@ -1,0 +1,2609 @@
+{
+  "generatedFrom": {
+    "api": "OilpriceAPI/oilpriceapi-api",
+    "commit": "b64093719",
+    "generatedAt": "2026-10-03"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/v1/account",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/alerts",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/alerts",
+      "audience": "product_preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/alerts/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/alerts/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/alerts/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/alerts/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/alerts/{param}/test",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/alerts/analytics_history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/alerts/test",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/alerts/triggers",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/analytics/correlation",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/analytics/forecast",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/analytics/performance",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/analytics/spread",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/analytics/statistics",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/analytics/trend",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/api-keys",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/api-keys",
+      "audience": "openapi"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/api-keys/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/api-keys/{param}/roll",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/aviation-fuel/pilot",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/benchmarks/close",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/all",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/compare",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/export",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/historical/{param}",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/latest",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/ports/{param}",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/bunker-fuels/spreads/ports",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/commodities",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/commodities/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/commodities/{param}/coverage",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/commodities/categories",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/context/market",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/context/market/economic",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/context/market/indicators",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/context/market/news",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/costco-gas/warehouses",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/costco-gas/warehouses/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/current_price",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/current_price/{param}",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/dashboard",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-quality/reports",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-quality/reports/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-quality/summary",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-source-requests",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/data-source-requests",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-sources",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/data-sources",
+      "audience": "dashboard"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/data-sources/{param}",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-sources/{param}",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/data-sources/{param}",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/data-sources/{param}",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-sources/{param}/health",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/data-sources/{param}/logs",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/data-sources/{param}/rotate_credentials",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/data-sources/{param}/test",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/demo/commodities",
+      "audience": "discovery_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/demo/prices",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/demo/prices/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/demo/prices/latest",
+      "audience": "discovery_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/diesel-prices",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/diesel-prices/stations",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/disasters/earthquakes",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/disasters/energy-impact",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/disasters/fires",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/completions",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/duc-wells",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/frac-spreads",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/summary",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/well-permits",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling-intelligence/wells-drilled",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/drilling/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/dpr/production",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/by_basin",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/duc_wells",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/summary",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/drilling_productivities/trends",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/compare",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/prices",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/production",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/forecasts/summary",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/{param}/chemicals",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/by-chemical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/by-operator",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/by-state",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/for-well/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/search",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/frac-focus/summary",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories/by_product",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories/cushing",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/oil_inventories/summary",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_production/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_production/by_country",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_production/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_production/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_production/top_producers",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_production/total",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions/by_country",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions/top_producers",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/opec_productions/total",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/rig_counts",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/rig_counts/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/rig_counts/by_basin",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/rig_counts/by_state",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/rig_counts/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/rig_counts/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/by-formation",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/by-operator",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/by-state",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/latest",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/preview",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/search",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/states",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/states/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/well-permits/summary",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/ei/wells/{param}/timeline",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/electricity",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/email_captures",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/events/disruptions",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/events/disruptions/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/excel/run",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/feedback_experiments/{param}",
+      "audience": "website"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/feedback_responses",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/forecasts/monthly",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/forecasts/monthly/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/forecasts/monthly/accuracy",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/forecasts/monthly/archive",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fuel-surcharge",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fuel-surcharge/{param}/history",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fuel-surcharge/{param}/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fuel-surcharge/parcel",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fuel-surcharge/parcel/{param}/history",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fuel-surcharge/parcel/{param}/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fundamentals/natural-gas/consumption",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fundamentals/natural-gas/lng-exports",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fundamentals/natural-gas/production",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/fundamentals/natural-gas/storage",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/brent/spreads",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/continuous/brent",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/continuous/brent/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/continuous/wti",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/continuous/wti/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eu-carbon/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/eua-carbon/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gasoil/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/gold/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-brent/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-gasoil/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ice-wti/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm-lng/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/jkm/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/lng-jkm/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/natural-gas/spreads",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/rbob",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ttf-gas/spreads",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uk-carbon",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uk-carbon/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uk-carbon/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uka",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uka-carbon",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uka-carbon/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uka-carbon/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uka/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/uka/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ukets-carbon",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ukets-carbon/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/ukets-carbon/historical",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti/curve",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti/intraday",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti/ohlc",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti/spread-history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/futures/wti/spreads",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/gasoline-prices",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/geopolitical/events",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/geopolitical/history",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/geopolitical/hotspots",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/geopolitical/regions",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/geopolitical/risk",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/health",
+      "audience": "operations"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/health/change-24h",
+      "audience": "operations"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/health/detailed",
+      "audience": "operations"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/health/price-monitor",
+      "audience": "operations"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/annotations",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/annotations/batch",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/cftc-positioning",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/cftc-positioning/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/cftc-positioning/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/congressional-trades",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/fuel-switching",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/fuel-switching/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/price-context",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/storage-analytics",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/indicators/storage-analytics/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/infrastructure/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/infrastructure/near",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/infrastructure/status",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/internal/chat_logs",
+      "audience": "internal"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/internal/ops_alerts",
+      "audience": "internal"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/internal/send_email",
+      "audience": "internal"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/latest",
+      "audience": "compatibility"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/leads",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/macro/calendar",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/macro/releases",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/macro/releases/this-week",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/marine-fuels/latest",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/marine-ports",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/marine-ports/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/maritime-fuels/bundle",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/maritime-fuels/historical",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/market_brief",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/market-brief",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/meta/limits",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/natural-gas/hubs",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/natural-gas/hubs/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/natural-gas/storage",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/notification_preferences",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/notification_preferences",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/notification_preferences",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/notifications",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/notifications/{param}/mark_read",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/notifications/mark_all_read",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/notifications/unread_count",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/onboarding/first_call_example",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/onboarding/run_first_call",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/onboarding/status",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/onboarding/track_event",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/organizations/{param}/dashboard",
+      "audience": "dashboard"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/phone",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/phone",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/phone",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/phone/resend",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/phone/verify",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/price",
+      "audience": "unlisted"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/price/latest",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/{param}",
+      "audience": "unlisted"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/all/health",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/prices/batch",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/brent",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/BRENT_CRUDE_USD",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/BRENT_CRUDE_USD/latest",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/BRENT_USD",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/crude-oil",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/current",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/data-connector",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/excel-latest",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/export",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/historical/week",
+      "audience": "unlisted"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/history",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/history/week",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/marine-fuels",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/marine-fuels/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/marine-fuels/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/marine-fuels/ports",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/metrics",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/multi",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past_day",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past_day_price",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past_month",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past_week",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past_year",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past/1y",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/past/30d",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/widget",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/widget/diesel",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/prices/widget/ping",
+      "audience": "first_party_client"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pricing",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pricing/validate",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/basins",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/basins/{param}",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/cycle-times/{param}",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/duc-wells",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/frac-focus",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/frac-focus/chemicals",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/frac-focus/full",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/operators",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/operators/{param}",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/permits",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/states",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/states/{param}",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/states/{param}/full",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/summary",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/well-permits",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/well-permits/nearby",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/well-permits/weekly-digest",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/drilling-intelligence/wells/sitemap-seed",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/forecasts",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/inventories",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/inventories/cushing",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/inventories/history",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/inventories/padd",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/inventories/spr",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/macro/calendar",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/macro/cpi",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/macro/dashboard",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/macro/dxy",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/macro/unemployment",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/production",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/production/{param}",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/production/compliance",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/production/countries",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/production/history",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/production/us",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/rig-counts",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/rig-counts/basins",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/rig-counts/historical",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/pseo/rig-counts/states",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/referrals",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/referrals",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/referrals/{param}",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/referrals/earnings_calculator",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/referrals/leaderboard",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/referrals/sharing_resources",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/referrals/stats",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/referrals/track_click",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/referrals/track_share",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts/current",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts/historical",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts/latest",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts/summary",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts/trends",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/rig-counts/us",
+      "audience": "compatibility"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sample",
+      "audience": "discovery_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/scheduled-deliveries",
+      "audience": "unlisted"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/scheduled-deliveries",
+      "audience": "unlisted"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/scheduled-deliveries/{param}",
+      "audience": "unlisted"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/scheduled-deliveries/{param}",
+      "audience": "unlisted"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/scheduled-deliveries/{param}",
+      "audience": "unlisted"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/scheduled-deliveries/{param}",
+      "audience": "unlisted"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/scheduled-deliveries/{param}/send_now",
+      "audience": "unlisted"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/shipping/chokepoints",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/shipping/chokepoints/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/shipping/chokepoints/anomalies",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/confirm_phone",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sms/eligibility",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sms/messages",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sms/notification_preferences",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/sms/notification_preferences/{param}",
+      "audience": "dashboard"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/sms/optin",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sms/optin",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/optin",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/resend_verification",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sms/settings",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/sms/settings",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/test",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/sms/verification_status",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/verify",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/verify_phone",
+      "audience": "dashboard"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/sms/webhook/twilio",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/basis",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/basis/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/basis/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/crack",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/crack/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/crack/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/curve-structure",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/curve-structure/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/gasoil-crack",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/margin",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/margin/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/margin/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/physical-premium",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/physical-premium/all",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/spreads/physical-premium/historical",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/status",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/storage",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/storage/cushing",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/storage/history/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/storage/regional",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/storage/spr",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions",
+      "audience": "openapi"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/subscriptions/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/subscriptions/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/subscriptions/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions/{param}/pause",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/subscriptions/{param}/resume",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/subscriptions/events",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/users/activate-trial",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/users/api-keys",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/users/health",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/users/profile",
+      "audience": "dashboard"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/users/profile",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/users/usage",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks",
+      "audience": "openapi"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks",
+      "audience": "openapi"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/webhooks/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "PATCH",
+      "path": "/v1/webhooks/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/webhooks/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/webhooks/{param}/events",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/{param}/reactivate",
+      "audience": "product_preview"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/webhooks/{param}/test",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/welcome/first-call",
+      "audience": "dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-lifecycle/cohorts",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-lifecycle/states",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-lifecycle/states/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-lifecycle/wells/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/cycle-time",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/cycle-time/cohorts",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/pru/{param}",
+      "audience": "product_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/states",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/states/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/summary",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/top-producers",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/well-production/wells/{param}",
+      "audience": "openapi"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/wells/lookup",
+      "audience": "website"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/x402/prices/latest",
+      "audience": "protocol_preview"
+    }
+  ]
+}

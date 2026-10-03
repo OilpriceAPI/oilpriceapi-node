@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-03
+
+Four methods called routes the API has never served, so every call returned HTTP 404 (#125). They now reject immediately with `OilPriceAPIError` code `ENDPOINT_NOT_AVAILABLE`, name the supported alternative, and make no request. They are deprecated and will be removed in the next major.
+
+### Deprecated
+
+- `client.drilling.trends()`: no trends endpoint exists. Use `summary()`, or `completions()` / `wellsDrilled()` / `ducWells()` for basin-level series.
+- `client.drilling.basin(name)`: no per-basin endpoint exists. Read the `by_basin` maps from `completions()`, `wellsDrilled()`, `ducWells()` or `fracSpreads()`.
+- `client.futures.spreads(contract1, contract2)`: no arbitrary two-contract spread endpoint exists. Use `client.futures.family(slug).spreads()`, e.g. `client.futures.brent().spreads()`.
+- `client.futures.continuous(contract, months)`: no per-contract continuous endpoint exists. Use `continuousFrontMonth()`.
+
+### Added
+
+- `client.futures.continuousFrontMonth("brent" | "wti")` for `GET /v1/futures/continuous/{family}`, returning `ContinuousFrontMonth`.
+- `tests/api-path-contract.test.ts`, which fails CI when any SDK path is missing from a snapshot of the API's routes. Refresh the snapshot with `scripts/refresh-api-paths.mjs`.
+
+### Security
+
+- Dev-only lockfile updates: fast-uri 3.1.8 (GHSA-hrr3-gc8f-f4qj) and markdown-it 14.3.2 (GHSA-253c-mchw-3w2r).
+
 ## [2.0.0] - 2026-09-14
 
 A major release: several resources were typed and called in ways production never supported. The changes below are breaking at compile time or runtime, and in nearly every case the old call could not work correctly against the live API.
