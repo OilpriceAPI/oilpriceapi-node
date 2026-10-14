@@ -39,8 +39,11 @@ describe("release readiness", () => {
     const actions = workflow.match(/uses:\s+actions\/[^@\s]+@([^\s#]+)/g) ?? [];
 
     expect(workflow).toContain("Verify release tag matches package version and protected main");
-    expect(workflow).toContain("actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a");
-    expect(workflow).toContain("actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c");
+    // Pin by full commit SHA, but do not hard-code which SHA: Dependabot
+    // bumps the pin and a literal here turned every such PR red.
+    expect(workflow).toMatch(/actions\/upload-artifact@[0-9a-f]{40}\s/);
+    expect(workflow).toMatch(/actions\/download-artifact@[0-9a-f]{40}\s/);
+    expect(workflow).not.toMatch(/actions\/(?:upload|download)-artifact@v\d/);
     expect(workflow).toContain('cp scripts/resolve-npm-publication.mjs "$ARTIFACT_DIR/"');
     expect(publishJob).toContain("id-token: write");
     expect(publishJob).toContain("sha256sum -c artifact.sha256");
