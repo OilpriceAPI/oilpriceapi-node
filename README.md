@@ -26,7 +26,7 @@ in the current API response and documentation.
 
 ## Authenticate
 
-Create an API key in the [OilPriceAPI dashboard](https://www.oilpriceapi.com/auth/signup)
+Create an API key in the [OilPriceAPI dashboard](https://www.oilpriceapi.com/auth/signup?utm_source=node_sdk&utm_medium=sdk)
 and provide it through the environment. Do not put a key in source code, a URL,
 logs, screenshots, generated artifacts, or issue text.
 
