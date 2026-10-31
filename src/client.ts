@@ -858,10 +858,9 @@ export class OilPriceAPI {
     // The loop ends when a page comes back shorter than the one requested.
     // That test is only sound while the server actually honours the requested
     // size: the API caps a page at MAX_PER_PAGE rows however large `per_page`
-    // is, so asking for more made page one look short and ended iteration
-    // after a single page — 500 rows out of 5,500, with no error and no flag
-    // (#90). The SDK's own docs advertised a maximum of 1000, so the
-    // documented value was the one that truncated.
+    // is, so asking for more can make page one look short and end iteration
+    // early. Production raw window routes applied a 100-row cap in October
+    // 2026 even when 500 was requested.
     //
     // Clamping to what the server will serve restores the short-page test
     // and returns the full history. It changes nothing for a caller already
