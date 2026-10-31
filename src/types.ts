@@ -238,7 +238,8 @@ export const DEFAULT_PER_PAGE = 100;
 
 export interface HistoricalPricesOptions {
   /**
-   * Predefined time period (alternative to startDate/endDate)
+   * Predefined time period. Do not combine with startDate or endDate;
+   * ambiguous combinations are rejected before a request is made.
    */
   period?: HistoricalPeriod;
 
