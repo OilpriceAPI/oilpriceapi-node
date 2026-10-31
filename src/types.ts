@@ -227,18 +227,19 @@ export type AggregationInterval = "raw" | "hourly" | "daily" | "weekly" | "month
 /**
  * Rows the API will return for a single page, whatever `per_page` asks for.
  *
- * Verified against live production on 2026-09-13: `per_page` of 500, 600 and
- * 1000 each returned exactly 500 rows for the same query. Pagination that
- * requests more than this reads the cap as end-of-data (#90).
+ * Raw price window endpoints applied a 100-row cap in production on
+ * 2026-10-31, even when 500 was requested. Requesting more can make a full
+ * server page look like the final page and silently truncate pagination.
  */
-export const MAX_PER_PAGE = 500;
+export const MAX_PER_PAGE = 100;
 
 /** The API's own default page size, used when the caller names none. */
 export const DEFAULT_PER_PAGE = 100;
 
 export interface HistoricalPricesOptions {
   /**
-   * Predefined time period (alternative to startDate/endDate)
+   * Predefined time period. Do not combine with startDate or endDate;
+   * ambiguous combinations are rejected before a request is made.
    */
   period?: HistoricalPeriod;
 
@@ -272,14 +273,12 @@ export interface HistoricalPricesOptions {
   /**
    * Number of results per page
    *
-   * The API serves at most {@link MAX_PER_PAGE} rows per page however large
-   * this is — asking for more does not return more. The docs previously said
-   * 1000, which was the value that made `paginateHistoricalPrices` stop after
-   * one page (#90). Verified against production 2026-09-13: `per_page` of
-   * 500, 600 and 1000 all return 500 rows.
+   * For automatic historical pagination, requests are capped at
+   * {@link MAX_PER_PAGE} to avoid premature termination when the API applies
+   * its lower raw-window page limit.
    *
    * @default 100 (API default)
-   * @max 500
+   * @max 100 for automatic historical pagination
    */
   perPage?: number;
 
