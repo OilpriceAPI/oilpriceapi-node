@@ -53,7 +53,7 @@ jobs:
           fi
 
       - name: Audit dependencies
-        run: npm audit --audit-level=low
+        run: npm run audit:ci
 
       - name: Check for committed credentials
         run: npm run check:secrets
