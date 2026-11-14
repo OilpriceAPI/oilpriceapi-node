@@ -211,12 +211,47 @@ export interface FuturesCurvePoint {
  * `curve` is optional and `error` / `date` are surfaced for callers to detect
  * the no-data case.
  */
+/**
+ * One contract month on the forward curve, as `GET /v1/futures/{slug}/curve`
+ * returns it in `contracts`, `front_month` and `back_month`.
+ */
+export interface FuturesCurveContract {
+  /** Contract month, `YYYY-MM` */
+  contract_month: string;
+  /** Contract code, e.g. `WTI_FUTURES_2026_12` */
+  contract_code: string;
+  /** Settlement price */
+  settlement_price: number;
+  /** How the settlement was obtained, e.g. `exchange_settlement` or `close_fallback` */
+  settlement_basis?: string;
+  /** Trading date of the settlement, `YYYY-MM-DD` */
+  trading_date?: string;
+  /** Months until expiry */
+  months_to_expiry?: number;
+  /** Expiry date, `YYYY-MM-DD` */
+  expiry_date?: string;
+}
+
 export interface FuturesCurveData {
-  /** Base contract */
+  /** Date the curve was built from, `YYYY-MM-DD` */
+  analysis_date?: string;
+  /** `contango`, `backwardation` or another shape label */
+  curve_type?: string;
+  /** Number of contracts on the curve */
+  total_contracts?: number;
+  /** Nearest contract */
+  front_month?: FuturesCurveContract;
+  /** Furthest contract */
+  back_month?: FuturesCurveContract;
+  /** Contracts on the curve, nearest first */
+  contracts?: FuturesCurveContract[];
+  /** Summary metrics such as `total_slope` and `average_price` */
+  curve_metrics?: Record<string, number | string | null>;
+  /** Base contract (legacy field; not in the current response) */
   contract?: string;
-  /** ISO timestamp when curve was generated */
+  /** ISO timestamp when curve was generated (legacy field; not in the current response) */
   timestamp?: string;
-  /** Array of curve points (absent in the no-data response) */
+  /** Array of curve points (legacy field; the current response uses `contracts`) */
   curve?: FuturesCurvePoint[];
   /** Present in the no-data response: "No futures data available for curve analysis". */
   error?: string;
@@ -407,6 +442,19 @@ export function resolveFuturesFamilySlug(codeOrSlug: string): FuturesContractFam
 }
 
 /**
+ * Path segment for a contract code or family slug on the per-family routes
+ * (`/v1/futures/{slug}/curve`, `/historical`, `/ohlc`, `/intraday`).
+ *
+ * The API routes those by family slug only: `/v1/futures/CL/curve` is 404 and
+ * `/v1/futures/wti/curve` is 200 (#152, checked live 2026-11-14). A known code
+ * maps to its slug; anything else passes through unchanged so a slug this SDK
+ * does not list yet still reaches the API.
+ */
+export function futuresPathSlug(contract: string): string {
+  return resolveFuturesFamilySlug(contract) ?? contract.trim();
+}
+
+/**
  * Typed helper for a single futures contract family (e.g., ICE Brent, Gasoil).
  *
  * Provides ergonomic access to the family's endpoints without having to
@@ -525,8 +573,8 @@ export class FuturesContractFamily {
  * // Typed family helpers are the most ergonomic option:
  * const brent = await client.futures.brent().latest();
  * const curve = await client.futures.brent().curve();
- * curve.curve.forEach(point => {
- *   console.log(`${point.months_out}mo: $${point.price}`);
+ * curve.contracts?.forEach(c => {
+ *   console.log(`${c.contract_month}: $${c.settlement_price}`);
  * });
  * ```
  */
@@ -608,7 +656,7 @@ export class FuturesResource {
 
     const response = await this.client["request"]<
       HistoricalFuturesPrice[] | { prices: HistoricalFuturesPrice[] }
-    >(`/v1/futures/${encodeURIComponent(contract)}/historical`, params);
+    >(`/v1/futures/${encodeURIComponent(futuresPathSlug(contract))}/historical`, params);
 
     return Array.isArray(response) ? response : response.prices;
   }
@@ -640,7 +688,7 @@ export class FuturesResource {
     const params: Record<string, string> = {};
     if (date) params.date = date;
 
-    return this.client["request"]<FuturesOHLC>(`/v1/futures/${encodeURIComponent(contract)}/ohlc`, params);
+    return this.client["request"]<FuturesOHLC>(`/v1/futures/${encodeURIComponent(futuresPathSlug(contract))}/ohlc`, params);
   }
 
   /**
@@ -667,7 +715,7 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${encodeURIComponent(contract)}/intraday`, {});
+    return this.client["request"]<IntradayFuturesData>(`/v1/futures/${encodeURIComponent(futuresPathSlug(contract))}/intraday`, {});
   }
 
   /**
@@ -715,7 +763,7 @@ export class FuturesResource {
       throw new ValidationError("Contract symbol must be a non-empty string");
     }
 
-    return this.client["request"]<FuturesCurveData>(`/v1/futures/${encodeURIComponent(contract)}/curve`, {});
+    return this.client["request"]<FuturesCurveData>(`/v1/futures/${encodeURIComponent(futuresPathSlug(contract))}/curve`, {});
   }
 
   /**

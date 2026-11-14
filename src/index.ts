@@ -57,6 +57,7 @@ export type {
   FuturesSpread,
   FuturesCurvePoint,
   FuturesCurveData,
+  FuturesCurveContract,
   ContinuousContractPrice,
   ContinuousFuturesData,
   ContinuousFrontMonth,
