@@ -249,7 +249,7 @@ describe("FuturesResource", () => {
 
       const result = await client.futures.curve("CL");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/CL/curve", {});
+      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/wti/curve", {});
       expect(result).toEqual(mockCurve);
       expect(result.curve).toHaveLength(3);
     });
@@ -265,7 +265,7 @@ describe("FuturesResource", () => {
 
       const result = await client.futures.curve("CL");
 
-      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/CL/curve", {});
+      expect(requestSpy).toHaveBeenCalledWith("/v1/futures/wti/curve", {});
       expect(result.error).toBe("No futures data available for curve analysis");
       expect(result.curve).toBeUndefined();
     });

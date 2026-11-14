@@ -1,0 +1,61 @@
+{
+  "analysis_date": "2026-11-13",
+  "curve_type": "backwardation",
+  "total_contracts": 13,
+  "front_month": {
+    "contract_month": "2026-12",
+    "contract_code": "WTI_FUTURES_2026_12",
+    "settlement_price": 88.79,
+    "settlement_basis": "exchange_settlement",
+    "trading_date": "2026-11-13",
+    "months_to_expiry": 1,
+    "expiry_date": "2026-11-20"
+  },
+  "back_month": {
+    "contract_month": "2027-12",
+    "contract_code": "WTI_FUTURES_2027_12",
+    "settlement_price": 75.36,
+    "settlement_basis": "close_fallback",
+    "trading_date": "2026-11-13",
+    "months_to_expiry": 13,
+    "expiry_date": "2027-11-19"
+  },
+  "contracts": [
+    {
+      "contract_month": "2026-12",
+      "contract_code": "WTI_FUTURES_2026_12",
+      "settlement_price": 88.79,
+      "settlement_basis": "exchange_settlement",
+      "trading_date": "2026-11-13",
+      "months_to_expiry": 1,
+      "expiry_date": "2026-11-20"
+    },
+    {
+      "contract_month": "2027-01",
+      "contract_code": "WTI_FUTURES_2027_01",
+      "settlement_price": 87.83,
+      "settlement_basis": "close_fallback",
+      "trading_date": "2026-11-13",
+      "months_to_expiry": 2,
+      "expiry_date": "2026-12-21"
+    },
+    {
+      "contract_month": "2027-02",
+      "contract_code": "WTI_FUTURES_2027_02",
+      "settlement_price": 86.27,
+      "settlement_basis": "close_fallback",
+      "trading_date": "2026-11-13",
+      "months_to_expiry": 3,
+      "expiry_date": "2027-01-20"
+    }
+  ],
+  "curve_metrics": {
+    "front_month_price": 88.79,
+    "back_month_price": 75.36,
+    "total_slope": -13.43,
+    "slope_percentage": -15.1256,
+    "average_price": 81.3523,
+    "price_range": 13.43,
+    "steepness": -1.119167
+  }
+}
