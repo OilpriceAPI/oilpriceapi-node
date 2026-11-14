@@ -105,7 +105,7 @@ describe('Historical Prices', () => {
         expect(callUrl).toContain('/v1/prices/past_year');
       });
 
-      it('should use past_year endpoint even for period queries', async () => {
+      it('should select the requested period endpoint', async () => {
         const mockResponse = {
           status: 'success',
           data: { prices: [] }
@@ -124,7 +124,7 @@ describe('Historical Prices', () => {
         });
 
         const callUrl = fetchSpy.mock.calls[0][0] as string;
-        expect(callUrl).toContain('/v1/prices/past_year');
+        expect(callUrl).toContain('/v1/prices/past_week');
       });
     });
 
@@ -221,7 +221,7 @@ describe('Historical Prices', () => {
     });
 
     describe('Period Parameter Handling', () => {
-      it('should pass period parameter for past_week', async () => {
+      it('selects past_week without sending an unsupported period parameter', async () => {
         const mockResponse = {
           status: 'success',
           data: { prices: [] }
@@ -239,10 +239,11 @@ describe('Historical Prices', () => {
         });
 
         const callUrl = fetchSpy.mock.calls[0][0] as string;
-        expect(callUrl).toContain('period=past_week');
+        expect(callUrl).toContain('/v1/prices/past_week');
+        expect(callUrl).not.toContain('period=');
       });
 
-      it('should pass period parameter for past_month', async () => {
+      it('selects past_month without sending an unsupported period parameter', async () => {
         const mockResponse = {
           status: 'success',
           data: { prices: [] }
@@ -261,11 +262,12 @@ describe('Historical Prices', () => {
         });
 
         const callUrl = fetchSpy.mock.calls[0][0] as string;
-        expect(callUrl).toContain('period=past_month');
+        expect(callUrl).toContain('/v1/prices/past_month');
+        expect(callUrl).not.toContain('period=');
         expect(callUrl).toContain('by_code=WTI_USD');
       });
 
-      it('should pass period parameter for past_year', async () => {
+      it('selects past_year without sending an unsupported period parameter', async () => {
         const mockResponse = {
           status: 'success',
           data: { prices: [] }
@@ -283,7 +285,20 @@ describe('Historical Prices', () => {
         });
 
         const callUrl = fetchSpy.mock.calls[0][0] as string;
-        expect(callUrl).toContain('period=past_year');
+        expect(callUrl).toContain('/v1/prices/past_year');
+        expect(callUrl).not.toContain('period=');
+      });
+
+      it('rejects a period combined with explicit dates before making a request', async () => {
+        await expect(client.getHistoricalPrices({ period: 'past_week', startDate: '2024-01-01' }))
+          .rejects.toThrow(/period.*date/i);
+        expect(fetchSpy).not.toHaveBeenCalled();
+      });
+
+      it('rejects unknown period values before making a request', async () => {
+        await expect(client.getHistoricalPrices({ period: 'invalid' as never }))
+          .rejects.toThrow(/period/i);
+        expect(fetchSpy).not.toHaveBeenCalled();
       });
     });
 
