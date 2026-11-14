@@ -780,9 +780,15 @@ export class OilPriceAPI {
    */
   async getHistoricalPrices(options?: HistoricalPricesOptions): Promise<Price[]> {
     const params: Record<string, string> = {};
+    const period = options?.period;
 
-    if (options?.period) {
-      params.period = options.period;
+    if (period !== undefined) {
+      if (!["past_week", "past_month", "past_year"].includes(period)) {
+        throw new Error("Unsupported historical period");
+      }
+      if (options?.startDate || options?.endDate) {
+        throw new Error("Use either a historical period or explicit dates, not both");
+      }
     }
 
     if (options?.commodity) {
@@ -814,14 +820,10 @@ export class OilPriceAPI {
       params.page = options.page.toString();
     }
 
-    // CRITICAL FIX (December 17, 2025):
-    // Use /v1/prices/past_year endpoint instead of /v1/prices
-    // The /v1/prices endpoint does NOT correctly handle start_date/end_date parameters
-    // This was the same bug that affected the Python SDK (fixed in v1.4.4)
-    // Issue: SDK was returning wrong dates for historical queries
-    // Root Cause: Backend has_scope :by_period not working on /v1/prices
-    // Solution: Use /v1/prices/past_year which uses direct WHERE clauses
-    return this.request<Price[]>("/v1/prices/past_year", params);
+    // Window routes select the period in the path; passing `period` as a
+    // query parameter is rejected by the API. Explicit dates keep the
+    // existing past_year route, whose date filters support custom windows.
+    return this.request<Price[]>(`/v1/prices/${period ?? "past_year"}`, params);
   }
 
   /**
@@ -856,10 +858,9 @@ export class OilPriceAPI {
     // The loop ends when a page comes back shorter than the one requested.
     // That test is only sound while the server actually honours the requested
     // size: the API caps a page at MAX_PER_PAGE rows however large `per_page`
-    // is, so asking for more made page one look short and ended iteration
-    // after a single page — 500 rows out of 5,500, with no error and no flag
-    // (#90). The SDK's own docs advertised a maximum of 1000, so the
-    // documented value was the one that truncated.
+    // is, so asking for more can make page one look short and end iteration
+    // early. Production raw window routes applied a 100-row cap in October
+    // 2026 even when 500 was requested.
     //
     // Clamping to what the server will serve restores the short-page test
     // and returns the full history. It changes nothing for a caller already

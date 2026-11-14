@@ -2,9 +2,8 @@
  * #90 — the generator must not treat the server's page cap as end-of-data.
  *
  * These tests drive the REAL client against a REAL `fetch` that behaves the
- * way production does: it caps a page at 500 rows no matter what `per_page`
- * asks for. Verified against live production 2026-09-13 — per_page=1000,
- * per_page=600 and per_page=500 all return exactly 500 rows.
+ * way production does: it caps a raw window page at 100 rows even when
+ * `per_page` asks for more (verified 2026-10-31).
  *
  * The old last-page test compared against the REQUESTED page size, so the
  * documented maximum (@max 1000) was the value that made page one look short
@@ -15,7 +14,7 @@ import { OilPriceAPI, MAX_PER_PAGE } from "../src/index.js";
 
 const KEY = "fixture_key_not_a_real_credential";
 /** What production actually enforces, whatever per_page says. */
-const SERVER_CAP = 500;
+const SERVER_CAP = 100;
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -115,11 +114,7 @@ describe("#90 paginateHistoricalPrices vs the server page cap", () => {
 });
 
 describe("#90 MAX_PER_PAGE matches what production enforces", () => {
-  it("is the cap measured against live production on 2026-09-13", () => {
-    // per_page=500, 600 and 1000 each returned exactly 500 rows for
-    // /v1/prices/past_year?by_code=WTI_USD&period=past_month&interval=hourly.
-    // If the API's cap ever moves, this constant has to move with it or the
-    // generator silently truncates again.
+  it("uses the cap measured on raw window routes in production", () => {
     expect(MAX_PER_PAGE).toBe(SERVER_CAP);
   });
 });
