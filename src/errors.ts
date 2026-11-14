@@ -181,7 +181,11 @@ export function errorFromResponse(response: Response, body: string, apiKey?: str
     currentPlan: stringValue(envelope.current_plan) || stringValue(envelope.plan),
     requiredPlan: stringValue(envelope.required_plan),
     requiredFeature: stringValue(envelope.required_feature) || stringValue(envelope.feature),
-    remediationUrl: stringValue(envelope.remediation_url) || stringValue(envelope.upgrade_url),
+    // The historical-access 402 (UPGRADE_REQUIRED, api#10744) nests its link
+    // as `upgrade.url` and sends no top-level `upgrade_url`.
+    remediationUrl: stringValue(envelope.remediation_url)
+      || stringValue(envelope.upgrade_url)
+      || (isEnvelope(envelope.upgrade) ? stringValue(envelope.upgrade.url) : undefined),
     retryAfter,
     headers: headersToRecord(headers),
     rawBody: safeBody,
