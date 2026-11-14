@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-11-16
+
+### Fixed
+
+- **History-gate 402 upgrade link (#154).** From 2026-11-16 12:00 UTC `/v1/prices/historical` and `/v1/prices/history` return 402 `UPGRADE_REQUIRED` for accounts without history access. The API sends the link as `upgrade.url`; `OilPriceAPIError.remediationUrl` now reads it. A top-level `remediation_url` or `upgrade_url` still wins (#155).
+- **Predefined history periods (#144).** `getHistoricalPrices({ period })` sent `period=past_week` to `/v1/prices/past_year`, which the API rejects with 400 `UNKNOWN_PARAMETERS`. It now calls `/v1/prices/past_week`, `/past_month` or `/past_year` directly. An unsupported period, or a period combined with `startDate`/`endDate`, throws instead of returning a different window (#145).
+- **Futures contract codes on per-family routes (#152).** `futures.curve()`, `historical()`, `ohlc()` and `intraday()` sent the contract code (`/v1/futures/CL/curve`), which is 404. A known code now maps to its family slug (`CL` to `wti`, `BZ` to `brent`, and so on); other values pass through unchanged. `FuturesCurveData` now declares the fields the API returns (`analysis_date`, `contracts`, `front_month`, `back_month`, `curve_metrics`); the legacy fields stay optional (#153).
+
+### Changed
+
+- `MAX_PER_PAGE` is 100, the server's current page cap for raw history (#145).
+
+### Security
+
+- Dev-only: TypeDoc markdown-it patched (#149). The TypeDoc minimatch advisory remains a tracked, development-only exception (#150).
+
 ## [2.1.0] - 2026-10-03
 
 Four methods called routes the API has never served, so every call returned HTTP 404 (#125). They now reject immediately with `OilPriceAPIError` code `ENDPOINT_NOT_AVAILABLE`, name the supported alternative, and make no request. They are deprecated and will be removed in the next major.
