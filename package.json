@@ -26,6 +26,7 @@
     "prebuild": "node scripts/clean-dist.mjs",
     "build": "tsc && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json && node scripts/emit-cjs-declarations.mjs",
     "check:secrets": "node scripts/check-no-hardcoded-api-keys.mjs",
+    "audit:ci": "node scripts/audit-dependencies.mjs",
     "storefront:check": "node scripts/validate-storefront-claims.mjs",
     "snippets:build": "node scripts/generate-snippet-manifest.mjs --output artifacts/snippets/oilpriceapi-node-snippets-v1.json",
     "snippets:fixtures": "node scripts/run-snippet-fixtures.mjs",
@@ -84,5 +85,6 @@
     "@types/node": "^26.1.1",
     "@types/ws": "^8.18.1",
     "ws": "^8.21.0"
-  }
+  },
+  "overrides": {}
 }

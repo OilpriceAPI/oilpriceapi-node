@@ -25,7 +25,10 @@ describe("release readiness", () => {
     expect(packageJson.scripts.lint).toContain("--max-warnings=0");
     expect(packageJson.scripts["smoke:package"]).toBe("./scripts/clean-install-smoke.sh");
     expect(workflow).toContain("Verify release tag matches package version");
-    expect(workflow).toContain("npm audit --audit-level=low");
+    expect(workflow).toContain("npm run audit:ci");
+    expect(read("scripts/audit-dependencies.mjs")).toContain(
+      "GHSA-g3hv-75wg-m249",
+    );
     expect(workflow).toContain("npm run smoke:package");
     expect(smokeScript).toMatch(/npm run build[\s\S]*npm pack/);
     expect(smokeScript).toMatch(/npm install[\s\S]*--package-root/);
